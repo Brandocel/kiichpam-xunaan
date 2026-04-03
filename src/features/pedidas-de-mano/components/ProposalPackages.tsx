@@ -1,203 +1,17 @@
 "use client";
 
 import Link from "next/link";
+import type { ProposalPackageItem } from "../types/proposal.types";
 
 interface ProposalPackagesProps {
+  items: ProposalPackageItem[];     // ← Agregado
   locale: "es" | "en";
 }
 
-type PackageCard = {
-  id: string;
-  title: string;
-  includes: string[];
-  excludes: string[];
-  buttonText: string;
-  buttonHref: string;
-};
-
-const packagesContent: Record<"es" | "en", PackageCard[]> = {
-  es: [
-    {
-      id: "amor-de-verano",
-      title: "Amor de Verano",
-      includes: [
-        "Pedida de mano dentro del cenote Yun-chen (solo pareja)",
-        "Bendición tradicional maya",
-        "Eco-parque:",
-        "Taller de chocolate",
-        "Taller de mezcal y tequila",
-        "Taller de obsidiana",
-        "Áreas comunes",
-      ],
-      excludes: [
-        "Fotografías",
-        "Decoración adicional",
-        "Tiempo libre en el parque",
-        "Entrada al parque para 2 adultos",
-        "Buffet",
-        "Transportación",
-      ],
-      buttonText: "Cotizar",
-      buttonHref: "/es/contacto",
-    },
-    {
-      id: "tesoro-de-amor",
-      title: "Tesoro de Amor",
-      includes: [
-        "Entrada al parque para 2",
-        "Pedida de mano dentro del cenote a elegir",
-        "Bendición tradicional del maya",
-        "Tiempo libre en el parque",
-        "Buffet y bebidas naturales",
-        "Eco-parque:",
-        "Taller de chocolate",
-        "Taller de mezcal y tequila",
-        "Taller de obsidiana",
-        "Áreas comunes",
-      ],
-      excludes: ["Fotografías", "Decoración adicional", "Transportación."],
-      buttonText: "Cotizar",
-      buttonHref: "/es/contacto",
-    },
-    {
-      id: "fragancia-de-amor",
-      title: "Fragancia de Amor",
-      includes: [
-        "Entrada al parque para 2",
-        "Pedida de mano dentro del cenote a elegir",
-        "Bendición tradicional del maya",
-        "Ramo de flores (rosas blancas)",
-        "Tiempo libre en el parque.",
-        "Buffet y bebidas naturales",
-        "2 bebidas de cortesía para brindis (mezcalita)",
-        "Eco-parque:",
-        "Taller de chocolate",
-        "Taller de mezcal y tequila",
-        "Taller de obsidiana",
-        "Áreas comunes",
-      ],
-      excludes: ["Fotografías", "Decoración adicional", "Transportación."],
-      buttonText: "Cotizar",
-      buttonHref: "/es/contacto",
-    },
-    {
-      id: "amor-eterno",
-      title: "Amor Eterno",
-      includes: [
-        "Entrada al parque para 2",
-        "Pedida de mano dentro del cenote a elegir",
-        "Bendición tradicional del maya",
-        "Ramo de flores (rosas blancas)",
-        "Tiempo libre en el parque.",
-        "Buffet y bebidas naturales",
-        "2 bebidas de cortesía para brindis (mezcalita)",
-        "Fotografía (1 video y 40-60 fotografías)",
-        "Decoración adicional",
-        "Eco-parque:",
-        "Taller de chocolate",
-        "Taller de mezcal y tequila",
-        "Taller de obsidiana",
-        "Áreas comunes",
-      ],
-      excludes: ["Transportación."],
-      buttonText: "Cotizar",
-      buttonHref: "/es/contacto",
-    },
-  ],
-  en: [
-    {
-      id: "summer-love",
-      title: "Summer Love",
-      includes: [
-        "Proposal inside Yun-chen cenote (couple only)",
-        "Traditional Mayan blessing",
-        "Eco-park:",
-        "Chocolate workshop",
-        "Mezcal and tequila workshop",
-        "Obsidian workshop",
-        "Common areas",
-      ],
-      excludes: [
-        "Photography",
-        "Additional decoration",
-        "Free time in the park",
-        "Park admission for 2 adults",
-        "Buffet",
-        "Transportation",
-      ],
-      buttonText: "Quote",
-      buttonHref: "/en/contacto",
-    },
-    {
-      id: "treasure-of-love",
-      title: "Treasure of Love",
-      includes: [
-        "Park admission for 2",
-        "Proposal inside selected cenote",
-        "Traditional Mayan blessing",
-        "Free time in the park",
-        "Buffet and natural beverages",
-        "Eco-park:",
-        "Chocolate workshop",
-        "Mezcal and tequila workshop",
-        "Obsidian workshop",
-        "Common areas",
-      ],
-      excludes: ["Photography", "Additional decoration", "Transportation."],
-      buttonText: "Quote",
-      buttonHref: "/en/contacto",
-    },
-    {
-      id: "fragrance-of-love",
-      title: "Fragrance of Love",
-      includes: [
-        "Park admission for 2",
-        "Proposal inside selected cenote",
-        "Traditional Mayan blessing",
-        "Bouquet of flowers (white roses)",
-        "Free time in the park",
-        "Buffet and natural beverages",
-        "2 courtesy drinks for toast (mezcalita)",
-        "Eco-park:",
-        "Chocolate workshop",
-        "Mezcal and tequila workshop",
-        "Obsidian workshop",
-        "Common areas",
-      ],
-      excludes: ["Photography", "Additional decoration", "Transportation."],
-      buttonText: "Quote",
-      buttonHref: "/en/contacto",
-    },
-    {
-      id: "eternal-love",
-      title: "Eternal Love",
-      includes: [
-        "Park admission for 2",
-        "Proposal inside selected cenote",
-        "Traditional Mayan blessing",
-        "Bouquet of flowers (white roses)",
-        "Free time in the park",
-        "Buffet and natural beverages",
-        "2 courtesy drinks for toast (mezcalita)",
-        "Photography (1 video and 40-60 photos)",
-        "Additional decoration",
-        "Eco-park:",
-        "Chocolate workshop",
-        "Mezcal and tequila workshop",
-        "Obsidian workshop",
-        "Common areas",
-      ],
-      excludes: ["Transportation."],
-      buttonText: "Quote",
-      buttonHref: "/en/contacto",
-    },
-  ],
-};
-
 export default function ProposalPackages({
+  items,
   locale,
 }: ProposalPackagesProps) {
-  const items = packagesContent[locale];
   const sectionTitle =
     locale === "es" ? "Conoce nuestros paquetes" : "Discover our packages";
 
@@ -209,8 +23,7 @@ export default function ProposalPackages({
           <h2
             className="text-center text-[30px] font-black leading-[1.15] text-white md:text-[42px]"
             style={{
-              fontFamily:
-                '"Be Vietnam Pro", ui-sans-serif, system-ui, sans-serif',
+              fontFamily: '"Be Vietnam Pro", ui-sans-serif, system-ui, sans-serif',
             }}
           >
             {sectionTitle}
@@ -219,9 +32,9 @@ export default function ProposalPackages({
         </div>
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4 xl:gap-7">
-          {items.map((item) => (
+          {items.map((item, index) => (
             <article
-              key={item.id}
+              key={index}
               className="
                 group relative flex min-h-[632px] flex-col
                 rounded-[26px] bg-[#C028B9]
@@ -240,8 +53,7 @@ export default function ProposalPackages({
                   group-hover:text-[#C028B9]
                 "
                 style={{
-                  fontFamily:
-                    '"Be Vietnam Pro", ui-sans-serif, system-ui, sans-serif',
+                  fontFamily: '"Be Vietnam Pro", ui-sans-serif, system-ui, sans-serif',
                 }}
               >
                 {item.title}
@@ -254,12 +66,10 @@ export default function ProposalPackages({
                   <span className="text-[18px] text-white/90 transition-colors duration-300 group-hover:text-[#F2C8ED]">
                     ✓
                   </span>
-
                   <p
                     className="text-[20px] font-normal text-white transition-colors duration-300 group-hover:text-[#C028B9]"
                     style={{
-                      fontFamily:
-                        '"Be Vietnam Pro", ui-sans-serif, system-ui, sans-serif',
+                      fontFamily: '"Be Vietnam Pro", ui-sans-serif, system-ui, sans-serif',
                     }}
                   >
                     {locale === "es" ? "Inclusiones" : "Includes"}
@@ -275,12 +85,11 @@ export default function ProposalPackages({
                     group-hover:text-[#C028B9]
                   "
                   style={{
-                    fontFamily:
-                      '"Be Vietnam Pro", ui-sans-serif, system-ui, sans-serif',
+                    fontFamily: '"Be Vietnam Pro", ui-sans-serif, system-ui, sans-serif',
                   }}
                 >
-                  {item.includes.map((include, index) => (
-                    <li key={`${item.id}-include-${index}`}>{include}</li>
+                  {item.includes?.map((include, i) => (
+                    <li key={i}>{include}</li>
                   ))}
                 </ul>
               </div>
@@ -290,12 +99,10 @@ export default function ProposalPackages({
                   <span className="text-[18px] text-white/90 transition-colors duration-300 group-hover:text-[#F09AE3]">
                     ✕
                   </span>
-
                   <p
                     className="text-[20px] font-normal text-white transition-colors duration-300 group-hover:text-[#C028B9]"
                     style={{
-                      fontFamily:
-                        '"Be Vietnam Pro", ui-sans-serif, system-ui, sans-serif',
+                      fontFamily: '"Be Vietnam Pro", ui-sans-serif, system-ui, sans-serif',
                     }}
                   >
                     {locale === "es" ? "Exclusiones" : "Excludes"}
@@ -311,18 +118,17 @@ export default function ProposalPackages({
                     group-hover:text-[#C028B9]
                   "
                   style={{
-                    fontFamily:
-                      '"Be Vietnam Pro", ui-sans-serif, system-ui, sans-serif',
+                    fontFamily: '"Be Vietnam Pro", ui-sans-serif, system-ui, sans-serif',
                   }}
                 >
-                  {item.excludes.map((exclude, index) => (
-                    <li key={`${item.id}-exclude-${index}`}>{exclude}</li>
+                  {item.excludes?.map((exclude, i) => (
+                    <li key={i}>{exclude}</li>
                   ))}
                 </ul>
               </div>
 
               <Link
-                href={item.buttonHref}
+                href={item.buttonHref || "#"}
                 className="
                   mt-8 inline-flex h-[49px] w-full
                   items-center justify-center
@@ -333,11 +139,10 @@ export default function ProposalPackages({
                   group-hover:bg-[#483289] group-hover:text-white
                 "
                 style={{
-                  fontFamily:
-                    '"Be Vietnam Pro", ui-sans-serif, system-ui, sans-serif',
+                  fontFamily: '"Be Vietnam Pro", ui-sans-serif, system-ui, sans-serif',
                 }}
               >
-                {item.buttonText}
+                {item.buttonText || "Cotizar"}
               </Link>
             </article>
           ))}
