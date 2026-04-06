@@ -3,7 +3,7 @@ import Footer from "@/shared/components/layout/Footer";
 
 interface LocaleLayoutProps {
   children: ReactNode;
-  params: Promise<{ locale: "es" | "en" }>;
+  params: Promise<{ locale: string }>;
 }
 
 export default async function LocaleLayout({
@@ -12,10 +12,12 @@ export default async function LocaleLayout({
 }: LocaleLayoutProps) {
   const { locale } = await params;
 
+  const safeLocale: "es" | "en" = locale === "en" ? "en" : "es";
+
   return (
     <div className="flex min-h-screen flex-col">
       <main className="flex-1">{children}</main>
-      <Footer locale={locale} />
+      <Footer locale={safeLocale} />
     </div>
   );
 }
