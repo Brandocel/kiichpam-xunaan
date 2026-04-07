@@ -2,16 +2,17 @@
 
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { CircleFlag } from "react-circle-flags";
 
 interface LanguageSwitcherProps {
   locale: "es" | "en";
   className?: string;
+  mobile?: boolean;
 }
 
 export default function LanguageSwitcher({
   locale,
   className = "",
+  mobile = false,
 }: LanguageSwitcherProps) {
   const pathname = usePathname();
   const router = useRouter();
@@ -52,65 +53,79 @@ export default function LanguageSwitcher({
     timeoutRef.current = setTimeout(() => {
       router.push(buildNextPath(nextLocale), { scroll: false });
       isChangingRef.current = false;
-    }, 180);
+    }, 130);
   };
+
+  const textSize = mobile ? "text-[15px]" : "text-[14px]";
+  const underlineWidth = mobile ? "w-7" : "w-6";
 
   return (
     <div
       className={[
-        "relative inline-flex h-9 w-[112px] shrink-0 items-center overflow-hidden rounded-full",
-        "border border-white/15 bg-[#243c88]/95 p-1 backdrop-blur-md",
-        "shadow-[0_8px_20px_rgba(0,0,0,0.18)]",
+        "group inline-flex items-center gap-3",
+        mobile ? "gap-4" : "gap-3",
         className,
       ].join(" ")}
+      aria-label="Selector de idioma"
     >
-      <span
-        className={[
-          "absolute top-1 left-1 z-0 h-7 w-[50px] rounded-full bg-white",
-          "shadow-[0_4px_14px_rgba(0,0,0,0.14)]",
-          "transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform",
-          selected === "es" ? "translate-x-0" : "translate-x-[54px]",
-        ].join(" ")}
-      />
-
       <button
         type="button"
         onClick={() => handleSelect("es")}
-        className="relative z-10 flex h-7 w-[50px] items-center justify-center gap-1 rounded-full"
         aria-label="Cambiar a español"
+        className="relative flex flex-col items-center justify-center"
       >
-        <span className="flex h-4 w-4 shrink-0 items-center justify-center overflow-hidden rounded-full">
-          <CircleFlag countryCode="mx" height="16" />
-        </span>
-
         <span
           className={[
-            "text-[10px] font-semibold leading-none transition-colors duration-200",
-            selected === "es" ? "text-[#243c88]" : "text-white",
+            "uppercase leading-none tracking-[0.14em] transition-all duration-200",
+            textSize,
+            selected === "es"
+              ? "font-semibold text-white"
+              : "font-medium text-white/65 hover:text-white/90",
           ].join(" ")}
         >
           ES
         </span>
+
+        <span
+          className={[
+            "mt-1.5 h-[2px] rounded-full bg-white transition-all duration-300 ease-out",
+            underlineWidth,
+            selected === "es"
+              ? "scale-100 opacity-100"
+              : "scale-50 opacity-30 hover:scale-90 hover:opacity-70",
+          ].join(" ")}
+        />
       </button>
+
+      <span className="translate-y-[-1px] text-white/45">/</span>
 
       <button
         type="button"
         onClick={() => handleSelect("en")}
-        className="relative z-10 flex h-7 w-[50px] items-center justify-center gap-1 rounded-full"
         aria-label="Change to English"
+        className="relative flex flex-col items-center justify-center"
       >
-        <span className="flex h-4 w-4 shrink-0 items-center justify-center overflow-hidden rounded-full">
-          <CircleFlag countryCode="us" height="16" />
-        </span>
-
         <span
           className={[
-            "text-[10px] font-semibold leading-none transition-colors duration-200",
-            selected === "en" ? "text-[#243c88]" : "text-white",
+            "uppercase leading-none tracking-[0.14em] transition-all duration-200",
+            textSize,
+            selected === "en"
+              ? "font-semibold text-white"
+              : "font-medium text-white/65 hover:text-white/90",
           ].join(" ")}
         >
           EN
         </span>
+
+        <span
+          className={[
+            "mt-1.5 h-[2px] rounded-full bg-white transition-all duration-300 ease-out",
+            underlineWidth,
+            selected === "en"
+              ? "scale-100 opacity-100"
+              : "scale-50 opacity-30 hover:scale-90 hover:opacity-70",
+          ].join(" ")}
+        />
       </button>
     </div>
   );
