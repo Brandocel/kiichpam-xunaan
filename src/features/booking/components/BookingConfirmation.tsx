@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { formatHumanDate, formatMoney } from "../utils/booking-calculations";
+import { formatDateTime, formatHumanDate, formatMoney } from "../utils/booking-calculations";
 import type {
   PaymentIntentData,
   ReservationRecord,
@@ -23,9 +23,10 @@ function getText(locale: "es" | "en") {
         detailTitle: "Detalles de la reserva:",
         customerInfo: "Información del cliente",
         subtotal: "Subtotal",
-        total: "Precio total",
-        promo: "Promoción",
+        campaignDiscount: "Descuento campaña",
+        promo: "Descuento cupón",
         inapam: "Descuento INAPAM",
+        total: "Precio total",
         taxes: "Todos los impuestos incluidos",
         pendingOxxo:
           "Tu reservación quedará confirmada cuando el pago en OXXO se vea reflejado.",
@@ -52,9 +53,10 @@ function getText(locale: "es" | "en") {
         detailTitle: "Reservation details:",
         customerInfo: "Customer information",
         subtotal: "Subtotal",
-        total: "Total price",
-        promo: "Promotion",
+        campaignDiscount: "Campaign discount",
+        promo: "Coupon discount",
         inapam: "INAPAM Discount",
+        total: "Total price",
         taxes: "All taxes included",
         pendingOxxo:
           "Your reservation will be confirmed once the OXXO payment is reflected.",
@@ -163,7 +165,7 @@ export default function BookingConfirmation({
                     {t.expiresAt}
                   </p>
                   <p className="mt-2 break-words text-[15px] font-bold text-[#005F74] sm:text-[16px] md:text-[18px]">
-                    {new Date(paymentIntent.expiresAt).toLocaleString()}
+                    {formatDateTime(paymentIntent.expiresAt, locale)}
                   </p>
                 </div>
               ) : null}
@@ -261,6 +263,9 @@ export default function BookingConfirmation({
               <strong>Cupón:</strong> {reservation.couponCode || "-"}
             </li>
             <li>
+              <strong>Campaña:</strong> {reservation.campaignCode || "-"}
+            </li>
+            <li>
               <strong>Comentarios:</strong> {reservation.comments || "-"}
             </li>
           </ul>
@@ -296,24 +301,41 @@ export default function BookingConfirmation({
             </div>
 
             <div className="flex items-center justify-between text-[#6A6A6A]">
+              <span>{t.campaignDiscount}</span>
+              <span>
+                {reservation.campaignDiscountMXN
+                  ? `-${formatMoney(
+                      reservation.campaignDiscountMXN,
+                      reservation.currency,
+                      locale
+                    )}`
+                  : formatMoney(0, reservation.currency, locale)}
+              </span>
+            </div>
+
+            <div className="flex items-center justify-between text-[#6A6A6A]">
               <span>{t.promo}</span>
               <span>
-                {formatMoney(
-                  reservation.couponDiscountMXN ?? 0,
-                  reservation.currency,
-                  locale
-                )}
+                {reservation.couponDiscountMXN
+                  ? `-${formatMoney(
+                      reservation.couponDiscountMXN,
+                      reservation.currency,
+                      locale
+                    )}`
+                  : formatMoney(0, reservation.currency, locale)}
               </span>
             </div>
 
             <div className="flex items-center justify-between text-[#6A6A6A]">
               <span>{t.inapam}</span>
               <span>
-                {formatMoney(
-                  reservation.inapamDiscountMXN ?? 0,
-                  reservation.currency,
-                  locale
-                )}
+                {reservation.inapamDiscountMXN
+                  ? `-${formatMoney(
+                      reservation.inapamDiscountMXN,
+                      reservation.currency,
+                      locale
+                    )}`
+                  : formatMoney(0, reservation.currency, locale)}
               </span>
             </div>
 

@@ -1,28 +1,39 @@
+import type { BookingLocale } from "../types/booking.types";
+
 export function canQuoteBooking(params: {
   packageCode: string;
   visitDate: string;
   adults: number;
+  children: number;
+  infants: number;
 }) {
-  return Boolean(params.packageCode && params.visitDate && params.adults > 0);
+  const totalVisitors = params.adults + params.children + params.infants;
+
+  return Boolean(
+    params.packageCode.trim() &&
+      params.visitDate.trim() &&
+      totalVisitors > 0
+  );
 }
 
-export function needsBookingQuote(params: {
-  couponCode?: string;
-  inapamVisitors: number;
+export function shouldFetchBookingQuote(params: {
+  packageCode: string;
+  visitDate: string;
+  adults: number;
+  children: number;
+  infants: number;
 }) {
-  return Boolean(params.couponCode?.trim()) || params.inapamVisitors > 0;
+  return canQuoteBooking(params);
 }
 
 function parseLocalDateInput(date: string) {
   if (!date) return null;
 
-  // Caso input type="date" => YYYY-MM-DD
   if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
     const [year, month, day] = date.split("-").map(Number);
     return new Date(year, month - 1, day, 12, 0, 0, 0);
   }
 
-  // Caso ISO completo o cualquier otro string de fecha
   const parsed = new Date(date);
   if (Number.isNaN(parsed.getTime())) return null;
 
@@ -32,7 +43,7 @@ function parseLocalDateInput(date: string) {
 export function formatMoney(
   amount = 0,
   currency = "MXN",
-  locale: "es" | "en" = "es"
+  locale: BookingLocale = "es"
 ) {
   return new Intl.NumberFormat(locale === "es" ? "es-MX" : "en-US", {
     style: "currency",
@@ -44,11 +55,10 @@ export function formatMoney(
 export function toApiVisitDate(date: string) {
   const parsed = parseLocalDateInput(date);
   if (!parsed) return "";
-
   return parsed.toISOString();
 }
 
-export function formatHumanDate(date: string, locale: "es" | "en" = "es") {
+export function formatHumanDate(date: string, locale: BookingLocale = "es") {
   const parsed = parseLocalDateInput(date);
   if (!parsed) return "";
 
@@ -57,4 +67,57 @@ export function formatHumanDate(date: string, locale: "es" | "en" = "es") {
     month: "long",
     year: "numeric",
   }).format(parsed);
+}
+
+export function formatDateTime(date: string, locale: BookingLocale = "es") {
+  const parsed = parseLocalDateInput(date) ?? new Date(date);
+  if (Number.isNaN(parsed.getTime())) return "";
+
+  return new Intl.DateTimeFormat(locale === "es" ? "es-MX" : "en-US", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(parsed);
+}
+
+export function normalizeCouponCode(value: string) {
+  return value.trim().toUpperCase();
+}
+
+export function normalizeExtras(
+  extras: Array<{ code: string; qty: number }> = []
+) {
+  return [...extras]
+    .filter((item) => item.code?.trim() && item.qty > 0)
+    .map((item) => ({
+      code: item.code.trim().toUpperCase(),
+      qty: item.qty,
+    }))
+    .sort((a, b) => a.code.localeCompare(b.code));
+}
+
+export function buildBookingSignature(input: {
+  packageCode: string;
+  visitDate: string;
+  adults: number;
+  children: number;
+  infants: number;
+  inapamVisitors: number;
+  couponCode: string;
+  lang: BookingLocale;
+  extras?: Array<{ code: string; qty: number }>;
+}) {
+  return JSON.stringify({
+    packageCode: input.packageCode.trim().toUpperCase(),
+    visitDate: input.visitDate.trim(),
+    adults: input.adults,
+    children: input.children,
+    infants: input.infants,
+    inapamVisitors: input.inapamVisitors,
+    couponCode: normalizeCouponCode(input.couponCode),
+    lang: input.lang,
+    extras: normalizeExtras(input.extras),
+  });
 }

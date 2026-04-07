@@ -25,10 +25,10 @@ function getText(locale: "es" | "en") {
         chooseDate: "Elige tu fecha de visita",
         adults: "Adulto",
         children: "Niños",
-        infants: "Infantes entran gratis a partir de 0 a 4 años",
-        infantsLabel: "Infantes",
+        infants: "Infantes",
+        infantsNote: "Infantes entran gratis a partir de 0 a 4 años",
         inapamLabel: "Visitantes INAPAM",
-        inapamNote: "El descuento INAPAM aplica a visitantes adultos.",
+        inapamNote: "El descuento INAPAM aplica a visitantes adultos cobrables.",
         schedule: "Horario:",
         scheduleValue: "De 9:00 am a 5:00 pm",
         scheduleZone: "(horario Zona Centro)",
@@ -39,10 +39,10 @@ function getText(locale: "es" | "en") {
         chooseDate: "Choose your visit date",
         adults: "Adults",
         children: "Children",
-        infants: "Infants enter free from 0 to 4 years old",
-        infantsLabel: "Infants",
+        infants: "Infants",
+        infantsNote: "Infants enter free from 0 to 4 years old",
         inapamLabel: "INAPAM Visitors",
-        inapamNote: "INAPAM discount applies to adult visitors.",
+        inapamNote: "INAPAM discount applies to chargeable adult visitors.",
         schedule: "Schedule:",
         scheduleValue: "From 9:00 am to 5:00 pm",
         scheduleZone: "(Central Time)",
@@ -89,7 +89,7 @@ export default function BookingForm({
 
               {packages.map((item) => (
                 <option key={item.id} value={item.code}>
-                  {item.translation.name}
+                  {item.translation?.name || item.code}
                 </option>
               ))}
             </select>
@@ -122,7 +122,7 @@ export default function BookingForm({
         {selectedPackage && (
           <div>
             <h3 className={`mb-8 ${titleClass}`}>
-              {selectedPackage.translation.name}
+              {selectedPackage.translation?.name || selectedPackage.code}
             </h3>
 
             <div className="space-y-8">
@@ -142,13 +142,13 @@ export default function BookingForm({
 
               <div>
                 <CounterRow
-                  label={t.infantsLabel}
+                  label={t.infants}
                   value={infants}
                   onIncrement={() => onIncrement("infants")}
                   onDecrement={() => onDecrement("infants")}
                 />
                 <p className="mt-2 font-[var(--font-be-vietnam-pro)] text-[14px] font-normal leading-[1.3] text-[#005F74]">
-                  {t.infants}
+                  {t.infantsNote}
                 </p>
               </div>
 

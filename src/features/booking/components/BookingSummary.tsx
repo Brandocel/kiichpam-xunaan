@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { CalendarDays, UserRound } from "lucide-react";
+import { CalendarDays, Tag, UserRound } from "lucide-react";
 import {
   SiVisa,
   SiMastercard,
@@ -19,7 +19,6 @@ import type {
 import {
   formatHumanDate,
   formatMoney,
-  needsBookingQuote,
 } from "../utils/booking-calculations";
 import { buildMediaUrl } from "@/shared/lib/utils";
 
@@ -70,56 +69,56 @@ type PaymentLogoItem =
       boxClassName?: string;
     };
 
-    const paymentLogos: PaymentLogoItem[] = [
-      {
-        key: "visa",
-        type: "icon",
-        label: "Visa",
-        Icon: SiVisa,
-        iconClassName: "text-[#1A1F71]",
-        boxClassName: "w-[50px] md:w-[58px]",
-      },
-      {
-        key: "mastercard",
-        type: "icon",
-        label: "Mastercard",
-        Icon: SiMastercard,
-        iconClassName: "text-[#EB001B]",
-        boxClassName: "w-[50px] md:w-[58px]",
-      },
-      {
-        key: "discover",
-        type: "icon",
-        label: "Discover",
-        Icon: SiDiscover,
-        iconClassName: "text-[#F58220]",
-        boxClassName: "w-[62px] md:w-[74px]",
-      },
-      {
-        key: "american-express",
-        type: "icon",
-        label: "American Express",
-        Icon: SiAmericanexpress,
-        iconClassName: "text-[#2E77BC]",
-        boxClassName: "w-[50px] md:w-[58px]",
-      },
-      {
-        key: "paypal",
-        type: "icon",
-        label: "PayPal",
-        Icon: SiPaypal,
-        iconClassName: "text-[#003087]",
-        boxClassName: "w-[54px] md:w-[66px]",
-      },
-      {
-        key: "oxxo",
-        type: "image",
-        label: "OXXO",
-        src: "/logo/oxxo.png",
-        imageClassName: "object-contain",
-        boxClassName: "w-[50px] md:w-[58px]",
-      },
-    ];
+const paymentLogos: PaymentLogoItem[] = [
+  {
+    key: "visa",
+    type: "icon",
+    label: "Visa",
+    Icon: SiVisa,
+    iconClassName: "text-[#1A1F71]",
+    boxClassName: "w-[50px] md:w-[58px]",
+  },
+  {
+    key: "mastercard",
+    type: "icon",
+    label: "Mastercard",
+    Icon: SiMastercard,
+    iconClassName: "text-[#EB001B]",
+    boxClassName: "w-[50px] md:w-[58px]",
+  },
+  {
+    key: "discover",
+    type: "icon",
+    label: "Discover",
+    Icon: SiDiscover,
+    iconClassName: "text-[#F58220]",
+    boxClassName: "w-[62px] md:w-[74px]",
+  },
+  {
+    key: "american-express",
+    type: "icon",
+    label: "American Express",
+    Icon: SiAmericanexpress,
+    iconClassName: "text-[#2E77BC]",
+    boxClassName: "w-[50px] md:w-[58px]",
+  },
+  {
+    key: "paypal",
+    type: "icon",
+    label: "PayPal",
+    Icon: SiPaypal,
+    iconClassName: "text-[#003087]",
+    boxClassName: "w-[54px] md:w-[66px]",
+  },
+  {
+    key: "oxxo",
+    type: "image",
+    label: "OXXO",
+    src: "/logo/oxxo.png",
+    imageClassName: "object-contain",
+    boxClassName: "w-[50px] md:w-[58px]",
+  },
+];
 
 function getText(locale: "es" | "en") {
   return locale === "es"
@@ -127,13 +126,13 @@ function getText(locale: "es" | "en") {
         title: "Resumen de tu compra",
         promoPlaceholder: "Ingresa cupón de promoción",
         subtotal: "Subtotal",
-        promo: "Promoción",
+        campaignDiscount: "Descuento campaña",
+        promo: "Descuento cupón",
         inapam: "Descuento INAPAM",
         total: "Precio total",
         taxes: "Todos los impuestos incluidos",
         quote: "COTIZAR",
         continue: "CONTINUAR",
-        pay: "PAGAR",
         preparePayment: "PREPARAR PAGO",
         confirmPayment: "CONFIRMAR PAGO",
         generateOxxo: "GENERAR REFERENCIA",
@@ -148,19 +147,23 @@ function getText(locale: "es" | "en") {
         infants: "Infantes",
         free: "Gratis",
         inapamVisitors: "INAPAM",
+        payableAdults: "Adultos cobrables",
+        payableChildren: "Niños cobrables",
+        payableInfants: "Infantes cobrables",
+        campaignsApplied: "Campañas aplicadas",
         defaultPackageName: "Nombre del paquete",
       }
     : {
         title: "Purchase summary",
         promoPlaceholder: "Enter promo coupon",
         subtotal: "Subtotal",
-        promo: "Promotion",
-        inapam: "INAPAM Discount",
+        campaignDiscount: "Campaign discount",
+        promo: "Coupon discount",
+        inapam: "INAPAM discount",
         total: "Total price",
         taxes: "All taxes included",
         quote: "QUOTE",
         continue: "CONTINUE",
-        pay: "PAY",
         preparePayment: "PREPARE PAYMENT",
         confirmPayment: "CONFIRM PAYMENT",
         generateOxxo: "GENERATE REFERENCE",
@@ -175,6 +178,10 @@ function getText(locale: "es" | "en") {
         infants: "Infants",
         free: "Free",
         inapamVisitors: "INAPAM",
+        payableAdults: "Chargeable adults",
+        payableChildren: "Chargeable children",
+        payableInfants: "Chargeable infants",
+        campaignsApplied: "Applied campaigns",
         defaultPackageName: "Package name",
       };
 }
@@ -270,38 +277,37 @@ export default function BookingSummary({
   const t = getText(locale);
   const selectedPackage = packages.find((item) => item.code === packageCode);
 
-  const imageSrc = selectedPackage?.image
-    ? buildMediaUrl(selectedPackage.image)
-    : packageCode
-      ? fallbackImageMap[packageCode] || "/packages/kx-basic.webp"
-      : "/packages/kx-basic.webp";
+  const quoteCoverUrl = quote?.package?.coverMedia?.url;
+  const imageSrc = quoteCoverUrl
+    ? buildMediaUrl({ url: quoteCoverUrl } as any)
+    : selectedPackage?.image
+      ? buildMediaUrl(selectedPackage.image)
+      : packageCode
+        ? fallbackImageMap[packageCode] || "/packages/kx-basic.webp"
+        : "/packages/kx-basic.webp";
 
   const name =
     quote?.snapshot?.name ||
-    selectedPackage?.translation.name ||
+    selectedPackage?.translation?.name ||
     t.defaultPackageName;
 
   const currency =
     quote?.package?.currency || selectedPackage?.currency || "MXN";
 
-  const adultUnitPrice =
-    quote?.pricing?.adultPriceMXN ?? selectedPackage?.adultPriceMXN ?? 0;
-  const childUnitPrice =
-    quote?.pricing?.childPriceMXN ?? selectedPackage?.childPriceMXN ?? 0;
-
-  const infantUnitPrice = 0;
-
   const adultLineTotal =
-    quote?.pricing?.adultsTotalMXN ?? adultUnitPrice * adults;
+    quote?.pricing?.campaignAdultTotalMXN ??
+    (selectedPackage?.adultPriceMXN ?? 0) * adults;
+
   const childLineTotal =
-    quote?.pricing?.childrenTotalMXN ?? childUnitPrice * children;
+    quote?.pricing?.campaignChildTotalMXN ??
+    (selectedPackage?.childPriceMXN ?? 0) * children;
+
   const infantLineTotal =
-    quote?.pricing?.infantsTotalMXN ?? infantUnitPrice * infants;
+    quote?.pricing?.campaignInfantTotalMXN ??
+    (selectedPackage?.infantPriceMXN ?? 0) * infants;
 
-  const subtotalMXN =
-    quote?.pricing?.subtotalMXN ??
-    adultLineTotal + childLineTotal + infantLineTotal;
-
+  const subtotalMXN = quote?.pricing?.subtotalMXN ?? adultLineTotal + childLineTotal + infantLineTotal;
+  const campaignDiscountMXN = quote?.pricing?.campaignDiscountMXN ?? 0;
   const couponDiscountMXN = quote?.pricing?.couponDiscountMXN ?? 0;
   const inapamDiscountMXN = quote?.pricing?.inapamDiscountMXN ?? 0;
   const totalMXN = quote?.pricing?.totalMXN ?? subtotalMXN;
@@ -309,21 +315,14 @@ export default function BookingSummary({
   const isBusy =
     loadingQuote || loadingReservation || loadingContact || loadingPayment;
 
-  const shouldQuote = needsBookingQuote({
-    couponCode,
-    inapamVisitors,
-  });
-
   const mainButtonLabel = isBusy
     ? currentStep === 2
       ? t.saving
       : t.loading
     : currentStep === 1
-      ? shouldQuote
-        ? quote
-          ? t.continue
-          : t.quote
-        : t.continue
+      ? quote
+        ? t.continue
+        : t.quote
       : currentStep === 2
         ? t.continue
         : currentStep === 3
@@ -370,9 +369,39 @@ export default function BookingSummary({
         {infants > 0 ? (
           <PersonPriceRow
             label={getPeopleLabel(infants, t.infant, t.infants)}
-            isFree
+            value={
+              infantLineTotal > 0
+                ? formatMoney(infantLineTotal, currency, locale)
+                : undefined
+            }
+            isFree={infantLineTotal <= 0}
             freeLabel={t.free}
           />
+        ) : null}
+
+        {quote?.passengers ? (
+          <>
+            {quote.passengers.payableAdults !== adults ? (
+              <PersonPriceRow
+                label={t.payableAdults}
+                value={`${quote.passengers.payableAdults}`}
+              />
+            ) : null}
+
+            {quote.passengers.payableChildren !== children ? (
+              <PersonPriceRow
+                label={t.payableChildren}
+                value={`${quote.passengers.payableChildren}`}
+              />
+            ) : null}
+
+            {quote.passengers.payableInfants !== infants ? (
+              <PersonPriceRow
+                label={t.payableInfants}
+                value={`${quote.passengers.payableInfants}`}
+              />
+            ) : null}
+          </>
         ) : null}
 
         {inapamVisitors > 0 ? (
@@ -394,6 +423,28 @@ export default function BookingSummary({
             </span>
           </div>
         ) : null}
+
+        {quote?.campaigns?.appliedCampaignCodes?.length ? (
+          <div className="rounded-[10px] bg-[rgba(90,57,168,0.08)] px-3 py-3">
+            <div className="mb-2 flex items-center gap-2">
+              <Tag size={16} className="text-[#5A39A8]" />
+              <p className="text-[13px] font-bold text-[#5A39A8]">
+                {t.campaignsApplied}
+              </p>
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              {quote.campaigns.appliedCampaignCodes.map((code) => (
+                <span
+                  key={code}
+                  className="rounded-full bg-white px-3 py-1 text-[12px] font-semibold text-[#5A39A8]"
+                >
+                  {code}
+                </span>
+              ))}
+            </div>
+          </div>
+        ) : null}
       </div>
 
       <div className="mt-5">
@@ -402,7 +453,7 @@ export default function BookingSummary({
           value={couponCode}
           onChange={(e) => onCouponCodeChange(e.target.value)}
           placeholder={t.promoPlaceholder}
-          className="h-[40px] w-full rounded-[4px] border border-[#D6D6D6] bg-[#E9E9E9] px-3 font-[var(--font-be-vietnam-pro)] text-[13px] outline-none placeholder:text-[rgba(0,88,111,0.32)]"
+          className="h-[40px] w-full rounded-[4px] border border-[#D6D6D6] bg-[#E9E9E9] px-3 font-[var(--font-be-vietnam-pro)] text-[13px] outline-none placeholder:text-[rgba(0,88,111,0.55)]"
         />
       </div>
 
@@ -410,6 +461,15 @@ export default function BookingSummary({
         <div className="flex items-center justify-between font-bold text-[#005F74]">
           <span>{t.subtotal}</span>
           <span>{formatMoney(subtotalMXN, currency, locale)}</span>
+        </div>
+
+        <div className="flex items-center justify-between text-[#6A6A6A]">
+          <span>{t.campaignDiscount}</span>
+          <span>
+            {campaignDiscountMXN > 0
+              ? `-${formatMoney(campaignDiscountMXN, currency, locale)}`
+              : formatMoney(0, currency, locale)}
+          </span>
         </div>
 
         <div className="flex items-center justify-between text-[#6A6A6A]">
@@ -450,19 +510,19 @@ export default function BookingSummary({
         </button>
       ) : null}
 
-<div className="mt-8">
-  <p className="mb-2 font-[var(--font-be-vietnam-pro)] text-[16px] font-black leading-none text-[#C028B9] md:text-[18px]">
-    {t.accepts}
-  </p>
+      <div className="mt-8">
+        <p className="mb-2 font-[var(--font-be-vietnam-pro)] text-[16px] font-black leading-none text-[#C028B9] md:text-[18px]">
+          {t.accepts}
+        </p>
 
-  <div className="overflow-x-auto">
-    <div className="flex min-w-max flex-nowrap items-center gap-2.5 md:gap-3">
-      {paymentLogos.map((item) => (
-        <PaymentLogo key={item.key} item={item} />
-      ))}
-    </div>
-  </div>
-</div>
+        <div className="overflow-x-auto">
+          <div className="flex min-w-max flex-nowrap items-center gap-2.5 md:gap-3">
+            {paymentLogos.map((item) => (
+              <PaymentLogo key={item.key} item={item} />
+            ))}
+          </div>
+        </div>
+      </div>
     </aside>
   );
 }

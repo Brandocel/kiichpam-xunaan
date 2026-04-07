@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { loadStripe } from "@stripe/stripe-js";
 import {
   createOxxoReference,
   createPaymentIntent,
@@ -11,8 +10,9 @@ import {
   updateReservationContact,
 } from "../services/booking.service";
 import type {
-  BookingLocale,
+  BookingDraftStorage,
   BookingExtraInput,
+  BookingLocale,
   PaymentIntentData,
   PaymentMethodType,
   ReservationContactPayload,
@@ -22,14 +22,14 @@ import type {
   ReservationRecord,
 } from "../types/booking.types";
 import {
+  buildBookingSignature,
   canQuoteBooking,
-  needsBookingQuote,
+  normalizeExtras,
+  normalizeCouponCode,
+  shouldFetchBookingQuote,
   toApiVisitDate,
 } from "../utils/booking-calculations";
-
-const stripePromise = loadStripe(
-  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || ""
-);
+import { validateBookingContact } from "../utils/booking-validators";
 
 type BookingStep = 1 | 2 | 3 | 4;
 
@@ -38,39 +38,7 @@ interface UseBookingParams {
   initialPackageCode?: string;
 }
 
-interface BookingDraftStorage {
-  form: {
-    packageCode: string;
-    visitDate: string;
-    adults: number;
-    children: number;
-    infants: number;
-    inapamVisitors: number;
-    couponCode: string;
-    extras: BookingExtraInput[];
-    locale: BookingLocale;
-  };
-  reservation: {
-    folio: string;
-    currentStep: BookingStep;
-    data: ReservationRecord | null;
-    quote: ReservationQuoteData | null;
-    paymentIntent: PaymentIntentData | null;
-  };
-  contact: {
-    firstName: string;
-    lastName: string;
-    email: string;
-    phone: string;
-    country: string;
-    comments: string;
-    acceptedTerms: boolean;
-    acceptedPrivacy: boolean;
-  };
-  updatedAt: string;
-}
-
-const BOOKING_DRAFT_STORAGE_KEY = "kiichpam_xunaan_booking_draft_v2";
+const BOOKING_DRAFT_STORAGE_KEY = "kiichpam_xunaan_booking_draft_v3";
 
 function safeReadDraft(): BookingDraftStorage | null {
   if (typeof window === "undefined") return null;
@@ -93,7 +61,7 @@ function safeWriteDraft(data: BookingDraftStorage) {
       JSON.stringify(data)
     );
   } catch {
-    // ignore
+    //
   }
 }
 
@@ -103,42 +71,8 @@ function clearStoredDraft() {
   try {
     window.localStorage.removeItem(BOOKING_DRAFT_STORAGE_KEY);
   } catch {
-    // ignore
+    //
   }
-}
-
-function normalizeExtras(extras: BookingExtraInput[] = []) {
-  return [...extras]
-    .filter((item) => item.code?.trim() && item.qty > 0)
-    .sort((a, b) => a.code.localeCompare(b.code))
-    .map((item) => ({
-      code: item.code.trim(),
-      qty: item.qty,
-    }));
-}
-
-function buildReservationSignature(input: {
-  packageCode: string;
-  visitDate: string;
-  adults: number;
-  children: number;
-  infants: number;
-  inapamVisitors: number;
-  couponCode: string;
-  locale: BookingLocale;
-  extras?: BookingExtraInput[];
-}) {
-  return JSON.stringify({
-    packageCode: input.packageCode.trim(),
-    visitDate: input.visitDate.trim(),
-    adults: input.adults,
-    children: input.children,
-    infants: input.infants,
-    inapamVisitors: input.inapamVisitors,
-    couponCode: input.couponCode.trim().toUpperCase(),
-    locale: input.locale,
-    extras: normalizeExtras(input.extras),
-  });
 }
 
 export function useBooking({
@@ -148,7 +82,23 @@ export function useBooking({
   const hydratedRef = useRef(false);
   const restoringRef = useRef(false);
 
-  const [currentStep, setCurrentStep] = useState<BookingStep>(1);
+  const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
+  
+  function goToStep(step: 1 | 2 | 3 | 4) {
+    if (step >= currentStep) return;
+  
+    if (step === 1) {
+      setContactError("");
+      setPaymentError("");
+    }
+  
+    if (step === 2) {
+      setPaymentError("");
+    }
+  
+    setCurrentStep(step);
+  }
+  
 
   const [packageCode, setPackageCodeState] = useState(initialPackageCode);
   const [visitDate, setVisitDateState] = useState("");
@@ -157,7 +107,7 @@ export function useBooking({
   const [infants, setInfantsState] = useState(0);
   const [inapamVisitors, setInapamVisitorsState] = useState(0);
   const [couponCode, setCouponCodeState] = useState("");
-  const [extras] = useState<BookingExtraInput[]>([]);
+  const [extras, setExtras] = useState<BookingExtraInput[]>([]);
 
   const [quote, setQuote] = useState<ReservationQuoteData | null>(null);
   const [reservation, setReservation] = useState<ReservationRecord | null>(null);
@@ -189,21 +139,23 @@ export function useBooking({
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [acceptedPrivacy, setAcceptedPrivacy] = useState(false);
 
+  const apiVisitDate = useMemo(() => toApiVisitDate(visitDate), [visitDate]);
+
   const currentSignature = useMemo(() => {
-    return buildReservationSignature({
+    return buildBookingSignature({
       packageCode,
-      visitDate: toApiVisitDate(visitDate || ""),
+      visitDate: apiVisitDate,
       adults,
       children,
       infants,
       inapamVisitors,
       couponCode,
-      locale,
+      lang: locale,
       extras,
     });
   }, [
     packageCode,
-    visitDate,
+    apiVisitDate,
     adults,
     children,
     infants,
@@ -213,21 +165,31 @@ export function useBooking({
     extras,
   ]);
 
+  const [quoteSignature, setQuoteSignature] = useState("");
+  const [reservationSignature, setReservationSignature] = useState("");
+
   const canQuote = useMemo(() => {
     return canQuoteBooking({
       packageCode,
       visitDate,
       adults,
+      children,
+      infants,
     });
-  }, [packageCode, visitDate, adults]);
+  }, [packageCode, visitDate, adults, children, infants]);
 
   const shouldRequestQuote = useMemo(() => {
-    return needsBookingQuote({
-      couponCode,
-      inapamVisitors,
+    return shouldFetchBookingQuote({
+      packageCode,
+      visitDate,
+      adults,
+      children,
+      infants,
     });
-  }, [couponCode, inapamVisitors]);
+  }, [packageCode, visitDate, adults, children, infants]);
 
+
+  
   const canSubmitContact = useMemo(() => {
     return Boolean(
       folio &&
@@ -254,8 +216,10 @@ export function useBooking({
     return Boolean(folio && reservation && currentStep === 3);
   }, [folio, reservation, currentStep]);
 
-  const isProcessingStepOne =
-    loadingQuote || loadingReservation || loadingRecovery;
+  const hasFreshQuote = Boolean(quote && quoteSignature === currentSignature);
+  const hasFreshReservation = Boolean(
+    reservation && reservationSignature === currentSignature && folio
+  );
 
   const persistDraft = useCallback(() => {
     if (!hydratedRef.current || restoringRef.current) return;
@@ -278,6 +242,7 @@ export function useBooking({
         data: reservation,
         quote,
         paymentIntent,
+        quoteSignature,
       },
       contact: {
         firstName,
@@ -308,6 +273,7 @@ export function useBooking({
     reservation,
     quote,
     paymentIntent,
+    quoteSignature,
     firstName,
     lastName,
     email,
@@ -318,11 +284,13 @@ export function useBooking({
     acceptedPrivacy,
   ]);
 
-  const resetReservationStateOnly = useCallback(() => {
+  const invalidateQuoteReservationAndPayment = useCallback(() => {
     setQuote(null);
     setReservation(null);
     setFolio("");
     setPaymentIntent(null);
+    setQuoteSignature("");
+    setReservationSignature("");
     setCurrentStep(1);
     setQuoteError("");
     setReservationError("");
@@ -340,12 +308,16 @@ export function useBooking({
     setInfantsState(0);
     setInapamVisitorsState(0);
     setCouponCodeState("");
+    setExtras([]);
 
     setQuote(null);
     setReservation(null);
     setFolio("");
     setPaymentIntent(null);
     setPaymentMethodState("card");
+
+    setQuoteSignature("");
+    setReservationSignature("");
 
     setQuoteError("");
     setReservationError("");
@@ -366,12 +338,10 @@ export function useBooking({
 
   async function recoverReservationFromDraft(stored: BookingDraftStorage) {
     const storedFolio = stored.reservation?.folio;
-
     if (!storedFolio) return;
 
     try {
       setLoadingRecovery(true);
-      setReservationError("");
 
       const result = await getReservationByFolio(storedFolio);
 
@@ -383,18 +353,22 @@ export function useBooking({
       setFolio(result.data.folio);
       setQuote(stored.reservation?.quote ?? null);
       setPaymentIntent(stored.reservation?.paymentIntent ?? null);
+      setQuoteSignature(stored.reservation?.quoteSignature ?? "");
+      setReservationSignature(stored.reservation?.quoteSignature ?? "");
 
-      const step =
+      const nextStep =
         stored.reservation?.currentStep && stored.reservation.currentStep >= 1
           ? stored.reservation.currentStep
           : 1;
 
-      setCurrentStep(step);
+      setCurrentStep(nextStep);
     } catch {
       setReservation(null);
       setFolio("");
       setQuote(null);
       setPaymentIntent(null);
+      setQuoteSignature("");
+      setReservationSignature("");
       setCurrentStep(1);
     } finally {
       setLoadingRecovery(false);
@@ -420,6 +394,7 @@ export function useBooking({
     setInfantsState(stored.form?.infants ?? 0);
     setInapamVisitorsState(stored.form?.inapamVisitors ?? 0);
     setCouponCodeState(stored.form?.couponCode || "");
+    setExtras(stored.form?.extras ?? []);
 
     setFirstName(stored.contact?.firstName || "");
     setLastName(stored.contact?.lastName || "");
@@ -429,9 +404,6 @@ export function useBooking({
     setComments(stored.contact?.comments || "");
     setAcceptedTerms(stored.contact?.acceptedTerms ?? false);
     setAcceptedPrivacy(stored.contact?.acceptedPrivacy ?? false);
-
-    setPaymentIntent(stored.reservation?.paymentIntent ?? null);
-    setQuote(stored.reservation?.quote ?? null);
 
     hydratedRef.current = true;
     restoringRef.current = false;
@@ -444,184 +416,30 @@ export function useBooking({
     persistDraft();
   }, [persistDraft]);
 
-  function invalidateReservationIfCoreChanged(next?: {
-    packageCode?: string;
-    visitDate?: string;
-    couponCode?: string;
-  }) {
-    const nextPackageCode = next?.packageCode ?? packageCode;
-    const nextVisitDate = next?.visitDate ?? visitDate;
-    const nextCouponCode = next?.couponCode ?? couponCode;
-
-    const nextSignature = buildReservationSignature({
-      packageCode: nextPackageCode,
-      visitDate: toApiVisitDate(nextVisitDate || ""),
-      adults,
-      children,
-      infants,
-      inapamVisitors,
-      couponCode: nextCouponCode,
-      locale,
-      extras,
-    });
-
-    if (folio && nextSignature !== currentSignature) {
-      resetReservationStateOnly();
+  function setPackageCode(value: string) {
+    if (value !== packageCode) {
+      invalidateQuoteReservationAndPayment();
+      setPackageCodeState(value);
     }
   }
 
-  function setPackageCode(value: string) {
-    invalidateReservationIfCoreChanged({ packageCode: value });
-    setPackageCodeState(value);
-    setQuote(null);
-    setQuoteError("");
-  }
-
   function setVisitDate(value: string) {
-    invalidateReservationIfCoreChanged({ visitDate: value });
-    setVisitDateState(value);
-    setQuote(null);
-    setQuoteError("");
+    if (value !== visitDate) {
+      invalidateQuoteReservationAndPayment();
+      setVisitDateState(value);
+    }
   }
 
   function setCouponCode(value: string) {
-    invalidateReservationIfCoreChanged({ couponCode: value });
-    setCouponCodeState(value);
-    setQuote(null);
-    setQuoteError("");
+    if (value !== couponCode) {
+      invalidateQuoteReservationAndPayment();
+      setCouponCodeState(value);
+    }
   }
 
   function setPaymentMethod(method: PaymentMethodType) {
     setPaymentMethodState(method);
     setPaymentError("");
-  }
-
-  async function fetchQuote() {
-    if (!canQuote) return null;
-
-    try {
-      setLoadingQuote(true);
-      setQuoteError("");
-
-      const payload: ReservationQuoteRequest = {
-        packageCode,
-        visitDate: toApiVisitDate(visitDate),
-        adults,
-        children,
-        infants,
-        inapamVisitors,
-        couponCode: couponCode.trim() || undefined,
-        lang: locale,
-        extras,
-      };
-
-      const result = await getReservationQuote(payload);
-
-      if (!result.success || !result.data) {
-        throw new Error(result.message || "No se recibió cotización");
-      }
-
-      setQuote(result.data);
-      return result.data;
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Error al cotizar";
-
-      setQuoteError(message);
-      setQuote(null);
-      return null;
-    } finally {
-      setLoadingQuote(false);
-    }
-  }
-
-  async function tryReuseExistingReservation() {
-    const stored = safeReadDraft();
-    if (!stored?.reservation?.folio) return null;
-
-    const storedSignature = buildReservationSignature({
-      packageCode: stored.form?.packageCode || "",
-      visitDate: toApiVisitDate(stored.form?.visitDate || ""),
-      adults: stored.form?.adults ?? 1,
-      children: stored.form?.children ?? 0,
-      infants: stored.form?.infants ?? 0,
-      inapamVisitors: stored.form?.inapamVisitors ?? 0,
-      couponCode: stored.form?.couponCode || "",
-      locale: stored.form?.locale || locale,
-      extras: stored.form?.extras || [],
-    });
-
-    if (storedSignature !== currentSignature) {
-      return null;
-    }
-
-    try {
-      const result = await getReservationByFolio(stored.reservation.folio);
-
-      if (!result.success || !result.data) {
-        return null;
-      }
-
-      setReservation(result.data);
-      setFolio(result.data.folio);
-      setCurrentStep(
-        stored.reservation.currentStep >= 2
-          ? stored.reservation.currentStep
-          : 2
-      );
-      setQuote(stored.reservation.quote ?? quote);
-      setPaymentIntent(stored.reservation.paymentIntent ?? paymentIntent);
-
-      return result.data;
-    } catch {
-      return null;
-    }
-  }
-
-  async function createDraftReservation() {
-    if (!canQuote) return null;
-
-    const reused = await tryReuseExistingReservation();
-    if (reused) {
-      return reused;
-    }
-
-    try {
-      setLoadingReservation(true);
-      setReservationError("");
-
-      const payload: ReservationCreateRequest = {
-        packageCode,
-        visitDate: toApiVisitDate(visitDate),
-        adults,
-        children,
-        infants,
-        inapamVisitors,
-        couponCode: couponCode.trim() || undefined,
-        lang: locale,
-        extras,
-      };
-
-      const result = await createReservation(payload);
-
-      if (!result.success || !result.data) {
-        throw new Error(result.message || "No se pudo crear la reservación");
-      }
-
-      setReservation(result.data);
-      setFolio(result.data.folio);
-      setCurrentStep(2);
-
-      return result.data;
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Error al crear reservación";
-
-      setReservationError(message);
-      return null;
-    } finally {
-      setLoadingReservation(false);
-    }
   }
 
   function setContactField(
@@ -652,29 +470,135 @@ export function useBooking({
     }
   }
 
-  async function submitContact() {
-    if (!folio) {
-      setContactError("No se encontró el folio de la reservación");
+  async function fetchQuote() {
+    if (!canQuote) return null;
+
+    try {
+      setLoadingQuote(true);
+      setQuoteError("");
+
+      const payload: ReservationQuoteRequest = {
+        packageCode,
+        visitDate: apiVisitDate,
+        adults,
+        children,
+        infants,
+        inapamVisitors,
+        couponCode: normalizeCouponCode(couponCode) || undefined,
+        lang: locale,
+        extras: normalizeExtras(extras),
+      };
+
+      const result = await getReservationQuote(payload);
+
+      if (!result.success || !result.data) {
+        throw new Error(result.message || "No se recibió cotización");
+      }
+
+      setQuote(result.data);
+      setQuoteSignature(currentSignature);
+
+      return result.data;
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Error al cotizar";
+
+      setQuoteError(message);
+      setQuote(null);
+      setQuoteSignature("");
+      return null;
+    } finally {
+      setLoadingQuote(false);
+    }
+  }
+
+  async function createDraftReservation() {
+    if (!canQuote) {
+      setReservationError(
+        locale === "es"
+          ? "Completa paquete, fecha y al menos un visitante."
+          : "Complete package, date and at least one visitor."
+      );
       return null;
     }
 
-    if (!canSubmitContact) {
-      setContactError("Completa todos los campos obligatorios");
+    try {
+      setLoadingReservation(true);
+      setReservationError("");
+
+      const payload: ReservationCreateRequest = {
+        packageCode,
+        visitDate: apiVisitDate,
+        adults,
+        children,
+        infants,
+        inapamVisitors,
+        couponCode: normalizeCouponCode(couponCode) || undefined,
+        lang: locale,
+        extras: normalizeExtras(extras),
+      };
+
+      const result = await createReservation(payload);
+
+      if (!result.success || !result.data) {
+        throw new Error(result.message || "No se pudo crear la reservación");
+      }
+
+      setReservation(result.data);
+      setFolio(result.data.folio);
+      setReservationSignature(currentSignature);
+      setCurrentStep(2);
+
+      return result.data;
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Error al crear reservación";
+
+      setReservationError(message);
+      return null;
+    } finally {
+      setLoadingReservation(false);
+    }
+  }
+
+  async function submitContact() {
+    if (!folio) {
+      setContactError(
+        locale === "es"
+          ? "No se encontró el folio de la reservación"
+          : "Reservation folio was not found"
+      );
+      return null;
+    }
+
+    const payload: ReservationContactPayload = {
+      firstName: firstName.trim(),
+      lastName: lastName.trim(),
+      email: email.trim(),
+      phone: phone.trim(),
+      country: country.trim(),
+      comments: comments.trim() || "",
+    };
+
+    const validation = validateBookingContact(payload, locale);
+
+    if (!acceptedTerms || !acceptedPrivacy) {
+      setContactError(
+        locale === "es"
+          ? "Debes aceptar términos y políticas de privacidad"
+          : "You must accept terms and privacy policy"
+      );
+      return null;
+    }
+
+    if (!validation.valid) {
+      setContactError(validation.firstError);
       return null;
     }
 
     try {
       setLoadingContact(true);
       setContactError("");
-
-      const payload: ReservationContactPayload = {
-        firstName: firstName.trim(),
-        lastName: lastName.trim(),
-        email: email.trim(),
-        phone: phone.trim(),
-        country: country.trim(),
-        comments: comments.trim() || "",
-      };
 
       const result = await updateReservationContact(folio, payload);
 
@@ -699,7 +623,11 @@ export function useBooking({
 
   async function generateCardPaymentIntent() {
     if (!folio) {
-      setPaymentError("No se encontró el folio para generar el pago");
+      setPaymentError(
+        locale === "es"
+          ? "No se encontró el folio para generar el pago"
+          : "Reservation folio was not found"
+      );
       return null;
     }
 
@@ -767,7 +695,11 @@ export function useBooking({
 
   async function generateOxxoPayment() {
     if (!folio) {
-      setPaymentError("No se encontró el folio para generar el pago OXXO");
+      setPaymentError(
+        locale === "es"
+          ? "No se encontró el folio para generar el pago OXXO"
+          : "Reservation folio was not found for OXXO payment"
+      );
       return null;
     }
 
@@ -799,7 +731,7 @@ export function useBooking({
         setCurrentStep(4);
       } else {
         throw new Error(
-          "El backend no devolvió referencia OXXO. Revisa la respuesta del endpoint /payments/oxxo-reference."
+          "El backend no devolvió referencia OXXO. Revisa el endpoint /payments/oxxo-reference."
         );
       }
 
@@ -820,28 +752,18 @@ export function useBooking({
       if (!canQuote) {
         setQuoteError(
           locale === "es"
-            ? "Completa paquete, fecha y al menos un adulto."
-            : "Complete package, date and at least one adult."
+            ? "Completa paquete, fecha y al menos un visitante."
+            : "Complete package, date and at least one visitor."
         );
         return;
       }
 
-      if (shouldRequestQuote) {
-        if (!quote) {
-          await fetchQuote();
-          return;
-        }
-
-        if (!reservation) {
-          await createDraftReservation();
-          return;
-        }
-
-        setCurrentStep(2);
+      if (!hasFreshQuote) {
+        await fetchQuote();
         return;
       }
 
-      if (!reservation) {
+      if (!hasFreshReservation) {
         await createDraftReservation();
         return;
       }
@@ -866,9 +788,7 @@ export function useBooking({
   }
 
   function increment(type: "adults" | "children" | "infants" | "inapam") {
-    setQuote(null);
-    setQuoteError("");
-    resetReservationStateOnly();
+    invalidateQuoteReservationAndPayment();
 
     if (type === "adults") {
       setAdultsState((prev) => prev + 1);
@@ -889,13 +809,11 @@ export function useBooking({
   }
 
   function decrement(type: "adults" | "children" | "infants" | "inapam") {
-    setQuote(null);
-    setQuoteError("");
-    resetReservationStateOnly();
+    invalidateQuoteReservationAndPayment();
 
     if (type === "adults") {
       setAdultsState((prevAdults) => {
-        const nextAdults = Math.max(1, prevAdults - 1);
+        const nextAdults = Math.max(0, prevAdults - 1);
         setInapamVisitorsState((prevInapam) => Math.min(prevInapam, nextAdults));
         return nextAdults;
       });
@@ -938,38 +856,50 @@ export function useBooking({
   }
 
   return {
-    stripePromise,
     currentStep,
+
     packageCode,
     setPackageCode,
+
     visitDate,
     setVisitDate,
+
     adults,
     children,
     infants,
     inapamVisitors,
     couponCode,
     setCouponCode,
+
+    extras,
+    setExtras,
+
     quote,
     reservation,
     folio,
+
     paymentMethod,
     setPaymentMethod,
     paymentIntent,
+
     loadingQuote,
     loadingReservation,
     loadingContact,
     loadingPayment,
     loadingRecovery,
+
     quoteError,
     reservationError,
     contactError,
     paymentError,
+
     canQuote,
     shouldRequestQuote,
     canSubmitContact,
     canGeneratePayment,
-    isProcessingStepOne,
+    hasFreshQuote,
+    hasFreshReservation,
+
     firstName,
     lastName,
     email,
@@ -978,9 +908,11 @@ export function useBooking({
     comments,
     acceptedTerms,
     acceptedPrivacy,
+
     setContactField,
     setAcceptedTerms,
     setAcceptedPrivacy,
+
     fetchQuote,
     createDraftReservation,
     submitContact,
@@ -988,9 +920,11 @@ export function useBooking({
     confirmCardPayment,
     generateOxxoPayment,
     handlePrimaryAction,
+
     increment,
     decrement,
     handleCardPaymentSucceeded,
     resetAllFlow,
+    goToStep
   };
 }

@@ -38,6 +38,7 @@ function getText(locale: "es" | "en") {
         comments: "Comentarios",
         terms: "He leído y aceptado Términos y Condiciones",
         privacy: "He leído y aceptado Políticas de privacidad",
+        saving: "GUARDANDO...",
       }
     : {
         title: "Enter your personal information",
@@ -49,6 +50,7 @@ function getText(locale: "es" | "en") {
         comments: "Comments",
         terms: "I have read and accepted Terms and Conditions",
         privacy: "I have read and accepted Privacy Policy",
+        saving: "SAVING...",
       };
 }
 
@@ -151,7 +153,7 @@ export default function BookingContactForm({
         ) : null}
 
         {loadingContact ? (
-          <p className="text-sm font-semibold text-[#C028B9]">GUARDANDO...</p>
+          <p className="text-sm font-semibold text-[#C028B9]">{t.saving}</p>
         ) : null}
       </div>
     </div>

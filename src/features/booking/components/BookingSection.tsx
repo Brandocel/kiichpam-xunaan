@@ -86,12 +86,17 @@ export default function BookingSection({
                     height={22}
                     className="h-[22px] w-[22px] object-contain md:h-[24px] md:w-[24px]"
                   />
-                  <span>Todos los pagos son seguros y encriptados</span>
+                  <span>
+                    {locale === "es"
+                      ? "Todos los pagos son seguros y encriptados"
+                      : "All payments are secure and encrypted"}
+                  </span>
                 </div>
 
                 <BookingSteps
                   locale={locale}
                   currentStep={booking.currentStep}
+                  onStepClick={(step) => booking.goToStep(step)}
                 />
               </div>
             </div>
@@ -164,7 +169,7 @@ export default function BookingSection({
                 )}
               </div>
 
-              {booking.currentStep !== 4 ? (
+              {booking.currentStep < 4 ? (
                 <div className="min-w-0">
                   <BookingSummary
                     locale={locale}
@@ -186,9 +191,7 @@ export default function BookingSection({
                     paymentMethod={booking.paymentMethod}
                     paymentIntent={booking.paymentIntent}
                     onCouponCodeChange={booking.setCouponCode}
-                    onPrimaryAction={() => {
-                      void handleSummaryAction();
-                    }}
+                    onPrimaryAction={handleSummaryAction}
                   />
                 </div>
               ) : null}

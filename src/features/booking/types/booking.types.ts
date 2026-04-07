@@ -29,22 +29,33 @@ export interface ReservationQuotePackageInfo {
   id: string;
   code: string;
   currency: string;
-  coverMedia: string | null;
+  coverMedia?: {
+    id: string;
+    url: string;
+    mimeType: string;
+  } | null;
 }
 
 export interface ReservationQuotePricing {
   adultPriceMXN: number;
   childPriceMXN: number;
   infantPriceMXN: number;
-  adultsTotalMXN: number;
-  childrenTotalMXN: number;
-  infantsTotalMXN: number;
+
+  campaignAdultTotalMXN: number;
+  campaignChildTotalMXN: number;
+  campaignInfantTotalMXN: number;
+
   peopleSubtotalMXN: number;
+  peopleSubtotalWithCampaignMXN: number;
+  campaignDiscountMXN: number;
+
   extrasMXN: number;
   subtotalMXN: number;
+
   inapamPercent: number;
   inapamVisitors: number;
   inapamDiscountMXN: number;
+
   couponDiscountMXN: number;
   discountMXN: number;
   totalMXN: number;
@@ -54,6 +65,9 @@ export interface ReservationQuotePassengers {
   adults: number;
   children: number;
   infants: number;
+  payableAdults: number;
+  payableChildren: number;
+  payableInfants: number;
 }
 
 export interface ReservationQuoteCoupon {
@@ -63,10 +77,42 @@ export interface ReservationQuoteCoupon {
   scope: string;
 }
 
+export interface ReservationQuoteCampaignItem {
+  id?: string;
+  code: string;
+  name: string;
+  category: string;
+  ruleType: string;
+  priority: number;
+  audience: string;
+  stackable?: boolean;
+}
+
+export interface ReservationQuoteCampaigns {
+  primaryCampaignCode: string | null;
+  appliedCampaignCodes: string[];
+  appliedCampaigns: ReservationQuoteCampaignItem[];
+}
+
+export interface ReservationQuoteRules {
+  order: string[];
+  campaignResolvedByBackend: boolean;
+  couponValidatedAgainstCampaign: boolean;
+}
+
+export interface ReservationQuoteBreakdown {
+  basePeopleSubtotalMXN: number;
+  peopleSubtotalWithCampaignMXN: number;
+  extrasMXN: number;
+  subtotalBeforeDiscountsMXN: number;
+  subtotalAfterInapamMXN: number;
+  totalMXN: number;
+}
+
 export interface ReservationQuoteSnapshot {
   lang: BookingLocale;
   name: string;
-  description: string;
+  description: string | null;
   includes: string[];
   excludes: string[];
   notes: string[];
@@ -75,15 +121,25 @@ export interface ReservationQuoteSnapshot {
     childMax: number;
     childMin: number;
     infantMax: number;
-  };
+  } | null;
 }
 
 export interface ReservationQuoteData {
   package: ReservationQuotePackageInfo;
   pricing: ReservationQuotePricing;
   passengers: ReservationQuotePassengers;
-  extras: BookingExtraInput[];
+  extras: Array<{
+    code: string;
+    qty: number;
+    priceMXN?: number;
+    currency?: string;
+    name?: string | null;
+    description?: string | null;
+  }>;
+  campaigns: ReservationQuoteCampaigns;
   coupon?: ReservationQuoteCoupon | null;
+  rules: ReservationQuoteRules;
+  breakdown: ReservationQuoteBreakdown;
   snapshot: ReservationQuoteSnapshot;
 }
 
@@ -126,15 +182,15 @@ export interface ReservationPackageRecord {
   childPriceMXN: number;
   infantPriceMXN: number;
   currency: string;
-  maxAdults: number;
-  maxChildren: number;
-  maxInfants: number;
+  maxAdults: number | null;
+  maxChildren: number | null;
+  maxInfants: number | null;
   ageRules: {
     adultMin: number;
     childMax: number;
     childMin: number;
     infantMax: number;
-  };
+  } | null;
   coverMediaId: string | null;
   createdAt: string;
   updatedAt: string;
@@ -145,16 +201,21 @@ export interface ReservationRecord {
   folio: string;
   packageId: string;
   visitDate: string;
+
   adults: number;
   children: number;
   infants: number;
+
   firstName: string | null;
   lastName: string | null;
   email: string | null;
   phone: string | null;
   country: string | null;
   comments: string | null;
+
   campaignCode?: string | null;
+  appliedCampaignCodes?: string[] | null;
+
   utmSource?: string | null;
   utmMedium?: string | null;
   utmCampaign?: string | null;
@@ -162,19 +223,29 @@ export interface ReservationRecord {
   utmTerm?: string | null;
   fbclid?: string | null;
   ttclid?: string | null;
+
   couponCode?: string | null;
   couponDiscountMXN?: number;
+
   inapamVisitors: number;
   inapamDiscountMXN?: number;
+
+  campaignDiscountMXN?: number;
   discountMXN?: number;
+
+  peopleSubtotalMXN?: number;
   subtotalMXN: number;
   extrasMXN: number;
   totalMXN: number;
+
+  pricingBreakdown?: ReservationQuoteBreakdown | null;
+
   currency: string;
   status: string;
+
   snapshotLang?: BookingLocale;
   snapshotName?: string;
-  snapshotDescription?: string;
+  snapshotDescription?: string | null;
   snapshotIncludes?: string[];
   snapshotExcludes?: string[];
   snapshotNotes?: string[];
@@ -183,10 +254,20 @@ export interface ReservationRecord {
     childMax: number;
     childMin: number;
     infantMax: number;
-  };
+  } | null;
+
   createdAt: string;
   updatedAt: string;
-  extras: BookingExtraInput[];
+
+  extras: Array<{
+    code: string;
+    qty: number;
+    priceMXN?: number;
+    currency?: string;
+    name?: string | null;
+    description?: string | null;
+  }>;
+
   package?: ReservationPackageRecord;
 }
 
@@ -292,12 +373,25 @@ export interface PaymentIntentResponse {
 }
 
 export interface BookingDraftStorage {
-  signature: string;
-  currentStep: 1 | 2 | 3 | 4;
-  folio: string;
-  reservation: ReservationRecord | null;
-  quote: ReservationQuoteData | null;
-  paymentIntent: PaymentIntentData | null;
+  form: {
+    packageCode: string;
+    visitDate: string;
+    adults: number;
+    children: number;
+    infants: number;
+    inapamVisitors: number;
+    couponCode: string;
+    extras: BookingExtraInput[];
+    locale: BookingLocale;
+  };
+  reservation: {
+    folio: string;
+    currentStep: 1 | 2 | 3 | 4;
+    data: ReservationRecord | null;
+    quote: ReservationQuoteData | null;
+    paymentIntent: PaymentIntentData | null;
+    quoteSignature: string;
+  };
   contact: {
     firstName: string;
     lastName: string;

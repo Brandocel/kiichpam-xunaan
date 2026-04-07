@@ -32,6 +32,18 @@ async function parseJsonSafely(response: Response) {
   }
 }
 
+function getErrorMessage(result: any, fallback: string) {
+  if (typeof result?.message === "string" && result.message.trim()) {
+    return result.message;
+  }
+
+  if (typeof result?.error === "string" && result.error.trim()) {
+    return result.error;
+  }
+
+  return fallback;
+}
+
 export async function getReservationQuote(
   payload: ReservationQuoteRequest
 ): Promise<ReservationQuoteResponse> {
@@ -49,7 +61,7 @@ export async function getReservationQuote(
   const result = await parseJsonSafely(response);
 
   if (!response.ok) {
-    throw new Error(result?.message || "No se pudo obtener la cotización");
+    throw new Error(getErrorMessage(result, "No se pudo obtener la cotización"));
   }
 
   return result as ReservationQuoteResponse;
@@ -72,7 +84,7 @@ export async function createReservation(
   const result = await parseJsonSafely(response);
 
   if (!response.ok) {
-    throw new Error(result?.message || "No se pudo crear la reservación");
+    throw new Error(getErrorMessage(result, "No se pudo crear la reservación"));
   }
 
   return result as ReservationCreateResponse;
@@ -94,7 +106,9 @@ export async function getReservationByFolio(
   const result = await parseJsonSafely(response);
 
   if (!response.ok) {
-    throw new Error(result?.message || "No se pudo recuperar la reservación");
+    throw new Error(
+      getErrorMessage(result, "No se pudo recuperar la reservación")
+    );
   }
 
   return result as ReservationGetResponse;
@@ -121,7 +135,7 @@ export async function updateReservationContact(
   const result = await parseJsonSafely(response);
 
   if (!response.ok) {
-    throw new Error(result?.message || "No se pudo guardar el contacto");
+    throw new Error(getErrorMessage(result, "No se pudo guardar el contacto"));
   }
 
   return result as ReservationContactResponse;
@@ -144,7 +158,7 @@ export async function createPaymentIntent(
   const result = await parseJsonSafely(response);
 
   if (!response.ok) {
-    throw new Error(result?.message || "No se pudo iniciar el pago");
+    throw new Error(getErrorMessage(result, "No se pudo iniciar el pago"));
   }
 
   return result as PaymentIntentResponse;
@@ -167,7 +181,9 @@ export async function createOxxoReference(
   const result = await parseJsonSafely(response);
 
   if (!response.ok) {
-    throw new Error(result?.message || "No se pudo generar la referencia OXXO");
+    throw new Error(
+      getErrorMessage(result, "No se pudo generar la referencia OXXO")
+    );
   }
 
   return result as PaymentIntentResponse;
