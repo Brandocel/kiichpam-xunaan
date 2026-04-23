@@ -1,7 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
-import { CalendarDays, Tag, UserRound } from "lucide-react";
+import { CalendarDays, ChevronDown, UserRound } from "lucide-react";
 import {
   SiVisa,
   SiMastercard,
@@ -16,10 +17,7 @@ import type {
   PaymentMethodType,
   ReservationQuoteData,
 } from "../types/booking.types";
-import {
-  formatHumanDate,
-  formatMoney,
-} from "../utils/booking-calculations";
+import { formatHumanDate, formatMoney } from "../utils/booking-calculations";
 import { buildMediaUrl } from "@/shared/lib/utils";
 
 interface BookingSummaryProps {
@@ -127,8 +125,8 @@ function getText(locale: "es" | "en") {
         promoPlaceholder: "Ingresa cupón de promoción",
         subtotal: "Subtotal",
         campaignDiscount: "Descuento campaña",
-        promo: "Descuento cupón",
         inapam: "Descuento INAPAM",
+        promo: "Descuento cupón",
         total: "Precio total",
         taxes: "Todos los impuestos incluidos",
         quote: "COTIZAR",
@@ -136,7 +134,7 @@ function getText(locale: "es" | "en") {
         preparePayment: "PREPARAR PAGO",
         confirmPayment: "CONFIRMAR PAGO",
         generateOxxo: "GENERAR REFERENCIA",
-        loading: "CARGANDO...",
+        loading: "COTIZANDO...",
         saving: "GUARDANDO...",
         accepts: "Aceptamos:",
         adult: "Adulto",
@@ -146,20 +144,16 @@ function getText(locale: "es" | "en") {
         infant: "Infante",
         infants: "Infantes",
         free: "Gratis",
-        inapamVisitors: "INAPAM",
-        payableAdults: "Adultos cobrables",
-        payableChildren: "Niños cobrables",
-        payableInfants: "Infantes cobrables",
-        campaignsApplied: "Campañas aplicadas",
         defaultPackageName: "Nombre del paquete",
+        pendingQuote: "Cotiza para ver el desglose completo de precios.",
       }
     : {
         title: "Purchase summary",
         promoPlaceholder: "Enter promo coupon",
         subtotal: "Subtotal",
         campaignDiscount: "Campaign discount",
-        promo: "Coupon discount",
         inapam: "INAPAM discount",
+        promo: "Coupon discount",
         total: "Total price",
         taxes: "All taxes included",
         quote: "QUOTE",
@@ -167,7 +161,7 @@ function getText(locale: "es" | "en") {
         preparePayment: "PREPARE PAYMENT",
         confirmPayment: "CONFIRM PAYMENT",
         generateOxxo: "GENERATE REFERENCE",
-        loading: "LOADING...",
+        loading: "QUOTING...",
         saving: "SAVING...",
         accepts: "We accept:",
         adult: "Adult",
@@ -177,51 +171,18 @@ function getText(locale: "es" | "en") {
         infant: "Infant",
         infants: "Infants",
         free: "Free",
-        inapamVisitors: "INAPAM",
-        payableAdults: "Chargeable adults",
-        payableChildren: "Chargeable children",
-        payableInfants: "Chargeable infants",
-        campaignsApplied: "Applied campaigns",
         defaultPackageName: "Package name",
+        pendingQuote: "Quote to see the complete price breakdown.",
       };
 }
 
-function getPeopleLabel(
-  count: number,
-  singular: string,
-  plural: string
-): string {
+function getPeopleLabel(count: number, singular: string, plural: string) {
   return `${count} ${count === 1 ? singular : plural}`;
 }
 
-function PersonPriceRow({
-  label,
-  value,
-  isFree = false,
-  freeLabel = "Gratis",
-}: {
-  label: string;
-  value?: string;
-  isFree?: boolean;
-  freeLabel?: string;
-}) {
+function SkeletonLine({ className = "" }: { className?: string }) {
   return (
-    <div className="flex items-center justify-between gap-4">
-      <div className="flex items-center gap-3">
-        <UserRound
-          size={18}
-          strokeWidth={2.2}
-          className="shrink-0 text-[#5A39A8]"
-        />
-        <span className="font-[var(--font-be-vietnam-pro)] text-[14px] font-medium text-[#005F74] md:text-[15px]">
-          {label}
-        </span>
-      </div>
-
-      <span className="font-[var(--font-be-vietnam-pro)] text-[14px] font-black text-[#005F74] md:text-[15px]">
-        {isFree ? freeLabel : value}
-      </span>
-    </div>
+    <div className={`animate-pulse rounded-full bg-[#D8D8D8] ${className}`} />
   );
 }
 
@@ -230,7 +191,7 @@ function PaymentLogo({ item }: { item: PaymentLogoItem }) {
 
   return (
     <div
-      className={`shrink-0 ${boxWidth} h-[28px] md:h-[32px] flex items-center justify-center`}
+      className={`flex h-[28px] shrink-0 items-center justify-center md:h-[32px] ${boxWidth}`}
     >
       {item.type === "icon" ? (
         <item.Icon
@@ -252,6 +213,51 @@ function PaymentLogo({ item }: { item: PaymentLogoItem }) {
   );
 }
 
+function PersonRow({
+  label,
+  value,
+  previousValue,
+  showPrice,
+  isFree,
+  freeLabel,
+}: {
+  label: string;
+  value?: string;
+  previousValue?: string;
+  showPrice: boolean;
+  isFree?: boolean;
+  freeLabel: string;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-4">
+      <div className="flex items-center gap-3">
+        <UserRound
+          size={18}
+          strokeWidth={2.2}
+          className="shrink-0 text-[#5A39A8]"
+        />
+        <span className="font-[var(--font-be-vietnam-pro)] text-[14px] font-medium text-[#005F74] md:text-[15px]">
+          {label}
+        </span>
+      </div>
+
+      {showPrice ? (
+        <div className="text-right font-[var(--font-be-vietnam-pro)]">
+          {previousValue ? (
+            <p className="text-[13px] font-medium text-[#005F74] line-through md:text-[15px]">
+              {previousValue}
+            </p>
+          ) : null}
+
+          <p className="text-[14px] font-black text-[#005F74] md:text-[15px]">
+            {isFree ? freeLabel : value}
+          </p>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 export default function BookingSummary({
   locale,
   packages,
@@ -260,7 +266,6 @@ export default function BookingSummary({
   adults,
   children,
   infants,
-  inapamVisitors,
   quote,
   couponCode,
   loadingQuote,
@@ -275,9 +280,13 @@ export default function BookingSummary({
   onPrimaryAction,
 }: BookingSummaryProps) {
   const t = getText(locale);
+  const [subtotalOpen, setSubtotalOpen] = useState(true);
+
   const selectedPackage = packages.find((item) => item.code === packageCode);
+  const hasQuote = Boolean(quote);
 
   const quoteCoverUrl = quote?.package?.coverMedia?.url;
+
   const imageSrc = quoteCoverUrl
     ? buildMediaUrl({ url: quoteCoverUrl } as any)
     : selectedPackage?.image
@@ -291,26 +300,49 @@ export default function BookingSummary({
     selectedPackage?.translation?.name ||
     t.defaultPackageName;
 
-  const currency =
-    quote?.package?.currency || selectedPackage?.currency || "MXN";
+  const currency = quote?.package?.currency || selectedPackage?.currency || "MXN";
 
-  const adultLineTotal =
-    quote?.pricing?.campaignAdultTotalMXN ??
-    (selectedPackage?.adultPriceMXN ?? 0) * adults;
+  const baseAdultTotal = (selectedPackage?.adultPriceMXN ?? 0) * adults;
+  const baseChildTotal = (selectedPackage?.childPriceMXN ?? 0) * children;
+  const baseInfantTotal = (selectedPackage?.infantPriceMXN ?? 0) * infants;
+
+  const adultLineTotalBeforeInapam =
+    quote?.pricing?.campaignAdultTotalMXN ?? baseAdultTotal;
 
   const childLineTotal =
-    quote?.pricing?.campaignChildTotalMXN ??
-    (selectedPackage?.childPriceMXN ?? 0) * children;
+    quote?.pricing?.campaignChildTotalMXN ?? baseChildTotal;
 
   const infantLineTotal =
-    quote?.pricing?.campaignInfantTotalMXN ??
-    (selectedPackage?.infantPriceMXN ?? 0) * infants;
+    quote?.pricing?.campaignInfantTotalMXN ?? baseInfantTotal;
 
-  const subtotalMXN = quote?.pricing?.subtotalMXN ?? adultLineTotal + childLineTotal + infantLineTotal;
+  const subtotalMXN =
+    quote?.pricing?.subtotalMXN ??
+    adultLineTotalBeforeInapam + childLineTotal + infantLineTotal;
+
   const campaignDiscountMXN = quote?.pricing?.campaignDiscountMXN ?? 0;
   const couponDiscountMXN = quote?.pricing?.couponDiscountMXN ?? 0;
   const inapamDiscountMXN = quote?.pricing?.inapamDiscountMXN ?? 0;
   const totalMXN = quote?.pricing?.totalMXN ?? subtotalMXN;
+
+  const adultLineTotalAfterInapam = Math.max(
+    adultLineTotalBeforeInapam - inapamDiscountMXN,
+    0
+  );
+
+  const hasAdultDiscount =
+    hasQuote &&
+    adultLineTotalBeforeInapam > 0 &&
+    adultLineTotalAfterInapam < adultLineTotalBeforeInapam;
+
+  const hasChildDiscount =
+    hasQuote && baseChildTotal > 0 && childLineTotal < baseChildTotal;
+
+  const hasInfantDiscount =
+    hasQuote && baseInfantTotal > 0 && infantLineTotal < baseInfantTotal;
+
+  const shouldShowCampaignDiscount = hasQuote && campaignDiscountMXN > 0;
+  const shouldShowInapamDiscount = hasQuote && inapamDiscountMXN > 0;
+  const shouldShowCouponDiscount = hasQuote && couponDiscountMXN > 0;
 
   const isBusy =
     loadingQuote || loadingReservation || loadingContact || loadingPayment;
@@ -353,61 +385,45 @@ export default function BookingSummary({
 
       <div className="mt-4 space-y-3">
         {adults > 0 ? (
-          <PersonPriceRow
+          <PersonRow
             label={getPeopleLabel(adults, t.adult, t.adults)}
-            value={formatMoney(adultLineTotal, currency, locale)}
-          />
-        ) : null}
-
-        {children > 0 ? (
-          <PersonPriceRow
-            label={getPeopleLabel(children, t.child, t.children)}
-            value={formatMoney(childLineTotal, currency, locale)}
-          />
-        ) : null}
-
-        {infants > 0 ? (
-          <PersonPriceRow
-            label={getPeopleLabel(infants, t.infant, t.infants)}
-            value={
-              infantLineTotal > 0
-                ? formatMoney(infantLineTotal, currency, locale)
+            value={formatMoney(adultLineTotalAfterInapam, currency, locale)}
+            previousValue={
+              hasAdultDiscount
+                ? formatMoney(adultLineTotalBeforeInapam, currency, locale)
                 : undefined
             }
-            isFree={infantLineTotal <= 0}
+            showPrice={hasQuote}
             freeLabel={t.free}
           />
         ) : null}
 
-        {quote?.passengers ? (
-          <>
-            {quote.passengers.payableAdults !== adults ? (
-              <PersonPriceRow
-                label={t.payableAdults}
-                value={`${quote.passengers.payableAdults}`}
-              />
-            ) : null}
-
-            {quote.passengers.payableChildren !== children ? (
-              <PersonPriceRow
-                label={t.payableChildren}
-                value={`${quote.passengers.payableChildren}`}
-              />
-            ) : null}
-
-            {quote.passengers.payableInfants !== infants ? (
-              <PersonPriceRow
-                label={t.payableInfants}
-                value={`${quote.passengers.payableInfants}`}
-              />
-            ) : null}
-          </>
+        {children > 0 ? (
+          <PersonRow
+            label={getPeopleLabel(children, t.child, t.children)}
+            value={formatMoney(childLineTotal, currency, locale)}
+            previousValue={
+              hasChildDiscount
+                ? formatMoney(baseChildTotal, currency, locale)
+                : undefined
+            }
+            showPrice={hasQuote}
+            freeLabel={t.free}
+          />
         ) : null}
 
-        {inapamVisitors > 0 ? (
-          <PersonPriceRow
-            label={`${inapamVisitors} ${t.inapamVisitors}`}
-            value={`-${formatMoney(inapamDiscountMXN, currency, locale)}`}
+        {infants > 0 ? (
+          <PersonRow
+            label={getPeopleLabel(infants, t.infant, t.infants)}
+            value={formatMoney(infantLineTotal, currency, locale)}
+            previousValue={
+              hasInfantDiscount
+                ? formatMoney(baseInfantTotal, currency, locale)
+                : undefined
+            }
+            showPrice={hasQuote}
+            isFree={infantLineTotal <= 0}
+            freeLabel={t.free}
           />
         ) : null}
 
@@ -423,28 +439,6 @@ export default function BookingSummary({
             </span>
           </div>
         ) : null}
-
-        {quote?.campaigns?.appliedCampaignCodes?.length ? (
-          <div className="rounded-[10px] bg-[rgba(90,57,168,0.08)] px-3 py-3">
-            <div className="mb-2 flex items-center gap-2">
-              <Tag size={16} className="text-[#5A39A8]" />
-              <p className="text-[13px] font-bold text-[#5A39A8]">
-                {t.campaignsApplied}
-              </p>
-            </div>
-
-            <div className="flex flex-wrap gap-2">
-              {quote.campaigns.appliedCampaignCodes.map((code) => (
-                <span
-                  key={code}
-                  className="rounded-full bg-white px-3 py-1 text-[12px] font-semibold text-[#5A39A8]"
-                >
-                  {code}
-                </span>
-              ))}
-            </div>
-          </div>
-        ) : null}
       </div>
 
       <div className="mt-5">
@@ -453,50 +447,96 @@ export default function BookingSummary({
           value={couponCode}
           onChange={(e) => onCouponCodeChange(e.target.value)}
           placeholder={t.promoPlaceholder}
-          className="h-[40px] w-full rounded-[4px] border border-[#D6D6D6] bg-[#E9E9E9] px-3 font-[var(--font-be-vietnam-pro)] text-[13px] outline-none placeholder:text-[rgba(0,88,111,0.55)]"
+          className="h-[40px] w-full rounded-[4px] border border-[#D6D6D6] bg-[#E9E9E9] px-3 font-[var(--font-be-vietnam-pro)] text-[13px] text-[#005F74] outline-none placeholder:text-[rgba(0,88,111,0.55)]"
         />
       </div>
 
-      <div className="mt-8 space-y-3 font-[var(--font-be-vietnam-pro)] text-[15px]">
-        <div className="flex items-center justify-between font-bold text-[#005F74]">
-          <span>{t.subtotal}</span>
-          <span>{formatMoney(subtotalMXN, currency, locale)}</span>
-        </div>
+      <div className="mt-8 font-[var(--font-be-vietnam-pro)] text-[15px]">
+        {loadingQuote ? (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <SkeletonLine className="h-[16px] w-[92px]" />
+              <SkeletonLine className="h-[16px] w-[80px]" />
+            </div>
 
-        <div className="flex items-center justify-between text-[#6A6A6A]">
-          <span>{t.campaignDiscount}</span>
-          <span>
-            {campaignDiscountMXN > 0
-              ? `-${formatMoney(campaignDiscountMXN, currency, locale)}`
-              : formatMoney(0, currency, locale)}
-          </span>
-        </div>
+            <div className="flex items-center justify-between">
+              <SkeletonLine className="h-[14px] w-[150px]" />
+              <SkeletonLine className="h-[14px] w-[70px]" />
+            </div>
 
-        <div className="flex items-center justify-between text-[#6A6A6A]">
-          <span>{t.promo}</span>
-          <span>
-            {couponDiscountMXN > 0
-              ? `-${formatMoney(couponDiscountMXN, currency, locale)}`
-              : formatMoney(0, currency, locale)}
-          </span>
-        </div>
-
-        <div className="flex items-center justify-between text-[#6A6A6A]">
-          <span>{t.inapam}</span>
-          <span>
-            {inapamDiscountMXN > 0
-              ? `-${formatMoney(inapamDiscountMXN, currency, locale)}`
-              : formatMoney(0, currency, locale)}
-          </span>
-        </div>
-
-        <div className="pt-2">
-          <div className="flex items-center justify-between text-[22px] font-black text-[#005F74]">
-            <span>{t.total}</span>
-            <span>{formatMoney(totalMXN, currency, locale)}</span>
+            <div className="pt-3">
+              <div className="flex items-center justify-between">
+                <SkeletonLine className="h-[24px] w-[130px]" />
+                <SkeletonLine className="h-[24px] w-[100px]" />
+              </div>
+              <SkeletonLine className="mt-2 h-[10px] w-[140px]" />
+            </div>
           </div>
-          <p className="mt-1 text-[11px] text-[#005F74]">{t.taxes}</p>
-        </div>
+        ) : hasQuote ? (
+          <div className="space-y-3">
+            <button
+              type="button"
+              onClick={() => setSubtotalOpen((prev) => !prev)}
+              className="flex w-full items-center justify-between gap-4 font-bold text-[#005F74]"
+            >
+              <span>{t.subtotal}</span>
+
+              <span className="flex items-center gap-2">
+                <span>{formatMoney(subtotalMXN, currency, locale)}</span>
+                <ChevronDown
+                  size={18}
+                  strokeWidth={2.5}
+                  className={`text-[#56359A] transition-transform duration-200 ${
+                    subtotalOpen ? "rotate-180" : "rotate-0"
+                  }`}
+                />
+              </span>
+            </button>
+
+            {subtotalOpen ? (
+              <div className="space-y-3 pt-1">
+                {shouldShowCampaignDiscount ? (
+                  <div className="flex items-center justify-between text-[#6A6A6A]">
+                    <span>{t.campaignDiscount}</span>
+                    <span>
+                      -{formatMoney(campaignDiscountMXN, currency, locale)}
+                    </span>
+                  </div>
+                ) : null}
+
+                {shouldShowInapamDiscount ? (
+                  <div className="flex items-center justify-between text-[#6A6A6A]">
+                    <span>{t.inapam}</span>
+                    <span>
+                      -{formatMoney(inapamDiscountMXN, currency, locale)}
+                    </span>
+                  </div>
+                ) : null}
+
+                {shouldShowCouponDiscount ? (
+                  <div className="flex items-center justify-between text-[#6A6A6A]">
+                    <span>{t.promo}</span>
+                    <span>
+                      -{formatMoney(couponDiscountMXN, currency, locale)}
+                    </span>
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
+
+            <div className="pt-2">
+              <div className="flex items-center justify-between text-[22px] font-black text-[#005F74]">
+                <span>{t.total}</span>
+                <span>{formatMoney(totalMXN, currency, locale)}</span>
+              </div>
+              <p className="mt-1 text-[11px] text-[#005F74]">{t.taxes}</p>
+            </div>
+          </div>
+        ) : (
+          <p className="text-[13px] font-medium leading-[1.35] text-[#005F74]/80">
+            {t.pendingQuote}
+          </p>
+        )}
       </div>
 
       {currentStep < 4 ? (

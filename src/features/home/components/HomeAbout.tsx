@@ -1,6 +1,5 @@
 import Image from "next/image";
 import Link from "next/link";
-import patternBg from "../../../assets/Linemorada.webp";
 
 interface HomeAboutProps {
   locale?: "es" | "en";
@@ -29,39 +28,39 @@ export default function HomeAbout({ locale = "es" }: HomeAboutProps) {
   return (
     <section className="relative overflow-hidden bg-[#005F74]">
       <div
-        className="absolute inset-0 opacity-55"
+        className="absolute inset-0 opacity-50"
         style={{
           backgroundImage: "url('/cenote/textura.webp')",
           backgroundRepeat: "repeat",
-          backgroundSize: "1900px auto",
+          backgroundSize: "1500px auto",
           backgroundPosition: "center",
         }}
       />
 
       <div
-        className="absolute inset-x-0 bottom-0 h-[110px] bg-repeat-x bg-bottom sm:h-[130px] md:h-[150px] lg:h-[170px] xl:h-[190px]"
+        className="absolute inset-x-0 bottom-0 h-[76px] bg-repeat-x bg-bottom sm:h-[88px] md:h-[96px] lg:h-[104px] xl:h-[112px]"
         style={{
-          backgroundImage: `url(${patternBg.src})`,
           backgroundSize: "auto 100%",
         }}
       />
 
-      <div className="relative mx-auto max-w-[1500px] px-4 pb-[95px] pt-10 sm:px-5 sm:pb-[105px] sm:pt-12 md:px-6 md:pb-[120px] md:pt-14 lg:px-8 lg:pb-[135px] lg:pt-20 xl:px-10 xl:pb-[150px] xl:pt-24">
-        <div className="flex flex-col items-center justify-end gap-4 sm:gap-5 md:gap-6 lg:min-h-[620px] lg:flex-row lg:items-end lg:justify-center lg:gap-2 xl:min-h-[700px] xl:gap-4">
-          <div className="relative z-20 order-2 mx-auto h-[250px] w-[280px] shrink-0 sm:h-[320px] sm:w-[360px] md:h-[390px] md:w-[430px] lg:order-1 lg:mx-0 lg:h-[480px] lg:w-[560px] xl:h-[620px] xl:w-[700px]">
-            <Image
-              src="/cenote/CenoteYunChen.webp"
-              alt="Cenote Yun Chen"
-              fill
-              priority={false}
-              className="object-contain object-center lg:object-left-bottom"
-              sizes="(max-width: 640px) 280px, (max-width: 768px) 360px, (max-width: 1024px) 430px, (max-width: 1280px) 560px, 700px"
-            />
+      <div className="relative mx-auto max-w-[1360px] px-4 pb-[76px] pt-4 sm:px-5 sm:pb-[82px] sm:pt-5 md:px-6 md:pb-[88px] md:pt-6 lg:px-8 lg:pb-[94px] lg:pt-6 xl:px-10 xl:pb-[102px] xl:pt-7">
+        <div className="flex flex-col items-center gap-6 lg:flex-row lg:items-center lg:justify-center lg:gap-10 xl:gap-12">
+          <div className="relative w-full max-w-[320px] sm:max-w-[400px] md:max-w-[480px] lg:max-w-[561px]">
+            <div className="relative aspect-[561/378] overflow-hidden rounded-[14px] shadow-[0_18px_40px_rgba(0,0,0,0.26)]">
+              <Image
+                src="/cenote/CenoteAbout.webp"
+                alt="Cenote Kiichpam Xunáan"
+                fill
+                className="object-cover"
+                sizes="(max-width: 640px) 320px, (max-width: 768px) 400px, (max-width: 1024px) 480px, 561px"
+              />
+            </div>
           </div>
 
-          <div className="relative z-10 order-1 flex w-full max-w-[320px] flex-col items-start self-center sm:max-w-[420px] md:max-w-[520px] lg:order-2 lg:max-w-[500px] lg:self-end lg:pb-[110px] xl:max-w-[560px] xl:pb-[135px]">
+          <div className="w-full max-w-[320px] text-left sm:max-w-[420px] md:max-w-[500px] lg:max-w-[537px]">
             <h2
-              className="leading-none tracking-[0] text-white text-[clamp(2rem,4.8vw,4rem)]"
+              className="text-white leading-[0.92] tracking-[-0.02em] text-[clamp(2.5rem,5vw,5.4rem)]"
               style={{
                 fontFamily: '"Starting Lineup", "Times New Roman", serif',
                 fontWeight: 400,
@@ -70,17 +69,17 @@ export default function HomeAbout({ locale = "es" }: HomeAboutProps) {
               {t.title}
             </h2>
 
-            <p className="mt-2 font-[var(--font-be-vietnam-pro)] text-[10px] font-normal leading-[1.15] text-white sm:text-[11px] md:text-[12px]">
+            <p className="mt-2 font-[var(--font-be-vietnam-pro)] text-[11px] font-medium leading-[1.2] text-white sm:text-[12px] md:text-[13px]">
               {t.eyebrow}
             </p>
 
-            <p className="mt-4 max-w-[540px] text-left font-[var(--font-be-vietnam-pro)] text-[clamp(0.85rem,1.2vw,1.15rem)] font-normal leading-[1.35] text-white sm:mt-5">
+            <p className="mt-4 font-[var(--font-be-vietnam-pro)] text-[clamp(1rem,1.35vw,1.18rem)] font-normal leading-[1.35] text-white">
               {t.description}
             </p>
 
             <Link
               href={`/${locale}/mapa`}
-              className="mt-5 inline-flex min-h-[34px] min-w-[116px] items-center justify-center rounded-[6px] bg-[#C028B9] px-4 py-2 text-center font-[var(--font-be-vietnam-pro)] text-[12px] font-black text-white transition hover:opacity-90 sm:min-h-[36px] sm:min-w-[124px] sm:text-[13px] md:min-h-[38px] md:min-w-[132px] md:text-[14px] lg:min-h-[40px] lg:min-w-[136px] lg:text-[15px]"
+              className="mt-5 inline-flex h-[40px] min-w-[128px] items-center justify-center rounded-[8px] bg-[#C028B9] px-5 font-[var(--font-be-vietnam-pro)] text-[13px] font-extrabold text-white transition hover:opacity-90 sm:h-[42px] sm:min-w-[132px] sm:text-[14px] md:h-[44px] md:min-w-[136px]"
             >
               {t.button}
             </Link>

@@ -43,26 +43,29 @@ export default function Header({
           isOverlay ? "absolute" : "relative",
           isSolid
             ? "bg-[#B336B2]"
-            : "bg-gradient-to-b from-[#C028B9]/90 via-[#A62FA3]/55 to-transparent",
+            : "bg-gradient-to-b from-[#C028B9]/70 via-[#A62FA3]/35 via-[45%] to-transparent",
         ].join(" ")}
       >
-        <div className="mx-auto flex h-[110px] w-full max-w-[1800px] items-center justify-between px-4 sm:px-6 md:px-10 xl:px-16">
+        <div className="mx-auto flex h-[120px] w-full max-w-[1800px] items-start justify-between px-4 pt-2 sm:px-6 sm:pt-3 md:h-[135px] md:px-10 md:pt-3 xl:h-[150px] xl:px-16 xl:pt-4">
+          {/* LOGO */}
           <Link
             href={`/${locale}`}
-            className="relative z-10 flex shrink-0 items-center"
+            className="relative z-10 flex shrink-0 items-start"
             onClick={closeMenu}
           >
-            <Image
-              src="/KXXNlogo.svg"
-              alt="Kiichpam Xunaan"
-              width={311}
-              height={175}
-              priority
-              className="h-auto w-[130px] sm:w-[150px] md:w-[190px] xl:w-[230px]"
-            />
+            <div className="relative mt-0 h-[92px] w-[92px] sm:h-[108px] sm:w-[108px] md:h-[136px] md:w-[136px] xl:h-[154px] xl:w-[146px]">
+              <Image
+                src="/KXXNlogo.svg"
+                alt="Kiichpam Xunaan"
+                fill
+                priority
+                className="object-contain object-top"
+                sizes="(max-width: 640px) 92px, (max-width: 768px) 108px, (max-width: 1280px) 136px, 146px"
+              />
+            </div>
           </Link>
 
-          <div className="flex items-center gap-3 md:gap-6 xl:gap-10">
+          <div className="flex items-start gap-3 pt-4 md:gap-6 md:pt-4 xl:gap-10 xl:pt-5">
             {/* Navegación desktop */}
             <nav className="relative z-10 hidden items-center gap-8 lg:flex xl:gap-12">
               {navigation.map((item) => (
@@ -76,12 +79,12 @@ export default function Header({
               ))}
             </nav>
 
-            {/* Switcher solo desktop */}
+            {/* Switcher desktop */}
             <div className="relative z-10 hidden lg:block">
               <LanguageSwitcher locale={locale} />
             </div>
 
-            {/* Botón menú solo mobile */}
+            {/* Botón menú mobile */}
             <button
               type="button"
               aria-label={mobileMenuOpen ? "Cerrar menú" : "Abrir menú"}
@@ -114,7 +117,6 @@ export default function Header({
         ].join(" ")}
       >
         <div className="flex h-full flex-col">
-          {/* Header panel */}
           <div className="flex items-center justify-between border-b border-white/15 px-5 py-5">
             <span className="text-[28px] font-semibold text-white">Menú</span>
 
@@ -128,7 +130,6 @@ export default function Header({
             </button>
           </div>
 
-          {/* Navegación */}
           <nav className="flex flex-1 flex-col px-5 py-6">
             <div className="flex flex-col gap-3">
               {navigation.map((item, index) => (
@@ -155,7 +156,6 @@ export default function Header({
               ))}
             </div>
 
-            {/* Switcher solo mobile dentro del menú */}
             <div className="mt-auto border-t border-white/15 pt-5">
               <p className="mb-3 text-sm text-white/80">Idioma</p>
               <LanguageSwitcher locale={locale} mobile />

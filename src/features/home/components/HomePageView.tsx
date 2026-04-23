@@ -1,28 +1,34 @@
-import type { HeroSlide, PackageItem } from "../types/home.types";
+import HomeHero from "./HomeHero";
 import HomeAbout from "./HomeAbout";
 import HomeExperiences from "./HomeExperiences";
-import HomeHero from "./HomeHero";
 import HomeNature from "./HomeNature";
-import HomePackages from "./HomePackages";
+import HomePackagesWithBookingModal from "./HomePackagesWithBookingModal";
+import type {
+  HeroSlide,
+  PackageItem,
+} from "../types/home.types";
 
 interface HomePageViewProps {
+  locale: "es" | "en";
   heroSlides: HeroSlide[];
   packageItems: PackageItem[];
-  locale?: "es" | "en";
 }
 
 export default function HomePageView({
+  locale,
   heroSlides,
   packageItems,
-  locale = "es",
 }: HomePageViewProps) {
   return (
-    <main>
-      <HomeHero slides={heroSlides} locale={locale} />
-      <HomePackages packages={packageItems} locale={locale} />
+    <>
+      <HomeHero locale={locale} slides={heroSlides} />
+      <HomePackagesWithBookingModal
+        locale={locale}
+        packages={packageItems}
+      />
       <HomeAbout locale={locale} />
       <HomeExperiences locale={locale} />
       <HomeNature locale={locale} />
-    </main>
+    </>
   );
 }

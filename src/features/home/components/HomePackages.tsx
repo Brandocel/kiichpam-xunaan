@@ -1,3 +1,5 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import patternBg from "../../../assets/Linemorada.webp";
@@ -7,6 +9,7 @@ import { buildMediaUrl } from "../../../shared/lib/utils";
 interface HomePackagesProps {
   packages: PackageItem[];
   locale: "es" | "en";
+  onReserve?: (packageCode: string) => void;
 }
 
 const packageImageMap: Record<string, string> = {
@@ -45,9 +48,24 @@ function getReserveHref(locale: "es" | "en", packageCode: string) {
   return `/${locale}/reservar?packageCode=${encodeURIComponent(packageCode)}`;
 }
 
+function getNotesText(item: PackageItem) {
+  const notes = item.translation?.notes;
+
+  if (Array.isArray(notes)) {
+    return notes.join(" ");
+  }
+
+  if (typeof notes === "string") {
+    return notes;
+  }
+
+  return "";
+}
+
 export default function HomePackages({
   packages,
   locale,
+  onReserve,
 }: HomePackagesProps) {
   if (!packages.length) return null;
 
@@ -66,9 +84,9 @@ export default function HomePackages({
           {getSectionTitle(locale)}
         </h2>
 
-        <div className="grid grid-cols-3 gap-2 sm:gap-3 md:gap-4 lg:gap-6 xl:gap-8">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6 xl:gap-8">
           {packages.map((item) => {
-            const noteText = item.translation.notes?.join(" ") ?? "";
+            const noteText = getNotesText(item);
             const imageSrc = getCardImage(item);
 
             return (
@@ -76,55 +94,68 @@ export default function HomePackages({
                 key={item.id}
                 className="flex min-w-0 flex-col overflow-hidden rounded-[10px] bg-white shadow-[0_10px_22px_rgba(0,0,0,0.22)]"
               >
-                <div className="relative h-[95px] w-full overflow-hidden sm:h-[120px] md:h-[150px] lg:h-[190px] xl:h-[220px]">
+                <div className="relative h-[220px] w-full overflow-hidden sm:h-[240px] md:h-[260px] lg:h-[220px] xl:h-[220px]">
                   <Image
                     src={imageSrc}
-                    alt={item.translation.name}
+                    alt={item.translation?.name || item.code}
                     fill
                     className="object-cover"
-                    sizes="(max-width: 640px) 33vw, (max-width: 1024px) 33vw, 33vw"
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                   />
                 </div>
 
-                <div className="flex flex-1 flex-col px-2 pb-3 pt-2 sm:px-3 sm:pb-4 sm:pt-3 md:px-4 lg:px-5 xl:px-7 xl:pb-6 xl:pt-4">
-                  <h3 className="min-h-[44px] break-words font-[var(--font-be-vietnam-pro)] text-[clamp(0.8rem,1.7vw,3.05rem)] font-black leading-[1.02] text-[#C028B9] sm:min-h-[52px] md:min-h-[64px] lg:min-h-[78px] xl:min-h-[98px]">
-                    {item.translation.name}
+                <div className="flex flex-1 flex-col px-4 pb-5 pt-4 md:px-5 lg:px-6">
+                  <h3 className="font-[var(--font-be-vietnam-pro)] text-[clamp(1.4rem,2vw,2.1rem)] font-black leading-[1.02] text-[#C028B9]">
+                    {item.translation?.name || item.code}
                   </h3>
 
-                  <div className="mt-2 min-h-[150px] sm:min-h-[170px] md:min-h-[190px] lg:min-h-[220px] xl:mt-5 xl:min-h-[250px]">
-                    <ul className="list-disc space-y-1 pl-4 font-[var(--font-be-vietnam-pro)] text-[clamp(0.52rem,1vw,0.95rem)] font-normal leading-[1.2] text-[#111111] sm:pl-5">
-                      {item.translation.includes.map((include, index) => (
-                        <li key={`${item.id}-include-${index}`} className="break-words">
+                  <div className="mt-3 min-h-[190px] md:min-h-[210px] lg:min-h-[220px]">
+                    <ul className="list-disc space-y-1.5 pl-5 font-[var(--font-be-vietnam-pro)] text-[15px] font-normal leading-[1.35] text-[#111111]">
+                      {(item.translation?.includes || []).map((include, index) => (
+                        <li
+                          key={`${item.id}-include-${index}`}
+                          className="break-words"
+                        >
                           {include}
                         </li>
                       ))}
                     </ul>
                   </div>
 
-                  <p className="min-h-[38px] pt-3 font-[var(--font-be-vietnam-pro)] text-[clamp(0.45rem,0.85vw,0.7rem)] font-normal leading-[1.2] text-[#111111] sm:pt-4 md:min-h-[44px] xl:min-h-[52px] xl:pt-8">
+                  <p className="min-h-[48px] pt-4 font-[var(--font-be-vietnam-pro)] text-[13px] font-normal leading-[1.25] text-[#111111]">
                     {noteText}
                   </p>
 
-                  <div className="mt-auto pt-3 xl:pt-6">
-                    <p className="font-[var(--font-be-vietnam-pro)] text-[clamp(0.45rem,0.85vw,0.7rem)] font-normal leading-[1.2] text-[#111111] sm:leading-[1.3] md:leading-[1.4] xl:leading-[24px]">
+                  <div className="mt-auto pt-4">
+                    <p className="font-[var(--font-be-vietnam-pro)] text-[13px] font-normal leading-[1.2] text-[#111111]">
                       {getAdultLabel(item, locale)}
                     </p>
 
-                    <div className="mt-1 flex flex-wrap items-end gap-1 sm:gap-2">
-                      <span className="font-[var(--font-poppins)] text-[clamp(0.95rem,2vw,2.5rem)] font-bold leading-none text-[#C028B9]">
+                    <div className="mt-2 flex flex-wrap items-end gap-2">
+                      <span className="font-[var(--font-poppins)] text-[clamp(1.8rem,2.5vw,2.6rem)] font-bold leading-none text-[#C028B9]">
                         {formatPrice(item.adultPriceMXN)}
                       </span>
-                      <span className="pb-[2px] font-[var(--font-poppins)] text-[clamp(0.6rem,1.1vw,1.25rem)] font-bold leading-none text-[#C028B9] sm:pb-[4px] md:pb-[5px] xl:pb-[6px]">
+                      <span className="pb-[4px] font-[var(--font-poppins)] text-[1.2rem] font-bold leading-none text-[#C028B9]">
                         {item.currency}
                       </span>
                     </div>
 
-                    <Link
-                      href={getReserveHref(locale, item.code)}
-                      className="mt-3 flex h-[30px] w-full items-center justify-center rounded-[6px] bg-[#C028B9] px-1 text-center font-[var(--font-be-vietnam-pro)] text-[clamp(0.45rem,0.9vw,0.875rem)] font-black uppercase leading-none text-white transition hover:opacity-90 sm:h-[34px] md:h-[38px] lg:h-[40px] xl:mt-4 xl:h-[42px] xl:rounded-[8px]"
-                    >
-                      {getReserveText(locale)}
-                    </Link>
+                    {onReserve ? (
+                      <button
+                        type="button"
+                        onClick={() => onReserve(item.code)}
+                        className="mt-4 flex h-[44px] w-full items-center justify-center rounded-[8px] bg-[#C028B9] px-4 text-center font-[var(--font-be-vietnam-pro)] text-[14px] font-black uppercase leading-none text-white transition hover:opacity-90"
+                      >
+                        {getReserveText(locale)}
+                      </button>
+                    ) : (
+                      <Link
+                        href={getReserveHref(locale, item.code)}
+                        className="mt-4 flex h-[44px] w-full items-center justify-center rounded-[8px] bg-[#C028B9] px-4 text-center font-[var(--font-be-vietnam-pro)] text-[14px] font-black uppercase leading-none text-white transition hover:opacity-90"
+                      >
+                        {getReserveText(locale)}
+                      </Link>
+                    )}
                   </div>
                 </div>
               </article>
