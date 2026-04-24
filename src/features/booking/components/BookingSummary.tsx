@@ -218,6 +218,7 @@ function PersonRow({
   value,
   previousValue,
   showPrice,
+  loading,
   isFree,
   freeLabel,
 }: {
@@ -225,6 +226,7 @@ function PersonRow({
   value?: string;
   previousValue?: string;
   showPrice: boolean;
+  loading: boolean;
   isFree?: boolean;
   freeLabel: string;
 }) {
@@ -241,7 +243,12 @@ function PersonRow({
         </span>
       </div>
 
-      {showPrice ? (
+      {loading ? (
+        <div className="flex flex-col items-end gap-2">
+          <SkeletonLine className="h-[12px] w-[74px]" />
+          <SkeletonLine className="h-[14px] w-[88px]" />
+        </div>
+      ) : showPrice ? (
         <div className="text-right font-[var(--font-be-vietnam-pro)]">
           {previousValue ? (
             <p className="text-[13px] font-medium text-[#005F74] line-through md:text-[15px]">
@@ -394,6 +401,7 @@ export default function BookingSummary({
                 : undefined
             }
             showPrice={hasQuote}
+            loading={loadingQuote}
             freeLabel={t.free}
           />
         ) : null}
@@ -408,6 +416,7 @@ export default function BookingSummary({
                 : undefined
             }
             showPrice={hasQuote}
+            loading={loadingQuote}
             freeLabel={t.free}
           />
         ) : null}
@@ -422,6 +431,7 @@ export default function BookingSummary({
                 : undefined
             }
             showPrice={hasQuote}
+            loading={loadingQuote}
             isFree={infantLineTotal <= 0}
             freeLabel={t.free}
           />
