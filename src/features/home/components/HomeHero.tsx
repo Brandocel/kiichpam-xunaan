@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import type { HeroSlide } from "../types/home.types";
 import { buildMediaUrl } from "../../../shared/lib/utils";
@@ -11,13 +12,10 @@ interface HomeHeroProps {
   locale?: "es" | "en";
 }
 
-export default function HomeHero({
-  slides,
-  locale = "es",
-}: HomeHeroProps) {
+export default function HomeHero({ slides, locale = "es" }: HomeHeroProps) {
   const validSlides = useMemo(
     () => slides.filter((slide) => slide?.media?.url),
-    [slides]
+    [slides],
   );
 
   const [activeIndex, setActiveIndex] = useState(0);
@@ -27,7 +25,7 @@ export default function HomeHero({
 
     const interval = window.setInterval(() => {
       setActiveIndex((prev) => (prev + 1) % validSlides.length);
-    }, 5000);
+    }, 6500);
 
     return () => window.clearInterval(interval);
   }, [validSlides.length]);
@@ -40,9 +38,7 @@ export default function HomeHero({
   const imageUrl = buildMediaUrl(activeSlide.media.url);
 
   const goPrev = () => {
-    setActiveIndex((prev) =>
-      prev === 0 ? validSlides.length - 1 : prev - 1
-    );
+    setActiveIndex((prev) => (prev === 0 ? validSlides.length - 1 : prev - 1));
   };
 
   const goNext = () => {
@@ -50,14 +46,18 @@ export default function HomeHero({
   };
 
   return (
-    <section className="relative h-screen w-screen overflow-hidden">
-      <img
+    <section className="relative h-[100svh] min-h-[620px] w-full overflow-hidden bg-[#005F73] md:min-h-[720px]">
+      <Image
         src={imageUrl}
-        alt={activeSlide.altText || "Hero"}
-        className="block h-full w-full object-cover"
+        alt={activeSlide.altText || activeSlide.title || "Kiichpam Xunaan"}
+        fill
+        priority={activeIndex === 0}
+        quality={72}
+        sizes="100vw"
+        className="object-cover"
       />
 
-      <div className="absolute inset-0 bg-black/20" />
+      <div className="absolute inset-0 z-[1] bg-black/25" />
 
       <Header locale={locale} />
 
@@ -66,7 +66,7 @@ export default function HomeHero({
           <button
             type="button"
             onClick={goPrev}
-            aria-label="Slide anterior"
+            aria-label={locale === "es" ? "Slide anterior" : "Previous slide"}
             className="absolute left-3 top-1/2 z-20 -translate-y-1/2 rounded-full p-2 text-white/80 transition hover:text-white md:left-6 xl:left-8"
           >
             <svg
@@ -86,7 +86,7 @@ export default function HomeHero({
           <button
             type="button"
             onClick={goNext}
-            aria-label="Siguiente slide"
+            aria-label={locale === "es" ? "Siguiente slide" : "Next slide"}
             className="absolute right-3 top-1/2 z-20 -translate-y-1/2 rounded-full p-2 text-white/80 transition hover:text-white md:right-6 xl:right-8"
           >
             <svg
@@ -107,25 +107,27 @@ export default function HomeHero({
 
       <div className="absolute inset-0 z-10 flex items-center justify-center px-6 md:px-10">
         <div className="mx-auto flex max-w-[1100px] flex-col items-center text-center">
-          <h1 className="max-w-[950px] text-balance text-[clamp(3rem,8vw,7rem)] font-bold leading-[0.95] tracking-[-0.02em] text-white">
+          <h1 className="max-w-[950px] text-balance text-[clamp(2.8rem,7vw,6.7rem)] font-bold leading-[0.95] tracking-[-0.02em] text-white">
             {activeSlide.title}
           </h1>
 
-          <p className="mt-4 max-w-[900px] text-balance text-[clamp(1rem,2.3vw,2rem)] font-normal leading-[1.2] text-white md:mt-5">
+          <p className="mt-4 max-w-[900px] text-balance text-[clamp(1rem,2.1vw,1.9rem)] font-normal leading-[1.2] text-white md:mt-5">
             {activeSlide.subtitle}
           </p>
         </div>
       </div>
 
-      <HeroPagination
-        total={validSlides.length}
-        active={activeIndex}
-        onChange={setActiveIndex}
-        bottomOffset={34}
-        dotSize={10}
-        gap={14}
-        pillHeight={10}
-      />
+      {validSlides.length > 1 && (
+        <HeroPagination
+          total={validSlides.length}
+          active={activeIndex}
+          onChange={setActiveIndex}
+          bottomOffset={34}
+          dotSize={10}
+          gap={14}
+          pillHeight={10}
+        />
+      )}
     </section>
   );
 }
