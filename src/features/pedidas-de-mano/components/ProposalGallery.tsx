@@ -52,7 +52,7 @@ const galleryItems: GalleryImage[] = [
   },
   {
     id: "anillo",
-    src: "/pedida-mano/galeria-pedidademano/leopardo.png",
+    src: "/pedida-mano/galeria-pedidademano/anillo.png",
     altEs: "Leopardo descansando",
     altEn: "Resting leopard",
     heightClass: "h-[220px] md:h-[250px]",
