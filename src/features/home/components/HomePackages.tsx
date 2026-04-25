@@ -18,12 +18,73 @@ const packageImageMap: Record<string, string> = {
   KX_TOTAL: "/packages/kx-total.webp",
 };
 
+const packageOrder: Record<string, number> = {
+  KX_BASIC: 1,
+  KX_PLUS: 2,
+  KX_TOTAL: 3,
+};
+
+const includeIconMap = [
+  {
+    keywords: ["ceremonia", "welcome ceremony"],
+    icon: "/packages/svg/Ceremonia.svg",
+  },
+  {
+    keywords: ["chaleco", "life jacket", "lifejacket"],
+    icon: "/packages/svg/Chaleco.svg",
+  },
+  {
+    keywords: ["taller", "degust", "chocolate", "tequila", "mezcal", "workshop"],
+    icon: "/packages/svg/Vestidor.svg",
+  },
+  {
+    keywords: [
+      "baño",
+      "bano",
+      "regadera",
+      "cambiador",
+      "instalaciones",
+      "bathroom",
+      "shower",
+      "facilities",
+    ],
+    icon: "/packages/svg/Vestidor.svg",
+  },
+  {
+    keywords: ["yun chen", "yunchen", "cenote yun"],
+    icon: "/packages/svg/Yun Chen.svg",
+  },
+  {
+    keywords: ["x kokay", "xkokay"],
+    icon: "/packages/svg/Xkokay.svg",
+  },
+  {
+    keywords: ["buffet", "comida", "meal"],
+    icon: "/packages/svg/Buffet.svg",
+  },
+  {
+    keywords: ["bicicleta", "bicicletas", "bicycle", "bike", "transportation"],
+    icon: "/packages/svg/Bicicleta.svg",
+  },
+];
+
+const orderedFeatureKeywords = [
+  ["ceremonia", "welcome ceremony"],
+  ["chaleco", "life jacket", "lifejacket"],
+  ["taller", "degust", "chocolate", "tequila", "mezcal", "workshop"],
+  ["instalaciones", "baño", "bano", "regadera", "cambiador", "facilities"],
+  ["yun chen", "yunchen", "cenote yun"],
+  ["x kokay", "xkokay"],
+  ["buffet", "comida", "meal"],
+  ["bicicleta", "bicicletas", "bicycle", "bike", "transportation"],
+];
+
 function formatPrice(price: number) {
   return `$${(price / 100).toFixed(2)}`;
 }
 
 function getSectionTitle(locale: "es" | "en") {
-  return locale === "es" ? "Elije tu paquete" : "Choose your package";
+  return locale === "es" ? "Elige tu paquete" : "Choose your package";
 }
 
 function getReserveText(locale: "es" | "en") {
@@ -62,12 +123,76 @@ function getNotesText(item: PackageItem) {
   return "";
 }
 
+function normalizeText(text: string) {
+  return text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+
+function getIncludeIcon(include: string) {
+  const text = normalizeText(include);
+
+  const match = includeIconMap.find((item) =>
+    item.keywords.some((keyword) => text.includes(normalizeText(keyword))),
+  );
+
+  return match?.icon || "/packages/svg/Ceremonia.svg";
+}
+
+function getFeatureOrder(include: string) {
+  const text = normalizeText(include);
+
+  const index = orderedFeatureKeywords.findIndex((group) =>
+    group.some((keyword) => text.includes(normalizeText(keyword))),
+  );
+
+  return index === -1 ? 99 : index;
+}
+
+function sortIncludes(includes: string[]) {
+  return [...includes].sort((a, b) => getFeatureOrder(a) - getFeatureOrder(b));
+}
+
+function shouldBeBold(packageCode: string, include: string) {
+  const text = normalizeText(include);
+
+  if (packageCode === "KX_PLUS") {
+    return (
+      text.includes("buffet") ||
+      text.includes("comida") ||
+      text.includes("meal")
+    );
+  }
+
+  if (packageCode === "KX_TOTAL") {
+    return (
+      text.includes("yun chen") ||
+      text.includes("yunchen") ||
+      text.includes("cenote yun") ||
+      text.includes("x kokay") ||
+      text.includes("xkokay") ||
+      text.includes("buffet") ||
+      text.includes("comida") ||
+      text.includes("meal") ||
+      text.includes("bicicleta") ||
+      text.includes("bicicletas") ||
+      text.includes("bicycle") ||
+      text.includes("bike") ||
+      text.includes("transportation")
+    );
+  }
+
+  return false;
+}
+
 export default function HomePackages({
   packages,
   locale,
   onReserve,
 }: HomePackagesProps) {
   if (!packages.length) return null;
+
+  const sortedPackages = [...packages].sort((a, b) => {
+    return (packageOrder[a.code] || 99) - (packageOrder[b.code] || 99);
+  });
 
   return (
     <section className="relative overflow-hidden bg-[linear-gradient(180deg,#483289_0%,#005F74_100%)]">
@@ -79,63 +204,88 @@ export default function HomePackages({
         }}
       />
 
-      <div className="relative mx-auto max-w-[1380px] px-3 pb-12 pt-6 sm:px-4 md:px-6 lg:px-8 xl:px-10 xl:pb-24 xl:pt-10">
-        <h2 className="mb-6 text-center font-[var(--font-be-vietnam-pro)] text-[clamp(1.8rem,4vw,4.7rem)] font-black leading-none text-white md:mb-10">
+      <div className="relative mx-auto max-w-[1380px] px-4 pb-12 pt-6 sm:px-5 md:px-6 lg:px-8 xl:px-10 xl:pb-24 xl:pt-10">
+        <h2 className="mb-8 text-center font-[var(--font-be-vietnam-pro)] text-[clamp(2.3rem,5vw,4.8rem)] font-black leading-none text-white md:mb-10">
           {getSectionTitle(locale)}
         </h2>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6 xl:gap-8">
-          {packages.map((item) => {
+        <div className="grid grid-cols-1 items-stretch gap-7 md:grid-cols-2 lg:grid-cols-3 lg:gap-8">
+          {sortedPackages.map((item) => {
             const noteText = getNotesText(item);
             const imageSrc = getCardImage(item);
+            const includes = sortIncludes(item.translation?.includes || []);
 
             return (
               <article
                 key={item.id}
-                className="flex min-w-0 flex-col overflow-hidden rounded-[10px] bg-white shadow-[0_10px_22px_rgba(0,0,0,0.22)]"
+                className="flex min-w-0 flex-col overflow-hidden rounded-[8px] bg-white shadow-[0_14px_28px_rgba(0,0,0,0.25)]"
               >
-                <div className="relative h-[220px] w-full overflow-hidden sm:h-[240px] md:h-[260px] lg:h-[220px] xl:h-[220px]">
+                <div className="relative h-[190px] w-full overflow-hidden sm:h-[205px] lg:h-[190px] xl:h-[200px]">
                   <Image
                     src={imageSrc}
                     alt={item.translation?.name || item.code}
                     fill
                     className="object-cover"
-                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    priority={item.code === "KX_BASIC"}
                   />
                 </div>
 
-                <div className="flex flex-1 flex-col px-4 pb-5 pt-4 md:px-5 lg:px-6">
-                  <h3 className="font-[var(--font-be-vietnam-pro)] text-[clamp(1.4rem,2vw,2.1rem)] font-black leading-[1.02] text-[#C028B9]">
+                <div className="flex min-h-[515px] flex-1 flex-col px-6 pb-5 pt-6 lg:px-6 xl:px-7">
+                  <h3 className="whitespace-nowrap font-[var(--font-be-vietnam-pro)] text-[clamp(1.35rem,2vw,1.85rem)] font-black leading-[1] tracking-[-0.02em] text-[#C028B9]">
                     {item.translation?.name || item.code}
                   </h3>
 
-                  <div className="mt-3 min-h-[190px] md:min-h-[210px] lg:min-h-[220px]">
-                    <ul className="list-disc space-y-1.5 pl-5 font-[var(--font-be-vietnam-pro)] text-[15px] font-normal leading-[1.35] text-[#111111]">
-                      {(item.translation?.includes || []).map((include, index) => (
-                        <li
-                          key={`${item.id}-include-${index}`}
-                          className="break-words"
-                        >
-                          {include}
-                        </li>
-                      ))}
+                  <div className="mt-5 min-h-[205px]">
+                    <ul className="space-y-[8px] font-[var(--font-be-vietnam-pro)] text-[14px] font-normal leading-[19px] text-[#111111] xl:text-[14.5px]">
+                      {includes.map((include, index) => {
+                        const icon = getIncludeIcon(include);
+                        const bold = shouldBeBold(item.code, include);
+
+                        return (
+                          <li
+                            key={`${item.id}-include-${index}`}
+                            className="grid grid-cols-[17px_1fr] items-start gap-[9px]"
+                          >
+                            <span className="relative mt-[2px] block h-[15px] w-[15px] shrink-0">
+                              <Image
+                                src={icon}
+                                alt=""
+                                fill
+                                className="object-contain"
+                                sizes="15px"
+                              />
+                            </span>
+
+                            <span
+                              className={`break-words ${
+                                bold
+                                  ? "font-black text-[#050505]"
+                                  : "font-normal text-[#111111]"
+                              }`}
+                            >
+                              {include}
+                            </span>
+                          </li>
+                        );
+                      })}
                     </ul>
                   </div>
 
-                  <p className="min-h-[48px] pt-4 font-[var(--font-be-vietnam-pro)] text-[13px] font-normal leading-[1.25] text-[#111111]">
-                    {noteText}
-                  </p>
-
-                  <div className="mt-auto pt-4">
-                    <p className="font-[var(--font-be-vietnam-pro)] text-[13px] font-normal leading-[1.2] text-[#111111]">
+                  <div className="mt-auto">
+  <p className="mb-4 font-[var(--font-be-vietnam-pro)] text-[13px] font-normal leading-[17px] text-[#111111]">
+    {noteText}
+  </p>
+                    <p className="font-[var(--font-be-vietnam-pro)] text-[14px] font-normal leading-[19px] text-[#111111]">
                       {getAdultLabel(item, locale)}
                     </p>
 
                     <div className="mt-2 flex flex-wrap items-end gap-2">
-                      <span className="font-[var(--font-poppins)] text-[clamp(1.8rem,2.5vw,2.6rem)] font-bold leading-none text-[#C028B9]">
+                      <span className="font-[var(--font-poppins)] text-[clamp(2.55rem,4vw,3.45rem)] font-bold leading-none text-[#C028B9]">
                         {formatPrice(item.adultPriceMXN)}
                       </span>
-                      <span className="pb-[4px] font-[var(--font-poppins)] text-[1.2rem] font-bold leading-none text-[#C028B9]">
+
+                      <span className="pb-[7px] font-[var(--font-poppins)] text-[14px] font-bold leading-none text-[#C028B9]">
                         {item.currency}
                       </span>
                     </div>
@@ -144,14 +294,14 @@ export default function HomePackages({
                       <button
                         type="button"
                         onClick={() => onReserve(item.code)}
-                        className="mt-4 flex h-[44px] w-full items-center justify-center rounded-[8px] bg-[#C028B9] px-4 text-center font-[var(--font-be-vietnam-pro)] text-[14px] font-black uppercase leading-none text-white transition hover:opacity-90"
+                        className="mt-4 flex h-[44px] w-full items-center justify-center rounded-[7px] bg-[#C028B9] px-4 text-center font-[var(--font-be-vietnam-pro)] text-[14px] font-black uppercase leading-none text-white transition hover:bg-[#a91fa3]"
                       >
                         {getReserveText(locale)}
                       </button>
                     ) : (
                       <Link
                         href={getReserveHref(locale, item.code)}
-                        className="mt-4 flex h-[44px] w-full items-center justify-center rounded-[8px] bg-[#C028B9] px-4 text-center font-[var(--font-be-vietnam-pro)] text-[14px] font-black uppercase leading-none text-white transition hover:opacity-90"
+                        className="mt-4 flex h-[44px] w-full items-center justify-center rounded-[7px] bg-[#C028B9] px-4 text-center font-[var(--font-be-vietnam-pro)] text-[14px] font-black uppercase leading-none text-white transition hover:bg-[#a91fa3]"
                       >
                         {getReserveText(locale)}
                       </Link>
