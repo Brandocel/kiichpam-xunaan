@@ -5,7 +5,13 @@ interface LocaleLayoutProps {
   children: ReactNode;
   params: Promise<{ locale: string }>;
 }
-
+export const metadata = {
+  icons: {
+    icon: "/favicon.svg",
+    shortcut: "/favicon.svg",
+    apple: "/favicon.svg",
+  },
+};
 export default async function LocaleLayout({
   children,
   params,

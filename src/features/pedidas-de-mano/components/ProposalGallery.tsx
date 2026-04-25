@@ -45,13 +45,13 @@ const galleryItems: GalleryImage[] = [
   },
   {
     id: "pedida",
-    src: "/pedida-mano/galeria-pedidademano/pedida.png",
+    src: "/pedida-mano/galeria-pedidademano/anillo.png",
     altEs: "Pedida de mano",
     altEn: "Marriage proposal",
     heightClass: "h-[220px] md:h-[250px]",
   },
   {
-    id: "leopardo",
+    id: "anillo",
     src: "/pedida-mano/galeria-pedidademano/leopardo.png",
     altEs: "Leopardo descansando",
     altEn: "Resting leopard",
