@@ -131,7 +131,7 @@ function getIncludeIcon(include: string) {
   const text = normalizeText(include);
 
   const match = includeIconMap.find((item) =>
-    item.keywords.some((keyword) => text.includes(normalizeText(keyword))),
+    item.keywords.some((keyword) => text.includes(normalizeText(keyword)))
   );
 
   return match?.icon || "/packages/svg/Ceremonia.svg";
@@ -141,7 +141,7 @@ function getFeatureOrder(include: string) {
   const text = normalizeText(include);
 
   const index = orderedFeatureKeywords.findIndex((group) =>
-    group.some((keyword) => text.includes(normalizeText(keyword))),
+    group.some((keyword) => text.includes(normalizeText(keyword)))
   );
 
   return index === -1 ? 99 : index;
@@ -272,10 +272,11 @@ export default function HomePackages({
                     </ul>
                   </div>
 
-                  <div className="mt-auto">
-  <p className="mb-4 font-[var(--font-be-vietnam-pro)] text-[13px] font-normal leading-[17px] text-[#111111]">
-    {noteText}
-  </p>
+                  <div className="mt-auto pt-8">
+                    <p className="mb-2 font-[var(--font-be-vietnam-pro)] text-[13px] font-normal leading-[17px] text-[#111111]">
+                      {noteText}
+                    </p>
+
                     <p className="font-[var(--font-be-vietnam-pro)] text-[14px] font-normal leading-[19px] text-[#111111]">
                       {getAdultLabel(item, locale)}
                     </p>

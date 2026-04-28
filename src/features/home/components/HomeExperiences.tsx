@@ -97,35 +97,51 @@ export default function HomeExperiences({
   locale = "es",
 }: HomeExperiencesProps) {
   const [activeKey, setActiveKey] = useState<string | null>(null);
+
   const [statusByKey, setStatusByKey] = useState<Record<string, CardStatus>>(
     () => Object.fromEntries(ITEMS.map((item) => [item.key, "idle"]))
   );
 
   const [isMobile, setIsMobile] = useState(false);
+
   const videoRefs = useRef<Record<string, HTMLVideoElement | null>>({});
 
   useEffect(() => {
     if (typeof window === "undefined") return;
 
     const mq = window.matchMedia("(hover: none) and (pointer: coarse)");
-    const apply = () => setIsMobile(mq.matches);
+
+    const apply = () => {
+      setIsMobile(mq.matches);
+    };
 
     apply();
+
     mq.addEventListener?.("change", apply);
 
-    return () => mq.removeEventListener?.("change", apply);
+    return () => {
+      mq.removeEventListener?.("change", apply);
+    };
   }, []);
 
   const setStatus = (key: string, next: CardStatus) => {
-    setStatusByKey((prev) => ({ ...prev, [key]: next }));
+    setStatusByKey((prev) => ({
+      ...prev,
+      [key]: next,
+    }));
   };
 
   const pauseOthers = (keepKey: string) => {
     ITEMS.forEach((item) => {
       if (item.key === keepKey) return;
+
       const video = videoRefs.current[item.key];
+
       if (!video) return;
-      if (!video.paused) video.pause();
+
+      if (!video.paused) {
+        video.pause();
+      }
     });
   };
 
@@ -138,14 +154,19 @@ export default function HomeExperiences({
     }
 
     const video = videoRefs.current[key];
+
     if (!video) return;
 
     video.muted = true;
     video.playsInline = true;
 
     try {
-      if (video.readyState < 2) video.load();
+      if (video.readyState < 2) {
+        video.load();
+      }
+
       const promise = video.play();
+
       if (promise && typeof promise.catch === "function") {
         await promise.catch(() => {});
       }
@@ -154,6 +175,7 @@ export default function HomeExperiences({
 
   const pause = (key: string) => {
     const video = videoRefs.current[key];
+
     if (!video) return;
 
     video.pause();
@@ -162,11 +184,13 @@ export default function HomeExperiences({
 
   const onEnter = (key: string) => {
     if (isMobile) return;
+
     void play(key);
   };
 
   const onLeave = (key: string) => {
     if (isMobile) return;
+
     pause(key);
   };
 
@@ -174,10 +198,14 @@ export default function HomeExperiences({
     if (!isMobile) return;
 
     const video = videoRefs.current[key];
+
     if (!video) return;
 
-    if (!video.paused) pause(key);
-    else void play(key);
+    if (!video.paused) {
+      pause(key);
+    } else {
+      void play(key);
+    }
   };
 
   return (
@@ -194,97 +222,110 @@ export default function HomeExperiences({
       <div className="pointer-events-none absolute inset-0 z-[1] bg-white/10" />
 
       <div className="relative z-10 mx-auto max-w-[1440px] px-6 py-16 md:px-8 xl:px-10">
-        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4 lg:gap-10">
-          {ITEMS.map((item) => {
-            const status = statusByKey[item.key] ?? "idle";
-            const showImage = status === "idle";
+        <div className="mx-auto w-full">
+          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4 lg:gap-10">
+            {ITEMS.map((item) => {
+              const status = statusByKey[item.key] ?? "idle";
+              const showImage = status === "idle";
 
-            const video = videoRefs.current[item.key];
-            const isPlaying = activeKey === item.key && video && !video.paused;
+              const video = videoRefs.current[item.key];
 
-            const maskHeight = isPlaying ? "h-[38%]" : "h-[200%]";
+              const isPlaying =
+                activeKey === item.key && video && !video.paused;
 
-            return (
-              <div
-                key={item.key}
-                onMouseEnter={() => onEnter(item.key)}
-                onMouseLeave={() => onLeave(item.key)}
-                onClick={() => onTap(item.key)}
-                className={`
-                  group relative isolate w-full overflow-hidden
-                  shadow-[0_18px_35px_rgba(0,0,0,0.18)]
-                  transition-transform duration-300
-                  bg-transparent
-                  ${activeKey === item.key ? "scale-[1.03]" : "hover:-translate-y-1"}
-                  ${isMobile ? "cursor-pointer" : ""}
-                `}
-                role={isMobile ? "button" : undefined}
-                aria-label={
-                  isMobile
-                    ? `${locale === "es" ? "Reproducir o pausar" : "Play or pause"} ${item.title[locale]}`
-                    : undefined
-                }
-              >
-                <div className="relative aspect-[2/3] w-full">
-                  <div className="absolute inset-0">
-                    <video
-                      ref={(el) => {
-                        videoRefs.current[item.key] = el;
-                      }}
-                      className="h-full w-full object-cover"
-                      src={item.video}
-                      playsInline
-                      muted
-                      loop
-                      preload="auto"
-                    />
-                  </div>
+              const maskHeight = isPlaying ? "h-[38%]" : "h-[200%]";
 
-                  {showImage && (
-                    <>
-                      <Image
-                        src={item.image}
-                        alt={item.alt[locale]}
-                        fill
-                        className="object-cover"
-                        sizes="(max-width: 1024px) 100vw, 460px"
+              return (
+                <div
+                  key={item.key}
+                  onMouseEnter={() => onEnter(item.key)}
+                  onMouseLeave={() => onLeave(item.key)}
+                  onClick={() => onTap(item.key)}
+                  className={`
+                    group relative isolate w-full overflow-hidden
+                    bg-transparent
+                    shadow-[0_18px_35px_rgba(0,0,0,0.18)]
+                    transition-transform duration-300
+                    ${
+                      activeKey === item.key
+                        ? "scale-[1.03]"
+                        : "hover:-translate-y-1"
+                    }
+                    ${isMobile ? "cursor-pointer" : ""}
+                  `}
+                  role={isMobile ? "button" : undefined}
+                  aria-label={
+                    isMobile
+                      ? `${
+                          locale === "es"
+                            ? "Reproducir o pausar"
+                            : "Play or pause"
+                        } ${item.title[locale]}`
+                      : undefined
+                  }
+                >
+                  <div className="relative aspect-[2/3] w-full">
+                    <div className="absolute inset-0">
+                      <video
+                        ref={(el) => {
+                          videoRefs.current[item.key] = el;
+                        }}
+                        className="h-full w-full object-cover"
+                        src={item.video}
+                        playsInline
+                        muted
+                        loop
+                        preload="auto"
                       />
-                      <div className="pointer-events-none absolute inset-0 bg-black/10" />
-                    </>
-                  )}
-
-                  <div
-                    className={`
-                      pointer-events-none absolute inset-x-0 bottom-0
-                      ${maskHeight}
-                      transition-all duration-500 ease-out
-                      bg-gradient-to-t
-                      from-[#4b2a78]/90
-                      via-[#4b2a78]/40
-                      to-transparent
-                    `}
-                  />
-
-                  <div className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-center px-5 pb-5">
-                    <h3 className="text-center text-[28px] font-extrabold leading-[1] tracking-[-0.02em] text-white drop-shadow-[0_6px_18px_rgba(0,0,0,0.35)] sm:text-[30px]">
-                      {item.title[locale]}
-                    </h3>
-                  </div>
-
-                  {isMobile && (
-                    <div className="pointer-events-none absolute right-4 top-4 rounded-full bg-black/30 px-3 py-1 text-[12px] text-white/90">
-                      {sectionText[locale].tap}
                     </div>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
 
-        <p className="mt-10 max-w-[1200px] text-[18px] leading-[1.7] text-[#483289]">
-          {sectionText[locale].paragraph}
-        </p>
+                    {showImage && (
+                      <>
+                        <Image
+                          src={item.image}
+                          alt={item.alt[locale]}
+                          fill
+                          className="object-cover"
+                          sizes="(max-width: 1024px) 100vw, 460px"
+                        />
+
+                        <div className="pointer-events-none absolute inset-0 bg-black/10" />
+                      </>
+                    )}
+
+                    <div
+                      className={`
+                        pointer-events-none absolute inset-x-0 bottom-0
+                        ${maskHeight}
+                        bg-gradient-to-t
+                        from-[#4b2a78]/90
+                        via-[#4b2a78]/40
+                        to-transparent
+                        transition-all duration-500 ease-out
+                      `}
+                    />
+
+                    <div className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-center px-5 pb-5">
+                      <h3 className="text-center text-[28px] font-extrabold leading-[1] tracking-[-0.02em] text-white drop-shadow-[0_6px_18px_rgba(0,0,0,0.35)] sm:text-[30px]">
+                        {item.title[locale]}
+                      </h3>
+                    </div>
+
+                    {isMobile && (
+                      <div className="pointer-events-none absolute right-4 top-4 rounded-full bg-black/30 px-3 py-1 text-[12px] text-white/90">
+                        {sectionText[locale].tap}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <p className="mt-10 w-full text-justify text-[18px] leading-[1.7] text-[#483289]">
+            {sectionText[locale].paragraph}
+          </p>
+        </div>
       </div>
     </section>
   );
