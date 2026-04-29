@@ -22,13 +22,11 @@ type HowToArriveSectionProps = {
 };
 
 const DEFAULT_SOCIALS: SocialItem[] = [
-  { alt: "Facebook", href: "https://facebook.com", src: "/mapa/social/facebook.svg" },
-  { alt: "X", href: "https://x.com", src: "/mapa/social/x.svg" },
-  { alt: "Instagram", href: "https://instagram.com", src: "/mapa/social/instagram.svg" },
+  { alt: "Facebook", href: "https://www.facebook.com/kiichpamxunaan", src: "/mapa/social/facebook.svg" },
+  { alt: "Instagram", href: "https://www.instagram.com/kiichpamxunaan/", src: "/mapa/social/instagram.svg" },
   { alt: "WhatsApp", href: "https://wa.me/5219987510867", src: "/mapa/social/whatsapp.svg" },
-  { alt: "TikTok", href: "https://tiktok.com", src: "/mapa/social/tiktok.svg" },
-  { alt: "Messenger", href: "https://m.me/", src: "/mapa/social/messenger.svg" },
-  { alt: "YouTube", href: "https://youtube.com", src: "/mapa/social/youtube.svg" },
+  { alt: "TikTok", href: "https://www.tiktok.com/@kiichpamxunaan?lang=es", src: "/mapa/social/tiktok.svg" },
+  { alt: "YouTube", href: "https://www.youtube.com/@kiichpamxunaan", src: "/mapa/social/youtube.svg" },
 ];
 
 export default function HowToArriveSection({

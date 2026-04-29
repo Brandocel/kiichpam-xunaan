@@ -16,9 +16,8 @@ const footerContent = {
       { label: "News & Blogs", href: "/blog" },
     ],
     contactLinks: [
-      { label: "Instagram", href: "https://instagram.com" },
-      { label: "Twitter", href: "https://twitter.com" },
-      { label: "Facebook", href: "https://facebook.com" },
+      { label: "Instagram", href: "https://www.instagram.com/kiichpamxunaan/" },
+      { label: "Facebook", href: "https://www.facebook.com/kiichpamxunaan" },
     ],
     supportLinks: [
       { label: "FAQs", href: "/#faqs" },
@@ -36,9 +35,8 @@ const footerContent = {
       { label: "News & Blogs", href: "/blog" },
     ],
     contactLinks: [
-      { label: "Instagram", href: "https://instagram.com" },
-      { label: "Twitter", href: "https://twitter.com" },
-      { label: "Facebook", href: "https://facebook.com" },
+      { label: "Instagram", href: "https://www.instagram.com/kiichpamxunaan/" },
+      { label: "Facebook", href: "https://www.facebook.com/kiichpamxunaan" },
     ],
     supportLinks: [
       { label: "FAQs", href: "/#faqs" },
