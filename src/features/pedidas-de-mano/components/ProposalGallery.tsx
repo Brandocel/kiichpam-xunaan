@@ -1,6 +1,8 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Image from "next/image";
+import { ChevronLeft, ChevronRight, X } from "lucide-react";
 
 interface ProposalGalleryProps {
   locale: "es" | "en";
@@ -45,7 +47,7 @@ const galleryItems: GalleryImage[] = [
   },
   {
     id: "pedida",
-    src: "/pedida-mano/galeria-pedidademano/anillo.png",
+    src: "/pedida-mano/galeria-pedidademano/pedida.png",
     altEs: "Pedida de mano",
     altEn: "Marriage proposal",
     heightClass: "h-[220px] md:h-[250px]",
@@ -53,8 +55,8 @@ const galleryItems: GalleryImage[] = [
   {
     id: "anillo",
     src: "/pedida-mano/galeria-pedidademano/anillo.png",
-    altEs: "Leopardo descansando",
-    altEn: "Resting leopard",
+    altEs: "Anillo de compromiso",
+    altEn: "Engagement ring",
     heightClass: "h-[220px] md:h-[250px]",
   },
   {
@@ -146,43 +148,271 @@ const galleryItems: GalleryImage[] = [
 export default function ProposalGallery({ locale }: ProposalGalleryProps) {
   const title = locale === "es" ? "Galería" : "Gallery";
 
-  return (
-    <section className="w-full bg-[#005F73] pb-20 pt-8 md:pb-24 md:pt-10">
-      <div className="mx-auto w-full max-w-[1800px] px-4 sm:px-6 md:px-10 xl:px-16">
-        <div className="mb-10 flex items-center justify-center gap-4 md:mb-14 md:gap-8">
-          <div className="h-px flex-1 bg-white/80" />
-          <h2
-            className="text-center text-[30px] font-black leading-[1.15] text-white md:text-[42px]"
-            style={{
-              fontFamily:
-                '"Be Vietnam Pro", ui-sans-serif, system-ui, sans-serif',
-            }}
-          >
-            {title}
-          </h2>
-          <div className="h-px flex-1 bg-white/80" />
-        </div>
+  const [activeIndex, setActiveIndex] = useState<number | null>(null);
 
-        <div className="columns-1 gap-[8px] sm:columns-2 lg:columns-3 xl:columns-4">
-          {galleryItems.map((item) => (
-            <div
-              key={item.id}
-              className="mb-[8px] break-inside-avoid overflow-hidden"
+  const activeItem = activeIndex !== null ? galleryItems[activeIndex] : null;
+
+  const closeCarousel = () => {
+    setActiveIndex(null);
+  };
+
+  const goToPrevious = () => {
+    setActiveIndex((currentIndex) => {
+      if (currentIndex === null) return currentIndex;
+
+      return currentIndex === 0 ? galleryItems.length - 1 : currentIndex - 1;
+    });
+  };
+
+  const goToNext = () => {
+    setActiveIndex((currentIndex) => {
+      if (currentIndex === null) return currentIndex;
+
+      return currentIndex === galleryItems.length - 1 ? 0 : currentIndex + 1;
+    });
+  };
+
+  useEffect(() => {
+    if (activeIndex === null) {
+      document.body.style.overflow = "";
+      return;
+    }
+
+    document.body.style.overflow = "hidden";
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") closeCarousel();
+      if (event.key === "ArrowLeft") goToPrevious();
+      if (event.key === "ArrowRight") goToNext();
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = "";
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [activeIndex]);
+
+  return (
+    <>
+      <section
+        id="proposal-gallery"
+        className="scroll-mt-[120px] w-full bg-[#005F73] pb-20 pt-8 md:pb-24 md:pt-10"
+      >
+        <div className="mx-auto w-full max-w-[1800px] px-4 sm:px-6 md:px-10 xl:px-16">
+          <div className="mb-10 flex items-center justify-center gap-4 md:mb-14 md:gap-8">
+            <div className="h-px flex-1 bg-white/80" />
+
+            <h2
+              className="text-center text-[30px] font-black leading-[1.15] text-white md:text-[42px]"
+              style={{
+                fontFamily:
+                  '"Be Vietnam Pro", ui-sans-serif, system-ui, sans-serif',
+              }}
             >
-              <div className={`group relative w-full ${item.heightClass}`}>
-                <Image
-                  src={item.src}
-                  alt={locale === "es" ? item.altEs : item.altEn}
-                  fill
-                  className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
-                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
-                />
-                <div className="absolute inset-0 bg-black/0 transition-colors duration-300 group-hover:bg-black/10" />
+              {title}
+            </h2>
+
+            <div className="h-px flex-1 bg-white/80" />
+          </div>
+
+          <div className="columns-1 gap-[8px] sm:columns-2 lg:columns-3 xl:columns-4">
+            {galleryItems.map((item, index) => (
+              <div
+                key={item.id}
+                className="mb-[8px] break-inside-avoid overflow-hidden"
+              >
+                <button
+                  type="button"
+                  onClick={() => setActiveIndex(index)}
+                  className={`group relative block w-full overflow-hidden text-left ${item.heightClass}`}
+                  aria-label={
+                    locale === "es"
+                      ? `Abrir imagen: ${item.altEs}`
+                      : `Open image: ${item.altEn}`
+                  }
+                >
+                  <Image
+                    src={item.src}
+                    alt={locale === "es" ? item.altEs : item.altEn}
+                    fill
+                    className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
+                  />
+
+                  <div className="absolute inset-0 bg-black/0 transition-colors duration-300 group-hover:bg-black/20" />
+
+                  <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                    <span
+                      className="
+                        rounded-full bg-white/90 px-4 py-2
+                        text-[13px] font-black text-[#C028B9]
+                        shadow-lg backdrop-blur-sm
+                      "
+                      style={{
+                        fontFamily:
+                          '"Be Vietnam Pro", ui-sans-serif, system-ui, sans-serif',
+                      }}
+                    >
+                      {locale === "es" ? "Ver imagen" : "View image"}
+                    </span>
+                  </div>
+                </button>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
+
+      {activeItem && activeIndex !== null && (
+        <div
+          className="
+            fixed inset-0 z-[9999]
+            flex items-center justify-center
+            bg-black/90 px-4 py-5
+            backdrop-blur-sm
+            md:px-8 md:py-8
+          "
+          role="dialog"
+          aria-modal="true"
+        >
+          <button
+            type="button"
+            onClick={closeCarousel}
+            className="
+              absolute right-4 top-4 z-[3]
+              flex h-11 w-11 items-center justify-center
+              rounded-full bg-white/15 text-white
+              backdrop-blur-md transition-all duration-300
+              hover:bg-white hover:text-[#C028B9]
+              md:right-8 md:top-8
+            "
+            aria-label={locale === "es" ? "Cerrar galería" : "Close gallery"}
+          >
+            <X size={24} strokeWidth={3} />
+          </button>
+
+          <button
+            type="button"
+            onClick={goToPrevious}
+            className="
+              absolute left-3 top-1/2 z-[3]
+              flex h-11 w-11 -translate-y-1/2 items-center justify-center
+              rounded-full bg-white/15 text-white
+              backdrop-blur-md transition-all duration-300
+              hover:bg-white hover:text-[#C028B9]
+              md:left-8 md:h-14 md:w-14
+            "
+            aria-label={
+              locale === "es" ? "Imagen anterior" : "Previous image"
+            }
+          >
+            <ChevronLeft size={28} strokeWidth={3} />
+          </button>
+
+          <div
+            className="
+              relative z-[2]
+              flex h-full w-full max-w-[1180px]
+              flex-col items-center justify-center
+            "
+          >
+            <div
+              className="
+                relative w-full overflow-hidden rounded-[18px]
+                bg-black/30 shadow-2xl
+                h-[68vh]
+                sm:h-[72vh]
+                md:h-[78vh]
+              "
+            >
+              <Image
+                key={activeItem.id}
+                src={activeItem.src}
+                alt={locale === "es" ? activeItem.altEs : activeItem.altEn}
+                fill
+                priority
+                className="object-contain"
+                sizes="100vw"
+              />
+            </div>
+
+            <div
+              className="
+                mt-4 flex w-full max-w-[1180px]
+                items-center justify-between gap-4
+                text-white
+              "
+            >
+              <p
+                className="line-clamp-1 text-[13px] font-semibold text-white/90 md:text-[15px]"
+                style={{
+                  fontFamily:
+                    '"Be Vietnam Pro", ui-sans-serif, system-ui, sans-serif',
+                }}
+              >
+                {locale === "es" ? activeItem.altEs : activeItem.altEn}
+              </p>
+
+              <p
+                className="shrink-0 text-[13px] font-bold text-white/80 md:text-[15px]"
+                style={{
+                  fontFamily:
+                    '"Be Vietnam Pro", ui-sans-serif, system-ui, sans-serif',
+                }}
+              >
+                {activeIndex + 1} / {galleryItems.length}
+              </p>
+            </div>
+
+            <div className="mt-4 hidden w-full max-w-[980px] gap-2 overflow-x-auto px-1 pb-2 md:flex">
+              {galleryItems.map((item, index) => (
+                <button
+                  key={`thumb-${item.id}`}
+                  type="button"
+                  onClick={() => setActiveIndex(index)}
+                  className={[
+                    "relative h-[68px] w-[92px] shrink-0 overflow-hidden rounded-[10px] transition-all duration-300",
+                    activeIndex === index
+                      ? "ring-2 ring-white opacity-100"
+                      : "opacity-55 hover:opacity-100",
+                  ].join(" ")}
+                  aria-label={
+                    locale === "es"
+                      ? `Ver imagen ${index + 1}`
+                      : `View image ${index + 1}`
+                  }
+                >
+                  <Image
+                    src={item.src}
+                    alt={locale === "es" ? item.altEs : item.altEn}
+                    fill
+                    className="object-cover"
+                    sizes="92px"
+                  />
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={goToNext}
+            className="
+              absolute right-3 top-1/2 z-[3]
+              flex h-11 w-11 -translate-y-1/2 items-center justify-center
+              rounded-full bg-white/15 text-white
+              backdrop-blur-md transition-all duration-300
+              hover:bg-white hover:text-[#C028B9]
+              md:right-8 md:h-14 md:w-14
+            "
+            aria-label={locale === "es" ? "Siguiente imagen" : "Next image"}
+          >
+            <ChevronRight size={28} strokeWidth={3} />
+          </button>
+        </div>
+      )}
+    </>
   );
 }

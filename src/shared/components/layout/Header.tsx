@@ -4,13 +4,57 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Menu, X } from "lucide-react";
-import { navigation } from "../../config/navigation";
 import LanguageSwitcher from "./LanguageSwitcher";
 
 interface HeaderProps {
   locale?: "es" | "en";
   variant?: "solid" | "overlay";
 }
+
+const headerNavigation = [
+  {
+    href: "/cenotes",
+    label: {
+      es: "Cenotes",
+      en: "Cenotes",
+    },
+  },
+  {
+    href: "/galeria",
+    label: {
+      es: "Galería",
+      en: "Gallery",
+    },
+  },
+  {
+    href: "/pedidas-de-mano",
+    label: {
+      es: "Pedidas de mano",
+      en: "Proposals",
+    },
+  },
+  {
+    href: "/promociones",
+    label: {
+      es: "Promociones",
+      en: "Promotions",
+    },
+  },
+  {
+    href: "/contacto",
+    label: {
+      es: "Contacto",
+      en: "Contact",
+    },
+  },
+  {
+    href: "/blog",
+    label: {
+      es: "Blog",
+      en: "Blog",
+    },
+  },
+];
 
 export default function Header({
   locale = "es",
@@ -37,8 +81,8 @@ export default function Header({
           "left-0 top-0 z-40 w-full",
           isOverlay ? "absolute" : "relative",
           isOverlay
-            ? "bg-gradient-to-b from-[#C028B9]/75 via-[#A62FA3]/40 via-[48%] to-transparent"
-            : "bg-[linear-gradient(180deg,#C028B9_0%,#5A1357_100%)]",
+            ? "bg-gradient-to-b from-[#8B197C]/85 via-[#551145]/65 to-transparent"
+            : "bg-[linear-gradient(180deg,#8B197C_0%,#26051F_100%)]",
         ].join(" ")}
       >
         <div className="mx-auto flex h-[150px] w-full max-w-[1800px] items-center justify-between px-6 sm:h-[160px] sm:px-8 md:h-[170px] md:px-12 xl:h-[180px] xl:px-20">
@@ -60,12 +104,12 @@ export default function Header({
           </Link>
 
           <div className="flex items-center gap-3 md:gap-6 xl:gap-10">
-            <nav className="relative z-10 hidden items-center gap-10 lg:flex xl:gap-12">
-              {navigation.map((item) => (
+            <nav className="relative z-10 hidden items-center gap-8 lg:flex xl:gap-10">
+              {headerNavigation.map((item) => (
                 <Link
                   key={item.href}
                   href={`/${locale}${item.href}`}
-                  className="font-[var(--font-poppins)] text-[20px] font-medium leading-none text-white transition-opacity duration-200 hover:opacity-80 xl:text-[24px]"
+                  className="font-[var(--font-poppins)] text-[18px] font-semibold leading-none text-white transition-opacity duration-200 hover:opacity-80 xl:text-[21px]"
                 >
                   {item.label[locale]}
                 </Link>
@@ -101,7 +145,7 @@ export default function Header({
 
       <aside
         className={[
-          "fixed right-0 top-0 z-50 h-full w-[82%] max-w-[340px] bg-[linear-gradient(180deg,#C028B9_0%,#5A1357_100%)] shadow-2xl transition-transform duration-300 ease-out lg:hidden",
+          "fixed right-0 top-0 z-50 h-full w-[82%] max-w-[340px] bg-[linear-gradient(180deg,#8B197C_0%,#26051F_100%)] shadow-2xl transition-transform duration-300 ease-out lg:hidden",
           mobileMenuOpen ? "translate-x-0" : "translate-x-full",
         ].join(" ")}
       >
@@ -123,7 +167,7 @@ export default function Header({
 
           <nav className="flex flex-1 flex-col px-5 py-6">
             <div className="flex flex-col gap-3">
-              {navigation.map((item, index) => (
+              {headerNavigation.map((item, index) => (
                 <Link
                   key={item.href}
                   href={`/${locale}${item.href}`}

@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 
 interface ProposalIntroProps {
   locale: "es" | "en";
@@ -13,7 +12,6 @@ const content = {
     description:
       "Contamos con opciones que incluyen acceso exclusivo a uno de nuestros dos hermosos cenotes, donde podrán disfrutar de un entorno natural privado y mágico. Vivirán una auténtica bendición maya, una ceremonia llena de significado y energía que hará aún más especial este momento.",
     buttonText: "Galería",
-    buttonHref: "/es/galeria",
     image: "/pedida-mano/cadamomento.webp",
   },
   en: {
@@ -21,13 +19,23 @@ const content = {
     description:
       "We offer options that include exclusive access to one of our two beautiful cenotes, where you can enjoy a private and magical natural setting. You will experience an authentic Mayan blessing, a ceremony full of meaning and energy that will make this moment even more special.",
     buttonText: "Gallery",
-    buttonHref: "/en/galeria",
     image: "/pedida-mano/cadamomento.webp",
   },
 };
 
 export default function ProposalIntro({ locale }: ProposalIntroProps) {
   const t = content[locale];
+
+  const scrollToGallery = () => {
+    const gallerySection = document.getElementById("proposal-gallery");
+
+    if (gallerySection) {
+      gallerySection.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+  };
 
   return (
     <section className="w-full bg-[linear-gradient(180deg,#0B3F67_0%,#005F73_100%)]">
@@ -82,8 +90,9 @@ export default function ProposalIntro({ locale }: ProposalIntroProps) {
             {t.description}
           </p>
 
-          <Link
-            href={t.buttonHref}
+          <button
+            type="button"
+            onClick={scrollToGallery}
             className="
               mt-6 inline-flex h-[38px] w-[204px]
               items-center justify-center
@@ -102,7 +111,7 @@ export default function ProposalIntro({ locale }: ProposalIntroProps) {
             }}
           >
             {t.buttonText}
-          </Link>
+          </button>
         </div>
       </div>
     </section>
