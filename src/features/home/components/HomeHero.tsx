@@ -12,6 +12,24 @@ interface HomeHeroProps {
   locale?: "es" | "en";
 }
 
+function formatHeroTitle(title?: string) {
+  if (!title) return "";
+
+  const normalizedTitle = title.trim();
+
+  if (normalizedTitle.toLowerCase() === "el lugar de los sueños") {
+    return (
+      <>
+        El lugar
+        <br />
+        de los sueños
+      </>
+    );
+  }
+
+  return normalizedTitle;
+}
+
 export default function HomeHero({ slides, locale = "es" }: HomeHeroProps) {
   const validSlides = useMemo(
     () => slides.filter((slide) => slide?.media?.url),
@@ -106,9 +124,9 @@ export default function HomeHero({ slides, locale = "es" }: HomeHeroProps) {
       )}
 
       <div className="absolute inset-0 z-10 flex items-center justify-center px-6 md:px-10">
-        <div className="mx-auto flex max-w-[1100px] flex-col items-center text-center">
-          <h1 className="max-w-[950px] text-balance text-[clamp(2.8rem,7vw,6.7rem)] font-bold leading-[0.95] tracking-[-0.02em] text-white">
-            {activeSlide.title}
+        <div className="mx-auto flex max-w-[1100px] translate-y-[45px] flex-col items-center text-center md:translate-y-[65px]">
+          <h1 className="max-w-[980px] text-balance text-[clamp(3rem,7vw,6.7rem)] font-bold leading-[0.95] tracking-[-0.02em] text-white">
+            {formatHeroTitle(activeSlide.title)}
           </h1>
 
           <p className="mt-4 max-w-[900px] text-balance text-[clamp(1rem,2.1vw,1.9rem)] font-normal leading-[1.2] text-white md:mt-5">
