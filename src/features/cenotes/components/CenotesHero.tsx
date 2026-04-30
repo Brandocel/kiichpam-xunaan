@@ -12,7 +12,7 @@ export default function CenotesHero({ hero, locale }: CenotesHeroProps) {
     <section className="relative w-full overflow-hidden bg-black">
       <Header locale={locale} variant="overlay" />
 
-      <div className="relative h-[520px] w-full sm:h-[580px] md:h-[650px] lg:h-[720px] xl:h-[760px]">
+      <div className="relative h-[430px] w-full sm:h-[470px] md:h-[520px] lg:h-[560px] xl:h-[590px]">
         <Image
           src={hero.backgroundImage}
           alt={hero.title}
@@ -28,7 +28,7 @@ export default function CenotesHero({ hero, locale }: CenotesHeroProps) {
 
         <div className="absolute inset-0 z-[3] bg-[radial-gradient(circle_at_center,rgba(0,0,0,0.08)_0%,rgba(0,0,0,0.28)_55%,rgba(0,0,0,0.48)_100%)]" />
 
-        <div className="relative z-[4] flex h-full items-center justify-center px-4 pt-[82px] sm:px-6 sm:pt-[88px] md:px-8 md:pt-[92px] lg:pt-[96px]">
+        <div className="relative z-[4] flex h-full items-center justify-center px-4 pt-[95px] sm:px-6 sm:pt-[105px] md:px-8 md:pt-[115px] lg:pt-[120px]">
           <div className="w-full max-w-[1500px] text-center">
             <h1
               className="

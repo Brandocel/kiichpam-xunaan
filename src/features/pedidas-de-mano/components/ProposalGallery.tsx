@@ -318,29 +318,35 @@ export default function ProposalGallery({ locale }: ProposalGalleryProps) {
               flex-col items-center justify-center
             "
           >
-            <div
-              className="
-                relative w-full overflow-hidden rounded-[18px]
-                bg-black/30 shadow-2xl
-                h-[68vh]
-                sm:h-[72vh]
-                md:h-[78vh]
-              "
-            >
-              <Image
-                key={activeItem.id}
-                src={activeItem.src}
-                alt={locale === "es" ? activeItem.altEs : activeItem.altEn}
-                fill
-                priority
-                className="object-contain"
-                sizes="100vw"
-              />
-            </div>
+<div
+  className="
+    flex max-h-[82vh] w-full max-w-[1180px]
+    items-center justify-center overflow-hidden rounded-[18px]
+    bg-black/30 shadow-2xl
+  "
+>
+  <Image
+    key={activeItem.id}
+    src={activeItem.src}
+    alt={locale === "es" ? activeItem.altEs : activeItem.altEn}
+    width={1180}
+    height={780}
+    priority
+    quality={100}
+    className="
+      h-auto
+      max-h-[82vh]
+      w-auto
+      max-w-full
+      object-contain
+    "
+    sizes="(max-width: 768px) 94vw, 1180px"
+  />
+</div>
 
             <div
               className="
-                mt-4 flex w-full max-w-[1180px]
+                mt-4 flex w-full max-w-[1050px]
                 items-center justify-between gap-4
                 text-white
               "
