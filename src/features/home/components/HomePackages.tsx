@@ -260,8 +260,8 @@ export default function HomePackages({
                             <span
                               className={`break-words ${
                                 bold
-                                  ? "font-black text-[#050505]"
-                                  : "font-normal text-[#111111]"
+                                    ? "font-semibold text-[#050505]"
+                                    : "font-normal text-[#111111]"
                               }`}
                             >
                               {include}
