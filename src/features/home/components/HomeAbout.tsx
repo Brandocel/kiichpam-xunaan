@@ -27,7 +27,6 @@ export default function HomeAbout({ locale = "es" }: HomeAboutProps) {
 
   return (
     <section className="relative overflow-hidden bg-[#005F74]">
-      {/* Textura */}
       <div
         className="absolute inset-0 opacity-50"
         style={{
@@ -38,11 +37,18 @@ export default function HomeAbout({ locale = "es" }: HomeAboutProps) {
         }}
       />
 
-      {/* Contenedor */}
-      <div className="relative mx-auto max-w-[1360px] px-4 py-8 sm:px-5 md:px-6 lg:px-8 xl:px-10">
-        <div className="flex flex-col items-center gap-6 lg:flex-row lg:items-center lg:justify-center lg:gap-10 xl:gap-12">
-          
-          {/* Imagen */}
+      <div
+        className="
+          relative mx-auto max-w-[1360px]
+          px-4
+          pt-10 pb-16
+          sm:px-5 sm:pt-12 sm:pb-20
+          md:px-6 md:pt-14 md:pb-24
+          lg:px-8 lg:pt-16 lg:pb-28
+          xl:px-10 xl:pt-20 xl:pb-32
+        "
+      >
+        <div className="flex flex-col items-center gap-8 lg:flex-row lg:items-center lg:justify-center lg:gap-10 xl:gap-12">
           <div className="relative w-full max-w-[320px] sm:max-w-[400px] md:max-w-[480px] lg:max-w-[561px]">
             <div className="relative aspect-[561/378] overflow-hidden rounded-[14px] shadow-[0_18px_40px_rgba(0,0,0,0.26)]">
               <Image
@@ -55,12 +61,9 @@ export default function HomeAbout({ locale = "es" }: HomeAboutProps) {
             </div>
           </div>
 
-          {/* Texto */}
           <div className="w-full max-w-[320px] text-left sm:max-w-[420px] md:max-w-[500px] lg:max-w-[537px] xl:max-w-[580px]">
-            
-            {/* Título */}
             <h2
-              className="whitespace-nowrap text-white leading-[0.92] tracking-[-0.02em] text-[clamp(2.2rem,4.4vw,4.6rem)]"
+              className="whitespace-nowrap text-[clamp(2.2rem,4.4vw,4.6rem)] leading-[0.92] tracking-[-0.02em] text-white"
               style={{
                 fontFamily: '"Starting Lineup", "Times New Roman", serif',
                 fontWeight: 400,
@@ -69,20 +72,17 @@ export default function HomeAbout({ locale = "es" }: HomeAboutProps) {
               {t.title}
             </h2>
 
-            {/* Subtítulo */}
             <p className="mt-2 font-[var(--font-be-vietnam-pro)] text-[11px] font-medium leading-[1.2] text-white sm:text-[12px] md:text-[13px]">
               {t.eyebrow}
             </p>
 
-            {/* Descripción */}
             <p className="mt-4 max-w-[700px] text-justify font-[var(--font-be-vietnam-pro)] text-[clamp(1.25rem,1.65vw,1.65rem)] font-normal leading-[1.25] text-white">
               {t.description}
             </p>
 
-            {/* Botón */}
             <Link
               href={`/${locale}/mapa`}
-              className="mt-6 inline-flex h-[48px] min-w-[230px] items-center justify-center rounded-[8px] bg-[#C028B9] px-7 font-[var(--font-be-vietnam-pro)] text-[18px] font-extrabold text-white transition hover:opacity-90 max-sm:h-[42px] max-sm:min-w-[170px] max-sm:text-[14px]"
+              className="mt-8 inline-flex h-[48px] min-w-[230px] items-center justify-center rounded-[8px] bg-[#C028B9] px-7 font-[var(--font-be-vietnam-pro)] text-[18px] font-extrabold text-white transition hover:opacity-90 max-sm:h-[42px] max-sm:min-w-[170px] max-sm:text-[14px]"
             >
               {t.button}
             </Link>

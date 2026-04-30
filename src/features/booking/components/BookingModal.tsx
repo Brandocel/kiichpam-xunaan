@@ -42,14 +42,8 @@ export default function BookingModal({
   if (!isOpen) return null;
 
   return (
-    <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center bg-[rgba(0,0,0,0.58)] px-3 py-4 md:px-6 md:py-8"
-      onClick={onClose}
-    >
-      <div
-        className="relative max-h-[95vh] w-full max-w-[1380px] overflow-y-auto rounded-none bg-[#F3F3F3] shadow-[0_24px_70px_rgba(0,0,0,0.38)]"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-[rgba(0,0,0,0.58)] px-3 py-4 md:px-6 md:py-8">
+      <div className="relative max-h-[95vh] w-full max-w-[1380px] overflow-y-auto rounded-none bg-[#F3F3F3] shadow-[0_24px_70px_rgba(0,0,0,0.38)]">
         <button
           type="button"
           onClick={onClose}
