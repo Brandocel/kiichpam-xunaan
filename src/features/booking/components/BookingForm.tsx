@@ -26,6 +26,25 @@ type CalendarDay = {
   isCurrentMonth: boolean;
 };
 
+function getTodayStart() {
+  const today = new Date();
+  return new Date(today.getFullYear(), today.getMonth(), today.getDate());
+}
+
+function isPastDate(date: Date) {
+  return date < getTodayStart();
+}
+
+function isPastMonth(date: Date) {
+  const today = getTodayStart();
+
+  return (
+    date.getFullYear() < today.getFullYear() ||
+    (date.getFullYear() === today.getFullYear() &&
+      date.getMonth() < today.getMonth())
+  );
+}
+
 function getText(locale: "es" | "en") {
   return locale === "es"
     ? {
@@ -210,7 +229,10 @@ function CustomCalendar({
 }: CustomCalendarProps) {
   const t = getText(locale);
   const selectedDate = parseISODate(value);
-  const initialViewDate = selectedDate ?? new Date();
+  const today = getTodayStart();
+
+  const initialViewDate =
+    selectedDate && !isPastDate(selectedDate) ? selectedDate : today;
 
   const [viewDate, setViewDate] = useState(
     new Date(initialViewDate.getFullYear(), initialViewDate.getMonth(), 1)
@@ -218,10 +240,22 @@ function CustomCalendar({
 
   const days = useMemo(() => buildCalendarDays(viewDate), [viewDate]);
 
+  const canGoToPreviousMonth = !isPastMonth(
+    new Date(viewDate.getFullYear(), viewDate.getMonth() - 1, 1)
+  );
+
   function goToPreviousMonth() {
-    setViewDate(
-      (prev) => new Date(prev.getFullYear(), prev.getMonth() - 1, 1)
-    );
+    setViewDate((prev) => {
+      const previousMonth = new Date(
+        prev.getFullYear(),
+        prev.getMonth() - 1,
+        1
+      );
+
+      if (isPastMonth(previousMonth)) return prev;
+
+      return previousMonth;
+    });
   }
 
   function goToNextMonth() {
@@ -231,6 +265,8 @@ function CustomCalendar({
   }
 
   function handleSelectDate(date: Date) {
+    if (isPastDate(date)) return;
+
     onChange(toISODate(date));
     onClose();
   }
@@ -247,7 +283,12 @@ function CustomCalendar({
             <button
               type="button"
               onClick={goToPreviousMonth}
-              className="flex h-[34px] w-[34px] items-center justify-center rounded-full bg-[#EEF2F7] text-[#3B82F6] transition hover:scale-[1.05]"
+              disabled={!canGoToPreviousMonth}
+              className={`flex h-[34px] w-[34px] items-center justify-center rounded-full bg-[#EEF2F7] text-[#3B82F6] transition ${
+                canGoToPreviousMonth
+                  ? "hover:scale-[1.05]"
+                  : "cursor-not-allowed opacity-40"
+              }`}
               aria-label={locale === "es" ? "Mes anterior" : "Previous month"}
             >
               <ChevronLeft size={18} strokeWidth={2.4} />
@@ -276,17 +317,25 @@ function CustomCalendar({
 
           {days.map((day) => {
             const isSelected = isSameDay(selectedDate, day.date);
+            const disabled = isPastDate(day.date);
 
             return (
               <button
                 key={day.date.toISOString()}
                 type="button"
                 onClick={() => handleSelectDate(day.date)}
+                disabled={disabled}
                 className={`flex h-[40px] items-center justify-center text-center font-[var(--font-be-vietnam-pro)] text-[21px] font-normal leading-none transition sm:h-[42px] sm:text-[22px] md:h-[44px] md:text-[23px] ${
-                  day.isCurrentMonth ? "text-[#111111]" : "text-[#C7C7C7]"
+                  disabled
+                    ? "cursor-not-allowed text-[#D6D6D6] line-through opacity-60"
+                    : day.isCurrentMonth
+                    ? "text-[#111111]"
+                    : "text-[#C7C7C7]"
                 } ${
-                  isSelected
+                  isSelected && !disabled
                     ? "bg-[#DBE4F3] text-[#4B5563]"
+                    : disabled
+                    ? "bg-transparent"
                     : "bg-transparent hover:bg-[#F5F7FB]"
                 }`}
               >
@@ -325,6 +374,14 @@ export default function BookingForm({
 
   const titleClass =
     "font-[var(--font-be-vietnam-pro)] text-[24px] font-semibold leading-[100%] tracking-[0] text-[#005F74]";
+
+  useEffect(() => {
+    const parsedVisitDate = parseISODate(visitDate);
+
+    if (parsedVisitDate && isPastDate(parsedVisitDate)) {
+      onVisitDateChange("");
+    }
+  }, [visitDate, onVisitDateChange]);
 
   useEffect(() => {
     function handleOutsideClick(event: MouseEvent) {
