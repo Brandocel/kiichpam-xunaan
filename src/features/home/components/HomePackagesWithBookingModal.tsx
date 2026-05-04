@@ -18,6 +18,10 @@ export default function HomePackagesWithBookingModal({
   const [selectedPackageCode, setSelectedPackageCode] = useState("");
 
   function handleOpenBooking(packageCode: string) {
+    if (typeof window !== "undefined") {
+      window.localStorage.removeItem("kiichpam_xunaan_booking_draft_v3");
+    }
+
     setSelectedPackageCode(packageCode);
     setIsBookingOpen(true);
   }
@@ -40,6 +44,12 @@ export default function HomePackagesWithBookingModal({
         locale={locale}
         packages={packages}
         initialPackageCode={selectedPackageCode}
+        initialCampaignCode=""
+        initialCampaignByPackageCode={{}}
+        initialAdults={1}
+        initialChildren={0}
+        initialInfants={0}
+        promotionNotice=""
         onClose={handleCloseBooking}
       />
     </>
