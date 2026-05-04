@@ -18,6 +18,12 @@ interface BookingSectionProps {
   locale: "es" | "en";
   packages: PackageItem[];
   initialPackageCode?: string;
+  initialCampaignCode?: string;
+  initialCampaignByPackageCode?: Record<string, string>;
+  initialAdults?: number;
+  initialChildren?: number;
+  initialInfants?: number;
+  promotionNotice?: string;
   isModal?: boolean;
   onClose?: () => void;
 }
@@ -26,10 +32,25 @@ export default function BookingSection({
   locale,
   packages,
   initialPackageCode = "",
+  initialCampaignCode = "",
+  initialCampaignByPackageCode = {},
+  initialAdults = 1,
+  initialChildren = 0,
+  initialInfants = 0,
+  promotionNotice = "",
   isModal = false,
   onClose,
 }: BookingSectionProps) {
-  const booking = useBooking({ locale, initialPackageCode });
+  const booking = useBooking({
+    locale,
+    initialPackageCode,
+    initialCampaignCode,
+    initialCampaignByPackageCode,
+    initialAdults,
+    initialChildren,
+    initialInfants,
+  });
+
   const paymentFormRef = useRef<BookingPaymentFormHandle>(null);
 
   const canContinue =
@@ -56,7 +77,76 @@ export default function BookingSection({
   }
 
   const content = (
-    <div className="w-full max-w-[1320px] bg-[#F3F3F3]">
+    <div className="relative w-full max-w-[1320px] bg-[#F3F3F3]">
+      {promotionNotice ? (
+        <div className="group absolute right-4 top-[180px] z-20 hidden xl:block">
+          <div
+            className="
+              flex max-w-[46px] items-stretch overflow-hidden
+              rounded-[16px]
+              border border-[#EAB6E7]
+              bg-white
+              shadow-[0_16px_34px_rgba(192,40,185,0.22)]
+              transition-all duration-300 ease-out
+              group-hover:max-w-[390px]
+            "
+          >
+            <div
+              className="
+                flex min-h-[126px] w-[46px] shrink-0 items-center justify-center
+                bg-[#C028B9]
+                px-2 py-4
+              "
+            >
+              <span
+                className="
+                  rotate-180 whitespace-nowrap
+                  font-[var(--font-be-vietnam-pro)]
+                  text-[11px] font-black uppercase tracking-[0.18em]
+                  text-white
+                  [writing-mode:vertical-rl]
+                "
+              >
+                {locale === "es" ? "Promoción" : "Promotion"}
+              </span>
+            </div>
+
+            <div
+              className="
+                w-[330px] shrink-0
+                px-5 py-4
+                opacity-0
+                transition-opacity duration-200 ease-out
+                group-hover:opacity-100
+              "
+            >
+              <p
+                className="
+                  mb-1
+                  font-[var(--font-be-vietnam-pro)]
+                  text-[12px] font-black uppercase tracking-[0.12em]
+                  text-[#C028B9]
+                "
+              >
+                {locale === "es"
+                  ? "Promoción aplicada"
+                  : "Promotion applied"}
+              </p>
+
+              <p
+                className="
+                  font-[var(--font-be-vietnam-pro)]
+                  text-[14px] font-bold leading-[150%]
+                  text-[#005F74]
+                "
+              >
+                {promotionNotice}
+              </p>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
       <div className="mx-auto w-full max-w-[1180px] px-5 py-6 md:px-10 md:py-8 xl:px-14 xl:py-10">
         <div className="mb-8 border-b border-[#D9D9D9] pb-6">
           <div className="flex flex-col gap-5">
@@ -90,6 +180,31 @@ export default function BookingSection({
               currentStep={booking.currentStep}
               onStepClick={(step) => booking.goToStep(step)}
             />
+
+            {promotionNotice ? (
+              <div
+                className="
+                  rounded-[16px]
+                  border border-[#EAB6E7]
+                  bg-white
+                  px-4 py-3
+                  shadow-[0_10px_24px_rgba(192,40,185,0.14)]
+                  xl:hidden
+                "
+              >
+                <div className="mb-1 inline-flex rounded-full bg-[#C028B9] px-3 py-1">
+                  <span className="font-[var(--font-be-vietnam-pro)] text-[11px] font-black uppercase tracking-[0.12em] text-white">
+                    {locale === "es"
+                      ? "Promoción aplicada"
+                      : "Promotion applied"}
+                  </span>
+                </div>
+
+                <p className="font-[var(--font-be-vietnam-pro)] text-[14px] font-bold leading-[150%] text-[#005F74]">
+                  {promotionNotice}
+                </p>
+              </div>
+            ) : null}
           </div>
         </div>
 

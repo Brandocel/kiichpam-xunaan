@@ -31,28 +31,55 @@ import {
 } from "../utils/booking-calculations";
 import { validateBookingContact } from "../utils/booking-validators";
 
-type BookingStep = 1 | 2 | 3 | 4;
-
 interface UseBookingParams {
   locale: BookingLocale;
   initialPackageCode?: string;
+  initialCampaignCode?: string;
+  initialCampaignByPackageCode?: Record<string, string>;
+  initialAdults?: number;
+  initialChildren?: number;
+  initialInfants?: number;
 }
+
+type BookingDraftStorageWithCampaign = BookingDraftStorage & {
+  form: BookingDraftStorage["form"] & {
+    campaignCode?: string;
+    campaignByPackageCode?: Record<string, string>;
+  };
+};
 
 const BOOKING_DRAFT_STORAGE_KEY = "kiichpam_xunaan_booking_draft_v3";
 
-function safeReadDraft(): BookingDraftStorage | null {
+function normalizeCode(value?: string | null) {
+  return value?.trim().toUpperCase() ?? "";
+}
+
+function normalizeCampaignMap(map?: Record<string, string>) {
+  if (!map) return {};
+
+  return Object.fromEntries(
+    Object.entries(map)
+      .map(([packageCode, campaignCode]) => [
+        normalizeCode(packageCode),
+        normalizeCode(campaignCode),
+      ])
+      .filter(([packageCode, campaignCode]) => packageCode && campaignCode)
+  );
+}
+
+function safeReadDraft(): BookingDraftStorageWithCampaign | null {
   if (typeof window === "undefined") return null;
 
   try {
     const raw = window.localStorage.getItem(BOOKING_DRAFT_STORAGE_KEY);
     if (!raw) return null;
-    return JSON.parse(raw) as BookingDraftStorage;
+    return JSON.parse(raw) as BookingDraftStorageWithCampaign;
   } catch {
     return null;
   }
 }
 
-function safeWriteDraft(data: BookingDraftStorage) {
+function safeWriteDraft(data: BookingDraftStorageWithCampaign) {
   if (typeof window === "undefined") return;
 
   try {
@@ -75,36 +102,54 @@ function clearStoredDraft() {
   }
 }
 
+function showBookingError(message: string) {
+  if (typeof window === "undefined") return;
+  window.alert(message);
+}
+
 export function useBooking({
   locale,
   initialPackageCode = "",
+  initialCampaignCode = "",
+  initialCampaignByPackageCode = {},
+  initialAdults = 1,
+  initialChildren = 0,
+  initialInfants = 0,
 }: UseBookingParams) {
   const hydratedRef = useRef(false);
   const restoringRef = useRef(false);
+  const lastInitialValuesRef = useRef("");
+
+  const normalizedInitialCampaignByPackageCode = useMemo(
+    () => normalizeCampaignMap(initialCampaignByPackageCode),
+    [initialCampaignByPackageCode]
+  );
+
+  const normalizedInitialPackageCode = useMemo(
+    () => normalizeCode(initialPackageCode),
+    [initialPackageCode]
+  );
+
+  const normalizedInitialCampaignCode = useMemo(
+    () => normalizeCode(initialCampaignCode),
+    [initialCampaignCode]
+  );
 
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
-  
-  function goToStep(step: 1 | 2 | 3 | 4) {
-    if (step >= currentStep) return;
-  
-    if (step === 1) {
-      setContactError("");
-      setPaymentError("");
-    }
-  
-    if (step === 2) {
-      setPaymentError("");
-    }
-  
-    setCurrentStep(step);
-  }
-  
 
-  const [packageCode, setPackageCodeState] = useState(initialPackageCode);
+  const [packageCode, setPackageCodeState] = useState(
+    normalizedInitialPackageCode
+  );
+  const [campaignCode, setCampaignCodeState] = useState(
+    normalizedInitialCampaignCode
+  );
+  const [campaignByPackageCode, setCampaignByPackageCode] =
+    useState<Record<string, string>>(normalizedInitialCampaignByPackageCode);
+
   const [visitDate, setVisitDateState] = useState("");
-  const [adults, setAdultsState] = useState(1);
-  const [children, setChildrenState] = useState(0);
-  const [infants, setInfantsState] = useState(0);
+  const [adults, setAdultsState] = useState(initialAdults);
+  const [children, setChildrenState] = useState(initialChildren);
+  const [infants, setInfantsState] = useState(initialInfants);
   const [inapamVisitors, setInapamVisitorsState] = useState(0);
   const [couponCode, setCouponCodeState] = useState("");
   const [extras, setExtras] = useState<BookingExtraInput[]>([]);
@@ -139,6 +184,24 @@ export function useBooking({
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [acceptedPrivacy, setAcceptedPrivacy] = useState(false);
 
+  const initialValuesSignature = useMemo(() => {
+    return JSON.stringify({
+      initialPackageCode: normalizedInitialPackageCode,
+      initialCampaignCode: normalizedInitialCampaignCode,
+      initialCampaignByPackageCode: normalizedInitialCampaignByPackageCode,
+      initialAdults,
+      initialChildren,
+      initialInfants,
+    });
+  }, [
+    normalizedInitialPackageCode,
+    normalizedInitialCampaignCode,
+    normalizedInitialCampaignByPackageCode,
+    initialAdults,
+    initialChildren,
+    initialInfants,
+  ]);
+
   const apiVisitDate = useMemo(() => toApiVisitDate(visitDate), [visitDate]);
 
   const currentSignature = useMemo(() => {
@@ -150,6 +213,7 @@ export function useBooking({
       infants,
       inapamVisitors,
       couponCode,
+      campaignCode,
       lang: locale,
       extras,
     });
@@ -161,6 +225,7 @@ export function useBooking({
     infants,
     inapamVisitors,
     couponCode,
+    campaignCode,
     locale,
     extras,
   ]);
@@ -188,8 +253,6 @@ export function useBooking({
     });
   }, [packageCode, visitDate, adults, children, infants]);
 
-
-  
   const canSubmitContact = useMemo(() => {
     return Boolean(
       folio &&
@@ -221,12 +284,29 @@ export function useBooking({
     reservation && reservationSignature === currentSignature && folio
   );
 
+  function goToStep(step: 1 | 2 | 3 | 4) {
+    if (step >= currentStep) return;
+
+    if (step === 1) {
+      setContactError("");
+      setPaymentError("");
+    }
+
+    if (step === 2) {
+      setPaymentError("");
+    }
+
+    setCurrentStep(step);
+  }
+
   const persistDraft = useCallback(() => {
     if (!hydratedRef.current || restoringRef.current) return;
 
-    const draft: BookingDraftStorage = {
+    const draft: BookingDraftStorageWithCampaign = {
       form: {
         packageCode,
+        campaignCode,
+        campaignByPackageCode,
         visitDate,
         adults,
         children,
@@ -260,6 +340,8 @@ export function useBooking({
     safeWriteDraft(draft);
   }, [
     packageCode,
+    campaignCode,
+    campaignByPackageCode,
     visitDate,
     adults,
     children,
@@ -301,11 +383,13 @@ export function useBooking({
   const resetAllFlow = useCallback(() => {
     setCurrentStep(1);
 
-    setPackageCodeState(initialPackageCode);
+    setPackageCodeState(normalizedInitialPackageCode);
+    setCampaignCodeState(normalizedInitialCampaignCode);
+    setCampaignByPackageCode(normalizedInitialCampaignByPackageCode);
     setVisitDateState("");
-    setAdultsState(1);
-    setChildrenState(0);
-    setInfantsState(0);
+    setAdultsState(initialAdults);
+    setChildrenState(initialChildren);
+    setInfantsState(initialInfants);
     setInapamVisitorsState(0);
     setCouponCodeState("");
     setExtras([]);
@@ -334,9 +418,18 @@ export function useBooking({
     setAcceptedPrivacy(false);
 
     clearStoredDraft();
-  }, [initialPackageCode]);
+  }, [
+    normalizedInitialPackageCode,
+    normalizedInitialCampaignCode,
+    normalizedInitialCampaignByPackageCode,
+    initialAdults,
+    initialChildren,
+    initialInfants,
+  ]);
 
-  async function recoverReservationFromDraft(stored: BookingDraftStorage) {
+  async function recoverReservationFromDraft(
+    stored: BookingDraftStorageWithCampaign
+  ) {
     const storedFolio = stored.reservation?.folio;
     if (!storedFolio) return;
 
@@ -379,19 +472,47 @@ export function useBooking({
     if (hydratedRef.current) return;
 
     const stored = safeReadDraft();
+    const hasInitialCampaign = Boolean(normalizedInitialCampaignCode);
 
-    if (!stored) {
+    if (!stored || hasInitialCampaign) {
+      clearStoredDraft();
+
       hydratedRef.current = true;
+      lastInitialValuesRef.current = initialValuesSignature;
+
+      setPackageCodeState(normalizedInitialPackageCode);
+      setCampaignCodeState(normalizedInitialCampaignCode);
+      setCampaignByPackageCode(normalizedInitialCampaignByPackageCode);
+      setVisitDateState("");
+      setAdultsState(initialAdults);
+      setChildrenState(initialChildren);
+      setInfantsState(initialInfants);
+      setInapamVisitorsState(0);
+      setCouponCodeState("");
+      setExtras([]);
+
       return;
     }
 
     restoringRef.current = true;
 
-    setPackageCodeState(stored.form?.packageCode || initialPackageCode || "");
+    const storedPackageCode = normalizeCode(stored.form?.packageCode);
+    const storedCampaignCode = normalizeCode(stored.form?.campaignCode);
+    const storedCampaignMap = normalizeCampaignMap(
+      stored.form?.campaignByPackageCode
+    );
+
+    setPackageCodeState(storedPackageCode || normalizedInitialPackageCode);
+    setCampaignCodeState(storedCampaignCode || normalizedInitialCampaignCode);
+    setCampaignByPackageCode(
+      Object.keys(storedCampaignMap).length > 0
+        ? storedCampaignMap
+        : normalizedInitialCampaignByPackageCode
+    );
     setVisitDateState(stored.form?.visitDate || "");
-    setAdultsState(stored.form?.adults ?? 1);
-    setChildrenState(stored.form?.children ?? 0);
-    setInfantsState(stored.form?.infants ?? 0);
+    setAdultsState(stored.form?.adults ?? initialAdults);
+    setChildrenState(stored.form?.children ?? initialChildren);
+    setInfantsState(stored.form?.infants ?? initialInfants);
     setInapamVisitorsState(stored.form?.inapamVisitors ?? 0);
     setCouponCodeState(stored.form?.couponCode || "");
     setExtras(stored.form?.extras ?? []);
@@ -406,10 +527,59 @@ export function useBooking({
     setAcceptedPrivacy(stored.contact?.acceptedPrivacy ?? false);
 
     hydratedRef.current = true;
+    lastInitialValuesRef.current = initialValuesSignature;
     restoringRef.current = false;
 
     void recoverReservationFromDraft(stored);
-  }, [initialPackageCode]);
+  }, [
+    normalizedInitialPackageCode,
+    normalizedInitialCampaignCode,
+    normalizedInitialCampaignByPackageCode,
+    initialAdults,
+    initialChildren,
+    initialInfants,
+    initialValuesSignature,
+  ]);
+
+  useEffect(() => {
+    if (!hydratedRef.current) return;
+    if (restoringRef.current) return;
+    if (lastInitialValuesRef.current === initialValuesSignature) return;
+
+    lastInitialValuesRef.current = initialValuesSignature;
+
+    clearStoredDraft();
+    invalidateQuoteReservationAndPayment();
+
+    setPackageCodeState(normalizedInitialPackageCode);
+    setCampaignCodeState(normalizedInitialCampaignCode);
+    setCampaignByPackageCode(normalizedInitialCampaignByPackageCode);
+    setVisitDateState("");
+    setAdultsState(initialAdults);
+    setChildrenState(initialChildren);
+    setInfantsState(initialInfants);
+    setInapamVisitorsState(0);
+    setCouponCodeState("");
+    setExtras([]);
+
+    setFirstName("");
+    setLastName("");
+    setEmail("");
+    setPhone("");
+    setCountry("");
+    setComments("");
+    setAcceptedTerms(false);
+    setAcceptedPrivacy(false);
+  }, [
+    initialValuesSignature,
+    normalizedInitialPackageCode,
+    normalizedInitialCampaignCode,
+    normalizedInitialCampaignByPackageCode,
+    initialAdults,
+    initialChildren,
+    initialInfants,
+    invalidateQuoteReservationAndPayment,
+  ]);
 
   useEffect(() => {
     if (!hydratedRef.current) return;
@@ -417,9 +587,23 @@ export function useBooking({
   }, [persistDraft]);
 
   function setPackageCode(value: string) {
-    if (value !== packageCode) {
+    const nextPackageCode = normalizeCode(value);
+
+    if (nextPackageCode !== packageCode) {
       invalidateQuoteReservationAndPayment();
-      setPackageCodeState(value);
+      setPackageCodeState(nextPackageCode);
+
+      const nextCampaignCode = campaignByPackageCode[nextPackageCode] || "";
+      setCampaignCodeState(nextCampaignCode);
+    }
+  }
+
+  function setCampaignCode(value: string) {
+    const nextCampaignCode = normalizeCode(value);
+
+    if (nextCampaignCode !== campaignCode) {
+      invalidateQuoteReservationAndPayment();
+      setCampaignCodeState(nextCampaignCode);
     }
   }
 
@@ -485,6 +669,7 @@ export function useBooking({
         infants,
         inapamVisitors,
         couponCode: normalizeCouponCode(couponCode) || undefined,
+        campaignCode: campaignCode || undefined,
         lang: locale,
         extras: normalizeExtras(extras),
       };
@@ -504,6 +689,8 @@ export function useBooking({
         error instanceof Error ? error.message : "Error al cotizar";
 
       setQuoteError(message);
+      showBookingError(message);
+
       setQuote(null);
       setQuoteSignature("");
       return null;
@@ -514,11 +701,13 @@ export function useBooking({
 
   async function createDraftReservation() {
     if (!canQuote) {
-      setReservationError(
+      const message =
         locale === "es"
           ? "Completa paquete, fecha y al menos un visitante."
-          : "Complete package, date and at least one visitor."
-      );
+          : "Complete package, date and at least one visitor.";
+
+      setReservationError(message);
+      showBookingError(message);
       return null;
     }
 
@@ -534,6 +723,7 @@ export function useBooking({
         infants,
         inapamVisitors,
         couponCode: normalizeCouponCode(couponCode) || undefined,
+        campaignCode: campaignCode || undefined,
         lang: locale,
         extras: normalizeExtras(extras),
       };
@@ -555,6 +745,8 @@ export function useBooking({
         error instanceof Error ? error.message : "Error al crear reservación";
 
       setReservationError(message);
+      showBookingError(message);
+
       return null;
     } finally {
       setLoadingReservation(false);
@@ -563,11 +755,13 @@ export function useBooking({
 
   async function submitContact() {
     if (!folio) {
-      setContactError(
+      const message =
         locale === "es"
           ? "No se encontró el folio de la reservación"
-          : "Reservation folio was not found"
-      );
+          : "Reservation folio was not found";
+
+      setContactError(message);
+      showBookingError(message);
       return null;
     }
 
@@ -583,16 +777,19 @@ export function useBooking({
     const validation = validateBookingContact(payload, locale);
 
     if (!acceptedTerms || !acceptedPrivacy) {
-      setContactError(
+      const message =
         locale === "es"
           ? "Debes aceptar términos y políticas de privacidad"
-          : "You must accept terms and privacy policy"
-      );
+          : "You must accept terms and privacy policy";
+
+      setContactError(message);
+      showBookingError(message);
       return null;
     }
 
     if (!validation.valid) {
       setContactError(validation.firstError);
+      showBookingError(validation.firstError);
       return null;
     }
 
@@ -615,6 +812,8 @@ export function useBooking({
         error instanceof Error ? error.message : "Error al guardar contacto";
 
       setContactError(message);
+      showBookingError(message);
+
       return null;
     } finally {
       setLoadingContact(false);
@@ -623,11 +822,13 @@ export function useBooking({
 
   async function generateCardPaymentIntent() {
     if (!folio) {
-      setPaymentError(
+      const message =
         locale === "es"
           ? "No se encontró el folio para generar el pago"
-          : "Reservation folio was not found"
-      );
+          : "Reservation folio was not found";
+
+      setPaymentError(message);
+      showBookingError(message);
       return null;
     }
 
@@ -641,7 +842,9 @@ export function useBooking({
       });
 
       if (!result.success || !result.data) {
-        throw new Error(result.message || "No se pudo iniciar el pago con tarjeta");
+        throw new Error(
+          result.message || "No se pudo iniciar el pago con tarjeta"
+        );
       }
 
       const nextPaymentIntent: PaymentIntentData = {
@@ -663,6 +866,8 @@ export function useBooking({
           : "Error al generar el pago con tarjeta";
 
       setPaymentError(message);
+      showBookingError(message);
+
       return null;
     } finally {
       setLoadingPayment(false);
@@ -687,6 +892,8 @@ export function useBooking({
           : "No se pudo confirmar el pago con tarjeta";
 
       setPaymentError(message);
+      showBookingError(message);
+
       return null;
     } finally {
       setLoadingPayment(false);
@@ -695,11 +902,13 @@ export function useBooking({
 
   async function generateOxxoPayment() {
     if (!folio) {
-      setPaymentError(
+      const message =
         locale === "es"
           ? "No se encontró el folio para generar el pago OXXO"
-          : "Reservation folio was not found for OXXO payment"
-      );
+          : "Reservation folio was not found for OXXO payment";
+
+      setPaymentError(message);
+      showBookingError(message);
       return null;
     }
 
@@ -741,6 +950,8 @@ export function useBooking({
         error instanceof Error ? error.message : "Error al generar pago OXXO";
 
       setPaymentError(message);
+      showBookingError(message);
+
       return null;
     } finally {
       setLoadingPayment(false);
@@ -750,11 +961,13 @@ export function useBooking({
   async function handlePrimaryAction() {
     if (currentStep === 1) {
       if (!canQuote) {
-        setQuoteError(
+        const message =
           locale === "es"
             ? "Completa paquete, fecha y al menos un visitante."
-            : "Complete package, date and at least one visitor."
-        );
+            : "Complete package, date and at least one visitor.";
+
+        setQuoteError(message);
+        showBookingError(message);
         return;
       }
 
@@ -861,6 +1074,9 @@ export function useBooking({
     packageCode,
     setPackageCode,
 
+    campaignCode,
+    setCampaignCode,
+
     visitDate,
     setVisitDate,
 
@@ -868,6 +1084,7 @@ export function useBooking({
     children,
     infants,
     inapamVisitors,
+
     couponCode,
     setCouponCode,
 
@@ -925,6 +1142,6 @@ export function useBooking({
     decrement,
     handleCardPaymentSucceeded,
     resetAllFlow,
-    goToStep
+    goToStep,
   };
 }

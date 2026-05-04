@@ -98,26 +98,28 @@ export function normalizeExtras(
     .sort((a, b) => a.code.localeCompare(b.code));
 }
 
-export function buildBookingSignature(input: {
+export function buildBookingSignature(params: {
   packageCode: string;
   visitDate: string;
   adults: number;
   children: number;
   infants: number;
   inapamVisitors: number;
-  couponCode: string;
-  lang: BookingLocale;
-  extras?: Array<{ code: string; qty: number }>;
+  couponCode?: string;
+  campaignCode?: string;
+  lang: string;
+  extras?: unknown[];
 }) {
   return JSON.stringify({
-    packageCode: input.packageCode.trim().toUpperCase(),
-    visitDate: input.visitDate.trim(),
-    adults: input.adults,
-    children: input.children,
-    infants: input.infants,
-    inapamVisitors: input.inapamVisitors,
-    couponCode: normalizeCouponCode(input.couponCode),
-    lang: input.lang,
-    extras: normalizeExtras(input.extras),
+    packageCode: params.packageCode,
+    visitDate: params.visitDate,
+    adults: params.adults,
+    children: params.children,
+    infants: params.infants,
+    inapamVisitors: params.inapamVisitors,
+    couponCode: normalizeCouponCode(params.couponCode || ""),
+    campaignCode: params.campaignCode || "",
+    lang: params.lang,
+    extras: normalizeExtras(params.extras as any),
   });
 }

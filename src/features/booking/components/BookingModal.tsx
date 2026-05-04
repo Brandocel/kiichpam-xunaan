@@ -9,6 +9,12 @@ interface BookingModalProps {
   locale: "es" | "en";
   packages: PackageItem[];
   initialPackageCode?: string;
+  initialCampaignCode?: string;
+  initialCampaignByPackageCode?: Record<string, string>;
+  initialAdults?: number;
+  initialChildren?: number;
+  initialInfants?: number;
+  promotionNotice?: string;
   onClose: () => void;
 }
 
@@ -17,6 +23,12 @@ export default function BookingModal({
   locale,
   packages,
   initialPackageCode = "",
+  initialCampaignCode = "",
+  initialCampaignByPackageCode = {},
+  initialAdults = 1,
+  initialChildren = 0,
+  initialInfants = 0,
+  promotionNotice = "",
   onClose,
 }: BookingModalProps) {
   useEffect(() => {
@@ -26,9 +38,7 @@ export default function BookingModal({
     document.body.style.overflow = "hidden";
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        onClose();
-      }
+      if (event.key === "Escape") onClose();
     };
 
     window.addEventListener("keydown", handleKeyDown);
@@ -57,6 +67,12 @@ export default function BookingModal({
           locale={locale}
           packages={packages}
           initialPackageCode={initialPackageCode}
+          initialCampaignCode={initialCampaignCode}
+          initialCampaignByPackageCode={initialCampaignByPackageCode}
+          initialAdults={initialAdults}
+          initialChildren={initialChildren}
+          initialInfants={initialInfants}
+          promotionNotice={promotionNotice}
           isModal
           onClose={onClose}
         />

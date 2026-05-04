@@ -20,13 +20,6 @@ const headerNavigation = [
     },
   },
   {
-    href: "/galeria",
-    label: {
-      es: "Galería",
-      en: "Gallery",
-    },
-  },
-  {
     href: "/pedidas-de-mano",
     label: {
       es: "Pedidas de mano",
