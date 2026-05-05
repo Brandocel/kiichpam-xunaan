@@ -2,6 +2,7 @@
 
 import {
   forwardRef,
+  useEffect,
   useImperativeHandle,
   useMemo,
   useRef,
@@ -174,9 +175,7 @@ const CardPaymentContent = forwardRef<
 
       return null;
     } catch (err) {
-      setLocalError(
-        err instanceof Error ? err.message : t.unconfirmedPayment
-      );
+      setLocalError(err instanceof Error ? err.message : t.unconfirmedPayment);
       return null;
     } finally {
       setSubmitting(false);
@@ -230,6 +229,8 @@ const BookingPaymentForm = forwardRef<
 ) {
   const t = getText(locale);
   const clientSecret = paymentIntent?.stripe?.clientSecret;
+
+  const paymentRootRef = useRef<HTMLDivElement | null>(null);
   const cardPaymentRef = useRef<CardPaymentContentHandle>(null);
 
   const elementOptions = useMemo(() => {
@@ -242,6 +243,25 @@ const BookingPaymentForm = forwardRef<
       },
     };
   }, [clientSecret]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const isMobile = window.matchMedia("(max-width: 767px)").matches;
+
+    if (!isMobile) return;
+
+    const timer = window.setTimeout(() => {
+      paymentRootRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }, 150);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, []);
 
   useImperativeHandle(ref, () => ({
     async submit() {
@@ -262,7 +282,10 @@ const BookingPaymentForm = forwardRef<
   }));
 
   return (
-    <div className="w-full">
+    <div
+      ref={paymentRootRef}
+      className="w-full scroll-mt-[90px] md:scroll-mt-0"
+    >
       <h2 className="mb-6 font-[var(--font-be-vietnam-pro)] text-[24px] font-semibold text-[#005F74]">
         {t.title}
       </h2>

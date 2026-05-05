@@ -150,7 +150,7 @@ function getFeatureOrder(include: string) {
     group.some((keyword) => text.includes(normalizeText(keyword)))
   );
 
-  return index === -1 ? 99 : index; 
+  return index === -1 ? 99 : index;
 }
 
 function sortIncludes(includes: string[]) {

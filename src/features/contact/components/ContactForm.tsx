@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { FormEvent, useState } from "react";
+import { FormEvent, useRef, useState } from "react";
 import { sendContactMessage } from "../services/contact.service";
 import type {
   ContactLocale,
@@ -49,19 +49,19 @@ const DEFAULT_SOCIALS: SocialItem[] = [
 
 const translations = {
   es: {
-    title: "Mantengamonos en contacto",
+    title: "Mantengámonos en contacto",
     description:
-      "Agradecemos todos comentarios para poderte dar la mejor experiencia posible antes, durante y después de tu visita a nuestro ecoparque",
+      "Agradecemos todos tus comentarios para poder darte la mejor experiencia posible antes, durante y después de tu visita a nuestro ecoparque",
     firstName: "Nombre",
     lastName: "Apellido",
     email: "Email",
-    phone: "Numero de teléfono",
+    phone: "Número de teléfono",
     message: "Mensaje",
     submit: "Enviar",
     sending: "Enviando...",
     success: "Mensaje enviado correctamente.",
     error: "No se pudo enviar el mensaje.",
-    follow: "Siguenos en:",
+    follow: "Síguenos en:",
   },
   en: {
     title: "Stay in touch",
@@ -232,10 +232,10 @@ export default function ContactForm({ locale }: ContactFormProps) {
           </div>
 
           <div className="flex w-full justify-center md:justify-end">
-            <img
-              src="/contacto/pajaroto.png"
-              alt="Contacto"
-              className="h-auto w-full max-w-[560px] rounded-[10px] object-cover shadow-[0_22px_60px_rgba(0,0,0,0.18)] md:min-h-[430px] lg:min-h-[520px]"
+            <HoverMascotaVideo
+              posterSrc="/contacto/pajaroto.png"
+              videoSrc="/contacto/mascota.mp4"
+              alt="Contacto Kiichpam Xunaan"
             />
           </div>
         </div>
@@ -282,6 +282,89 @@ export default function ContactForm({ locale }: ContactFormProps) {
         </div>
       </div>
     </section>
+  );
+}
+
+interface HoverMascotaVideoProps {
+  posterSrc: string;
+  videoSrc: string;
+  alt: string;
+}
+
+function HoverMascotaVideo({
+  posterSrc,
+  videoSrc,
+  alt,
+}: HoverMascotaVideoProps) {
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const [showPoster, setShowPoster] = useState(true);
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  async function playVideo() {
+    const video = videoRef.current;
+
+    if (!video || isPlaying) return;
+
+    try {
+      setIsPlaying(true);
+      setShowPoster(false);
+
+      video.currentTime = 0;
+      video.muted = true;
+
+      await video.play();
+    } catch (error) {
+      setIsPlaying(false);
+      setShowPoster(true);
+    }
+  }
+
+  function handleVideoEnded() {
+    const video = videoRef.current;
+
+    if (video) {
+      video.pause();
+      video.currentTime = 0;
+    }
+
+    setIsPlaying(false);
+    setShowPoster(true);
+  }
+
+  return (
+    <div
+      onMouseEnter={playVideo}
+      onClick={playVideo}
+      className="group relative h-auto w-full max-w-[560px] cursor-pointer overflow-hidden rounded-[10px] shadow-[0_22px_60px_rgba(0,0,0,0.18)] md:min-h-[430px] lg:min-h-[520px]"
+      aria-label={alt}
+    >
+      <video
+        ref={videoRef}
+        src={videoSrc}
+        poster={posterSrc}
+        muted
+        playsInline
+        preload="metadata"
+        onEnded={handleVideoEnded}
+        className="block h-full min-h-[430px] w-full object-cover lg:min-h-[520px]"
+      />
+
+      <img
+        src={posterSrc}
+        alt={alt}
+        className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-300 ${
+          showPoster ? "opacity-100" : "pointer-events-none opacity-0"
+        }`}
+      />
+
+      {showPoster && (
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/5 opacity-0 transition duration-300 group-hover:opacity-100">
+          <div className="rounded-full bg-white/90 px-5 py-3 text-sm font-semibold text-[#073d5d] shadow-lg">
+            Ver animación
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 

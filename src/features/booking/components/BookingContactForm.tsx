@@ -222,6 +222,8 @@ export default function BookingContactForm({
 
   const [countryOpen, setCountryOpen] = useState(false);
   const [countrySearch, setCountrySearch] = useState("");
+
+  const formRootRef = useRef<HTMLDivElement | null>(null);
   const countryRef = useRef<HTMLDivElement | null>(null);
 
   const selectedCountry = countries.find(
@@ -246,6 +248,25 @@ export default function BookingContactForm({
   }, [countrySearch, locale]);
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const isMobile = window.matchMedia("(max-width: 767px)").matches;
+
+    if (!isMobile) return;
+
+    const timer = window.setTimeout(() => {
+      formRootRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }, 150);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, []);
+
+  useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
         countryRef.current &&
@@ -266,7 +287,7 @@ export default function BookingContactForm({
     "font-[var(--font-be-vietnam-pro)] text-[24px] font-semibold text-[#005F74]";
 
   return (
-    <div className="w-full">
+    <div ref={formRootRef} className="w-full scroll-mt-[90px] md:scroll-mt-0">
       <h2 className={`mb-8 ${titleClass}`}>{t.title}</h2>
 
       <div className="space-y-5">
