@@ -79,6 +79,9 @@ const orderedFeatureKeywords = [
   ["bicicleta", "bicicletas", "bicycle", "bike", "transportation"],
 ];
 
+const reserveButtonClassName =
+  "group relative mt-4 flex h-[44px] w-full items-center justify-center overflow-hidden rounded-[7px] bg-[#C028B9] px-4 text-center font-[var(--font-be-vietnam-pro)] text-[14px] font-black uppercase leading-none text-white transition-all duration-300 ease-out hover:-translate-y-[2px] hover:bg-[#a91fa3] hover:shadow-[0_16px_28px_rgba(192,40,185,0.38)] active:translate-y-0 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-white/70 focus:ring-offset-2 focus:ring-offset-[#483289]";
+
 function formatPrice(price: number) {
   return `$${(price / 100).toFixed(2)}`;
 }
@@ -124,7 +127,10 @@ function getNotesText(item: PackageItem) {
 }
 
 function normalizeText(text: string) {
-  return text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  return text
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
 }
 
 function getIncludeIcon(include: string) {
@@ -144,7 +150,7 @@ function getFeatureOrder(include: string) {
     group.some((keyword) => text.includes(normalizeText(keyword)))
   );
 
-  return index === -1 ? 99 : index;
+  return index === -1 ? 99 : index; 
 }
 
 function sortIncludes(includes: string[]) {
@@ -181,6 +187,20 @@ function shouldBeBold(packageCode: string, include: string) {
   }
 
   return false;
+}
+
+function ReserveButtonContent({ locale }: { locale: "es" | "en" }) {
+  return (
+    <>
+      <span className="pointer-events-none absolute inset-0 -translate-x-full bg-[linear-gradient(120deg,transparent_0%,rgba(255,255,255,0.35)_45%,transparent_70%)] opacity-0 transition-all duration-700 ease-out group-hover:translate-x-full group-hover:opacity-100" />
+
+      <span className="pointer-events-none absolute inset-0 rounded-[7px] ring-1 ring-white/20 transition duration-300 group-hover:ring-white/40" />
+
+      <span className="relative z-[1] flex items-center justify-center transition-transform duration-300 ease-out group-hover:scale-[1.03]">
+        {getReserveText(locale)}
+      </span>
+    </>
+  );
 }
 
 export default function HomePackages({
@@ -260,8 +280,8 @@ export default function HomePackages({
                             <span
                               className={`break-words ${
                                 bold
-                                    ? "font-semibold text-[#050505]"
-                                    : "font-normal text-[#111111]"
+                                  ? "font-semibold text-[#050505]"
+                                  : "font-normal text-[#111111]"
                               }`}
                             >
                               {include}
@@ -295,16 +315,16 @@ export default function HomePackages({
                       <button
                         type="button"
                         onClick={() => onReserve(item.code)}
-                        className="mt-4 flex h-[44px] w-full items-center justify-center rounded-[7px] bg-[#C028B9] px-4 text-center font-[var(--font-be-vietnam-pro)] text-[14px] font-black uppercase leading-none text-white transition hover:bg-[#a91fa3]"
+                        className={reserveButtonClassName}
                       >
-                        {getReserveText(locale)}
+                        <ReserveButtonContent locale={locale} />
                       </button>
                     ) : (
                       <Link
                         href={getReserveHref(locale, item.code)}
-                        className="mt-4 flex h-[44px] w-full items-center justify-center rounded-[7px] bg-[#C028B9] px-4 text-center font-[var(--font-be-vietnam-pro)] text-[14px] font-black uppercase leading-none text-white transition hover:bg-[#a91fa3]"
+                        className={reserveButtonClassName}
                       >
-                        {getReserveText(locale)}
+                        <ReserveButtonContent locale={locale} />
                       </Link>
                     )}
                   </div>
