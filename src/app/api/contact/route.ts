@@ -1,32 +1,34 @@
-// src/app/api/contact/route.ts
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from "next/server";
 
-export async function POST(request: NextRequest) {
+import { kiichpamApiFetch } from "@/shared/lib/kiichpam-api";
+
+export async function POST(request: Request) {
   try {
     const body = await request.json();
 
-    // Aquí puedes agregar lógica real más adelante (enviar email, guardar en BD, etc.)
-    console.log('Contacto recibido:', body);
+    const result = await kiichpamApiFetch("/contact", {
+      method: "POST",
+      body,
+      protected: false,
+    });
 
-    return NextResponse.json({
-      success: true,
-      message: "Mensaje recibido correctamente. Te contactaremos pronto.",
+    return NextResponse.json(result, {
+      status: 200,
     });
   } catch (error) {
-    console.error('Error en contacto:', error);
+    console.error("CONTACT_PROXY_ERROR", error);
+
+    const message =
+      error instanceof Error && error.message
+        ? error.message
+        : "No se pudo enviar el mensaje.";
+
     return NextResponse.json(
-      { 
-        success: false, 
-        message: "Error al enviar el mensaje. Inténtalo de nuevo." 
+      {
+        success: false,
+        message,
       },
-      { status: 500 }
+      { status: 400 }
     );
   }
-}
-
-// Opcional: GET para probar que la ruta funciona
-export async function GET() {
-  return NextResponse.json({
-    message: "API de contacto funcionando correctamente",
-  });
 }
