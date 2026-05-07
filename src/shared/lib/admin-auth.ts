@@ -35,6 +35,7 @@ function base64UrlEncode(bytes: Uint8Array): string {
 
 function base64UrlDecode(value: string): Uint8Array {
   const base64 = value.replace(/-/g, "+").replace(/_/g, "/");
+
   const padded = base64.padEnd(
     base64.length + ((4 - (base64.length % 4)) % 4),
     "="
@@ -42,7 +43,31 @@ function base64UrlDecode(value: string): Uint8Array {
 
   const binary = atob(padded);
 
-  return Uint8Array.from(binary, (char) => char.charCodeAt(0));
+  const bytes = new Uint8Array(binary.length);
+
+  for (let index = 0; index < binary.length; index += 1) {
+    bytes[index] = binary.charCodeAt(index);
+  }
+
+  return bytes;
+}
+
+/**
+ * Convierte un Uint8Array a un ArrayBuffer normal.
+ *
+ * Esto evita el error de TypeScript:
+ * Uint8Array<ArrayBufferLike> is not assignable to BufferSource
+ *
+ * El problema aparece en builds estrictos de Next/TypeScript cuando
+ * crypto.subtle.verify espera un BufferSource compatible con ArrayBuffer.
+ */
+function toArrayBuffer(bytes: Uint8Array): ArrayBuffer {
+  const buffer = new ArrayBuffer(bytes.byteLength);
+  const view = new Uint8Array(buffer);
+
+  view.set(bytes);
+
+  return buffer;
 }
 
 async function getHmacKey(secret: string): Promise<CryptoKey> {
@@ -60,7 +85,12 @@ async function getHmacKey(secret: string): Promise<CryptoKey> {
 
 async function signData(data: string, secret: string): Promise<string> {
   const key = await getHmacKey(secret);
-  const signature = await crypto.subtle.sign("HMAC", key, encoder.encode(data));
+
+  const signature = await crypto.subtle.sign(
+    "HMAC",
+    key,
+    encoder.encode(data)
+  );
 
   return base64UrlEncode(new Uint8Array(signature));
 }
@@ -73,12 +103,11 @@ async function verifySignature(
   try {
     const key = await getHmacKey(secret);
 
-    return crypto.subtle.verify(
-      "HMAC",
-      key,
-      base64UrlDecode(signature),
-      encoder.encode(data)
-    );
+    const signatureBytes = base64UrlDecode(signature);
+    const signatureBuffer = toArrayBuffer(signatureBytes);
+    const dataBytes = encoder.encode(data);
+
+    return crypto.subtle.verify("HMAC", key, signatureBuffer, dataBytes);
   } catch {
     return false;
   }
@@ -99,18 +128,25 @@ export async function verifyAdminSession(
   token: string | undefined,
   secret: string
 ): Promise<AdminSessionPayload | null> {
-  if (!token) return null;
+  if (!token) {
+    return null;
+  }
 
   const [payloadEncoded, signature] = token.split(".");
 
-  if (!payloadEncoded || !signature) return null;
+  if (!payloadEncoded || !signature) {
+    return null;
+  }
 
   const isValid = await verifySignature(payloadEncoded, signature, secret);
 
-  if (!isValid) return null;
+  if (!isValid) {
+    return null;
+  }
 
   try {
-    const payloadJson = decoder.decode(base64UrlDecode(payloadEncoded));
+    const payloadBytes = base64UrlDecode(payloadEncoded);
+    const payloadJson = decoder.decode(payloadBytes);
     const payload = JSON.parse(payloadJson) as AdminSessionPayload;
 
     const now = Math.floor(Date.now() / 1000);
