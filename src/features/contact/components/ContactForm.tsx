@@ -2,12 +2,11 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { FormEvent, useRef, useState } from "react";
+import { type ChangeEvent, type FormEvent, useRef, useState } from "react";
+
 import { sendContactMessage } from "../services/contact.service";
-import type {
-  ContactLocale,
-  ContactSubjectType,
-} from "../types/contact.types";
+
+type ContactLocale = "es" | "en";
 
 interface ContactFormProps {
   locale: ContactLocale;
@@ -17,6 +16,14 @@ type SocialItem = {
   alt: string;
   href: string;
   src: string;
+};
+
+type ContactFormState = {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  message: string;
 };
 
 const DEFAULT_SOCIALS: SocialItem[] = [
@@ -62,6 +69,11 @@ const translations = {
     success: "Mensaje enviado correctamente.",
     error: "No se pudo enviar el mensaje.",
     follow: "Síguenos en:",
+    defaultSubject: "Mensaje desde formulario de contacto",
+    defaultCountry: "No especificado",
+    missingName: "Ingresa tu nombre y apellido.",
+    missingEmail: "Ingresa tu correo electrónico.",
+    missingMessage: "Ingresa tu mensaje.",
   },
   en: {
     title: "Stay in touch",
@@ -77,29 +89,33 @@ const translations = {
     success: "Message sent successfully.",
     error: "The message could not be sent.",
     follow: "Follow us:",
+    defaultSubject: "Message from contact form",
+    defaultCountry: "Not specified",
+    missingName: "Enter your first and last name.",
+    missingEmail: "Enter your email address.",
+    missingMessage: "Enter your message.",
   },
+} as const;
+
+const initialFormData: ContactFormState = {
+  firstName: "",
+  lastName: "",
+  email: "",
+  phone: "",
+  message: "",
 };
 
 export default function ContactForm({ locale }: ContactFormProps) {
-  const t = translations[locale];
+  const t = translations[locale] ?? translations.es;
 
-  const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    phone: "",
-    message: "",
-  });
-
+  const [formData, setFormData] = useState<ContactFormState>(initialFormData);
   const [isSending, setIsSending] = useState(false);
   const [status, setStatus] = useState<{
     type: "success" | "error";
     message: string;
   } | null>(null);
 
-  function handleChange(
-    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) {
+  function handleChange(event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
     const { name, value } = event.target;
 
     setFormData((prev) => ({
@@ -108,22 +124,54 @@ export default function ContactForm({ locale }: ContactFormProps) {
     }));
   }
 
+  function validateForm() {
+    const fullName = `${formData.firstName.trim()} ${formData.lastName.trim()}`.trim();
+
+    if (!fullName) {
+      return t.missingName;
+    }
+
+    if (!formData.email.trim()) {
+      return t.missingEmail;
+    }
+
+    if (!formData.message.trim()) {
+      return t.missingMessage;
+    }
+
+    return null;
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
     setStatus(null);
+
+    const validationMessage = validateForm();
+
+    if (validationMessage) {
+      setStatus({
+        type: "error",
+        message: validationMessage,
+      });
+
+      return;
+    }
+
     setIsSending(true);
 
     try {
+      const fullName = `${formData.firstName.trim()} ${formData.lastName.trim()}`.trim();
+
       await sendContactMessage({
-        name: `${formData.firstName.trim()} ${formData.lastName.trim()}`.trim(),
+        name: fullName,
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
         email: formData.email.trim(),
-        phone: formData.phone.trim() || undefined,
-        country: undefined,
-        subjectType: "general" as ContactSubjectType,
-        subject:
-          locale === "es"
-            ? "Mensaje desde formulario de contacto"
-            : "Message from contact form",
+        phone: formData.phone.trim() || "No especificado",
+        country: t.defaultCountry,
+        subjectType: "reservations",
+        subject: t.defaultSubject,
         message: formData.message.trim(),
         lang: locale,
       });
@@ -133,13 +181,7 @@ export default function ContactForm({ locale }: ContactFormProps) {
         message: t.success,
       });
 
-      setFormData({
-        firstName: "",
-        lastName: "",
-        email: "",
-        phone: "",
-        message: "",
-      });
+      setFormData(initialFormData);
     } catch (error) {
       setStatus({
         type: "error",
@@ -303,7 +345,9 @@ function HoverMascotaVideo({
   async function playVideo() {
     const video = videoRef.current;
 
-    if (!video || isPlaying) return;
+    if (!video || isPlaying) {
+      return;
+    }
 
     try {
       setIsPlaying(true);
@@ -313,7 +357,7 @@ function HoverMascotaVideo({
       video.muted = true;
 
       await video.play();
-    } catch (error) {
+    } catch {
       setIsPlaying(false);
       setShowPoster(true);
     }
@@ -349,10 +393,12 @@ function HoverMascotaVideo({
         className="block h-full min-h-[430px] w-full object-cover lg:min-h-[520px]"
       />
 
-      <img
+      <Image
         src={posterSrc}
         alt={alt}
-        className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-300 ${
+        fill
+        sizes="(max-width: 768px) 100vw, 560px"
+        className={`object-cover transition-opacity duration-300 ${
           showPoster ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
       />
@@ -375,7 +421,7 @@ interface FloatingInputProps {
   type?: string;
   required?: boolean;
   className?: string;
-  onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  onChange: (event: ChangeEvent<HTMLInputElement>) => void;
 }
 
 function FloatingInput({
@@ -416,7 +462,7 @@ interface FloatingTextareaProps {
   value: string;
   required?: boolean;
   className?: string;
-  onChange: (event: React.ChangeEvent<HTMLTextAreaElement>) => void;
+  onChange: (event: ChangeEvent<HTMLTextAreaElement>) => void;
 }
 
 function FloatingTextarea({
