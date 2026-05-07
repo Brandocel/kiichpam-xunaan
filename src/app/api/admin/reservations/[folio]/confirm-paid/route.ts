@@ -1,16 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
-import {
-  buildKiichpamApiUrl,
-  fetchKiichpamApi,
-} from "@/shared/lib/kiichpam-api";
+
+import { kiichpamApiFetch } from "@/shared/lib/kiichpam-api";
 import { requireAdminSession } from "@/shared/lib/require-admin-session";
 
 type RouteContext = {
-  params: Promise<{
-    folio: string;
-  }> | {
-    folio: string;
-  };
+  params:
+    | Promise<{
+        folio: string;
+      }>
+    | {
+        folio: string;
+      };
 };
 
 export async function POST(request: NextRequest, context: RouteContext) {
@@ -23,24 +23,29 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     const { folio } = await context.params;
 
-    const apiUrl = buildKiichpamApiUrl(
-      `/reservations/${encodeURIComponent(folio)}/confirm-paid`
+    const result = await kiichpamApiFetch(
+      `/reservations/${encodeURIComponent(folio)}/confirm-paid`,
+      {
+        method: "POST",
+        protected: true,
+      }
     );
 
-    const apiResponse = await fetchKiichpamApi(apiUrl, {
-      method: "POST",
-    });
-
-    return NextResponse.json(apiResponse.data, {
-      status: apiResponse.status,
+    return NextResponse.json(result, {
+      status: 200,
     });
   } catch (error) {
     console.error("ADMIN_RESERVATION_CONFIRM_PAID_PROXY_ERROR", error);
 
+    const message =
+      error instanceof Error && error.message
+        ? error.message
+        : "No se pudo marcar la reservación como pagada.";
+
     return NextResponse.json(
       {
         success: false,
-        message: "No se pudo marcar la reservación como pagada.",
+        message,
       },
       { status: 500 }
     );

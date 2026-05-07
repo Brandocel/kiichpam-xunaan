@@ -1,16 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
-import {
-  buildKiichpamApiUrl,
-  fetchKiichpamApi,
-} from "@/shared/lib/kiichpam-api";
+
+import { kiichpamApiFetch } from "@/shared/lib/kiichpam-api";
 import { requireAdminSession } from "@/shared/lib/require-admin-session";
 
 type RouteContext = {
-  params: Promise<{
-    folio: string;
-  }> | {
-    folio: string;
-  };
+  params:
+    | Promise<{
+        folio: string;
+      }>
+    | {
+        folio: string;
+      };
 };
 
 export async function PATCH(request: NextRequest, context: RouteContext) {
@@ -24,25 +24,30 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     const { folio } = await context.params;
     const body = await request.json();
 
-    const apiUrl = buildKiichpamApiUrl(
-      `/reservations/${encodeURIComponent(folio)}/contact`
+    const result = await kiichpamApiFetch(
+      `/reservations/${encodeURIComponent(folio)}/contact`,
+      {
+        method: "PATCH",
+        body,
+        protected: true,
+      }
     );
 
-    const apiResponse = await fetchKiichpamApi(apiUrl, {
-      method: "PATCH",
-      body: JSON.stringify(body),
-    });
-
-    return NextResponse.json(apiResponse.data, {
-      status: apiResponse.status,
+    return NextResponse.json(result, {
+      status: 200,
     });
   } catch (error) {
     console.error("ADMIN_RESERVATION_CONTACT_PROXY_ERROR", error);
 
+    const message =
+      error instanceof Error && error.message
+        ? error.message
+        : "No se pudieron actualizar los datos de contacto.";
+
     return NextResponse.json(
       {
         success: false,
-        message: "No se pudieron actualizar los datos de contacto.",
+        message,
       },
       { status: 500 }
     );
