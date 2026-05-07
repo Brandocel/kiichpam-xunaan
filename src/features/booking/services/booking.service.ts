@@ -10,14 +10,6 @@ import type {
   ReservationQuoteResponse,
 } from "../types/booking.types";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
-
-function ensureApiUrl() {
-  if (!API_BASE_URL) {
-    throw new Error("NEXT_PUBLIC_API_URL no está configurada");
-  }
-}
-
 async function parseJsonSafely(response: Response) {
   const text = await response.text();
 
@@ -37,6 +29,10 @@ function getErrorMessage(result: any, fallback: string) {
     return result.message;
   }
 
+  if (Array.isArray(result?.message) && result.message.length > 0) {
+    return result.message.join(", ");
+  }
+
   if (typeof result?.error === "string" && result.error.trim()) {
     return result.error;
   }
@@ -44,147 +40,115 @@ function getErrorMessage(result: any, fallback: string) {
   return fallback;
 }
 
-export async function getReservationQuote(
-  payload: ReservationQuoteRequest
-): Promise<ReservationQuoteResponse> {
-  ensureApiUrl();
-
-  const response = await fetch(`${API_BASE_URL}/reservations/quote`, {
-    method: "POST",
+async function bookingFetch<T>(
+  path: string,
+  options: RequestInit,
+  fallbackErrorMessage: string
+): Promise<T> {
+  const response = await fetch(path, {
+    ...options,
+    cache: "no-store",
     headers: {
       "Content-Type": "application/json",
+      ...(options.headers ?? {}),
     },
-    cache: "no-store",
-    body: JSON.stringify(payload),
   });
 
   const result = await parseJsonSafely(response);
 
   if (!response.ok) {
-    throw new Error(getErrorMessage(result, "No se pudo obtener la cotización"));
+    throw new Error(getErrorMessage(result, fallbackErrorMessage));
   }
 
-  return result as ReservationQuoteResponse;
+  return result as T;
+}
+
+export async function getReservationQuote(
+  payload: ReservationQuoteRequest
+): Promise<ReservationQuoteResponse> {
+  return bookingFetch<ReservationQuoteResponse>(
+    "/api/booking/quote",
+    {
+      method: "POST",
+      body: JSON.stringify(payload),
+    },
+    "No se pudo obtener la cotización"
+  );
 }
 
 export async function createReservation(
   payload: ReservationCreateRequest
 ): Promise<ReservationCreateResponse> {
-  ensureApiUrl();
-
-  const response = await fetch(`${API_BASE_URL}/reservations`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
+  return bookingFetch<ReservationCreateResponse>(
+    "/api/booking/reservations",
+    {
+      method: "POST",
+      body: JSON.stringify(payload),
     },
-    cache: "no-store",
-    body: JSON.stringify(payload),
-  });
-
-  const result = await parseJsonSafely(response);
-
-  if (!response.ok) {
-    throw new Error(getErrorMessage(result, "No se pudo crear la reservación"));
-  }
-
-  return result as ReservationCreateResponse;
+    "No se pudo crear la reservación"
+  );
 }
 
 export async function getReservationByFolio(
   folio: string
 ): Promise<ReservationGetResponse> {
-  ensureApiUrl();
-
-  const response = await fetch(`${API_BASE_URL}/reservations/${folio}`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
+  return bookingFetch<ReservationGetResponse>(
+    `/api/booking/reservations/${encodeURIComponent(folio)}`,
+    {
+      method: "GET",
     },
-    cache: "no-store",
-  });
-
-  const result = await parseJsonSafely(response);
-
-  if (!response.ok) {
-    throw new Error(
-      getErrorMessage(result, "No se pudo recuperar la reservación")
-    );
-  }
-
-  return result as ReservationGetResponse;
+    "No se pudo recuperar la reservación"
+  );
 }
 
 export async function updateReservationContact(
   folio: string,
   payload: ReservationContactPayload
 ): Promise<ReservationContactResponse> {
-  ensureApiUrl();
-
-  const response = await fetch(
-    `${API_BASE_URL}/reservations/${folio}/contact`,
+  return bookingFetch<ReservationContactResponse>(
+    `/api/booking/reservations/${encodeURIComponent(folio)}/contact`,
     {
       method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      cache: "no-store",
       body: JSON.stringify(payload),
-    }
+    },
+    "No se pudo guardar el contacto"
   );
-
-  const result = await parseJsonSafely(response);
-
-  if (!response.ok) {
-    throw new Error(getErrorMessage(result, "No se pudo guardar el contacto"));
-  }
-
-  return result as ReservationContactResponse;
 }
 
 export async function createPaymentIntent(
   payload: PaymentIntentRequest
 ): Promise<PaymentIntentResponse> {
-  ensureApiUrl();
-
-  const response = await fetch(`${API_BASE_URL}/payments/intent`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
+  return bookingFetch<PaymentIntentResponse>(
+    "/api/booking/payments/intent",
+    {
+      method: "POST",
+      body: JSON.stringify(payload),
     },
-    cache: "no-store",
-    body: JSON.stringify(payload),
-  });
-
-  const result = await parseJsonSafely(response);
-
-  if (!response.ok) {
-    throw new Error(getErrorMessage(result, "No se pudo iniciar el pago"));
-  }
-
-  return result as PaymentIntentResponse;
+    "No se pudo iniciar el pago"
+  );
 }
 
 export async function createOxxoReference(
   payload: PaymentIntentRequest
 ): Promise<PaymentIntentResponse> {
-  ensureApiUrl();
-
-  const response = await fetch(`${API_BASE_URL}/payments/oxxo-reference`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
+  return bookingFetch<PaymentIntentResponse>(
+    "/api/booking/payments/oxxo-reference",
+    {
+      method: "POST",
+      body: JSON.stringify(payload),
     },
-    cache: "no-store",
-    body: JSON.stringify(payload),
-  });
+    "No se pudo generar la referencia OXXO"
+  );
+}
 
-  const result = await parseJsonSafely(response);
-
-  if (!response.ok) {
-    throw new Error(
-      getErrorMessage(result, "No se pudo generar la referencia OXXO")
-    );
-  }
-
-  return result as PaymentIntentResponse;
+export async function getPaymentStatusByFolio(
+  folio: string
+): Promise<PaymentIntentResponse> {
+  return bookingFetch<PaymentIntentResponse>(
+    `/api/booking/payments/status/${encodeURIComponent(folio)}`,
+    {
+      method: "GET",
+    },
+    "No se pudo consultar el estado del pago"
+  );
 }

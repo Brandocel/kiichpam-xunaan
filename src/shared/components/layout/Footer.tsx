@@ -7,79 +7,212 @@ interface FooterProps {
 
 const footerContent = {
   es: {
-    about: "About",
-    contact: "Contact",
-    support: "Support",
-    aboutLinks: [
-      { label: "About us", href: "/#about" },
-      { label: "Features", href: "/#features" },
-      { label: "News & Blogs", href: "/blog" },
+    home: "Inicio",
+    contact: "Contacto",
+    support: "Soporte",
+    copyright: "© 2026 Ecoparque Ki’ichpam Xunaán. All rights reserved.",
+    homeLinks: [
+      { label: "Cenotes", href: "/cenotes" },
+      { label: "Pedidas de mano", href: "/pedida-mano" },
+      { label: "Promociones", href: "/promotions" },
+      { label: "Contacto", href: "/contacto" },
+      { label: "Blog", href: "/blog" },
     ],
     contactLinks: [
-      { label: "Instagram", href: "https://www.instagram.com/kiichpamxunaan/" },
-      { label: "Facebook", href: "https://www.facebook.com/kiichpamxunaan" },
+      {
+        label: "Instagram",
+        href: "https://www.instagram.com/kiichpamxunaan/",
+      },
+      {
+        label: "Facebook",
+        href: "https://www.facebook.com/kiichpamxunaan",
+      },
+      {
+        label: "Whatsapp",
+        href: "https://wa.me/52XXXXXXXXXX",
+      },
+      {
+        label: "Tiktok",
+        href: "#",
+      },
+      {
+        label: "Youtube",
+        href: "#",
+      },
     ],
     supportLinks: [
       { label: "FAQs", href: "/#faqs" },
-      { label: "Support Centre", href: "/contacto" },
+      { label: "Atención al cliente", href: "/contacto" },
       { label: "Feedback", href: "/contacto" },
     ],
   },
+
   en: {
-    about: "About",
+    home: "Home",
     contact: "Contact",
     support: "Support",
-    aboutLinks: [
-      { label: "About us", href: "/#about" },
-      { label: "Features", href: "/#features" },
-      { label: "News & Blogs", href: "/blog" },
+    copyright: "© 2026 Ecoparque Ki’ichpam Xunaán. All rights reserved.",
+    homeLinks: [
+      { label: "Cenotes", href: "/cenotes" },
+      { label: "Proposal packages", href: "/pedida-mano" },
+      { label: "Promotions", href: "/promotions" },
+      { label: "Contact", href: "/contacto" },
+      { label: "Blog", href: "/blog" },
     ],
     contactLinks: [
-      { label: "Instagram", href: "https://www.instagram.com/kiichpamxunaan/" },
-      { label: "Facebook", href: "https://www.facebook.com/kiichpamxunaan" },
+      {
+        label: "Instagram",
+        href: "https://www.instagram.com/kiichpamxunaan/",
+      },
+      {
+        label: "Facebook",
+        href: "https://www.facebook.com/kiichpamxunaan",
+      },
+      {
+        label: "Whatsapp",
+        href: "https://wa.me/52XXXXXXXXXX",
+      },
+      {
+        label: "Tiktok",
+        href: "#",
+      },
+      {
+        label: "Youtube",
+        href: "#",
+      },
     ],
     supportLinks: [
       { label: "FAQs", href: "/#faqs" },
-      { label: "Support Centre", href: "/contacto" },
+      { label: "Customer support", href: "/contacto" },
       { label: "Feedback", href: "/contacto" },
     ],
   },
 } as const;
 
-function withLocale(locale: "es" | "en", href: string) {
-  if (href.startsWith("http")) return href;
-  return `/${locale}${href}`;
-}
-
 function isExternal(href: string) {
   return href.startsWith("http");
+}
+
+function withLocale(locale: "es" | "en", href: string) {
+  if (href.startsWith("http")) return href;
+  if (href === "#") return href;
+  if (href.startsWith("/#")) return `/${locale}${href}`;
+  return `/${locale}${href}`;
 }
 
 export default function Footer({ locale = "es" }: FooterProps) {
   const t = footerContent[locale];
 
   return (
-    <footer className="mt-auto bg-[#483289]">
-      <div className="mx-auto max-w-[1512px] px-6 py-10 sm:px-8 sm:py-12 md:px-10 md:py-14 lg:px-14 lg:py-16 xl:px-20 xl:py-[56px]">
-        <div className="flex flex-col gap-10 md:gap-12 lg:flex-row lg:items-center lg:justify-between lg:gap-16 xl:gap-24">
-          <div className="flex shrink-0 justify-center lg:block">
+    <footer className="mt-auto w-full overflow-hidden bg-[#493287] text-white">
+      {/* Franja superior del patrón */}
+      <div
+        className="
+          h-[36px] 
+          w-full 
+          bg-[url('/footer/text.png')] 
+          bg-repeat-x 
+          bg-top
+          [background-size:auto_36px]
+        "
+        aria-hidden="true"
+      />
+
+      {/* Contenido principal */}
+      <div
+        className="
+          mx-auto 
+          flex 
+          min-h-[248px] 
+          w-full 
+          max-w-[1080px] 
+          flex-col 
+          px-8 
+          pb-4 
+          pt-11
+          sm:px-10
+          lg:px-16
+        "
+      >
+        <div
+          className="
+            flex 
+            flex-1 
+            flex-col 
+            items-center 
+            justify-center 
+            gap-10 
+            md:flex-row 
+            md:items-start 
+            md:justify-between 
+            md:gap-14
+          "
+        >
+          {/* Logo */}
+          <div className="flex shrink-0 justify-center md:justify-start">
             <Link href={`/${locale}`} aria-label="Kiichpam Xunáan home">
               <Image
                 src="/footer/logofooter.svg"
                 alt="Kiichpam Xunáan"
-                width={239}
-                height={252}
-                className="h-[110px] w-auto sm:h-[130px] md:h-[145px] lg:h-[150px] xl:h-[160px]"
+                width={180}
+                height={180}
+                priority={false}
+                className="
+                  h-[130px] 
+                  w-auto 
+                  object-contain
+                  sm:h-[145px]
+                  md:h-[150px]
+                  lg:h-[158px]
+                "
               />
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 gap-10 text-center sm:grid-cols-3 sm:text-left sm:gap-8 md:gap-10 lg:gap-12 xl:gap-16">
-            <FooterColumn title={t.about} links={t.aboutLinks} locale={locale} />
-            <FooterColumn title={t.contact} links={t.contactLinks} locale={locale} />
-            <FooterColumn title={t.support} links={t.supportLinks} locale={locale} />
+          {/* Columnas */}
+          <div
+            className="
+              grid 
+              w-full 
+              max-w-[505px] 
+              grid-cols-1 
+              gap-9 
+              text-center 
+              sm:grid-cols-3 
+              sm:gap-8 
+              sm:text-left
+              md:mt-4
+            "
+          >
+            <FooterColumn title={t.home} links={t.homeLinks} locale={locale} />
+            <FooterColumn
+              title={t.contact}
+              links={t.contactLinks}
+              locale={locale}
+            />
+            <FooterColumn
+              title={t.support}
+              links={t.supportLinks}
+              locale={locale}
+            />
           </div>
         </div>
+
+        {/* Copyright */}
+        <p
+          className="
+            mt-7 
+            text-center 
+            font-[var(--font-poppins)] 
+            text-[11px] 
+            font-semibold 
+            leading-none 
+            text-white
+            sm:text-[12px]
+          "
+        >
+          {t.copyright}
+        </p>
       </div>
     </footer>
   );
@@ -87,18 +220,30 @@ export default function Footer({ locale = "es" }: FooterProps) {
 
 interface FooterColumnProps {
   title: string;
-  links: ReadonlyArray<{ label: string; href: string }>;
+  links: ReadonlyArray<{
+    label: string;
+    href: string;
+  }>;
   locale: "es" | "en";
 }
 
 function FooterColumn({ title, links, locale }: FooterColumnProps) {
   return (
     <div className="min-w-0">
-      <h3 className="mb-3 font-[var(--font-poppins)] text-[20px] font-semibold leading-[1.06] tracking-[-0.01em] text-white sm:mb-4 md:text-[22px] lg:text-[24px] xl:text-[25px]">
+      <h3
+        className="
+          mb-3 
+          font-[var(--font-poppins)] 
+          text-[15px] 
+          font-bold 
+          leading-[1.1] 
+          text-white
+        "
+      >
         {title}
       </h3>
 
-      <ul className="space-y-2 sm:space-y-3 md:space-y-4">
+      <ul className="space-y-[10px]">
         {links.map((item) => {
           const href = withLocale(locale, item.href);
           const external = isExternal(item.href);
@@ -113,7 +258,15 @@ function FooterColumn({ title, links, locale }: FooterColumnProps) {
                       rel: "noopener noreferrer",
                     }
                   : {})}
-                className="font-[var(--font-poppins)] text-[18px] font-normal leading-[1.06] tracking-[-0.01em] text-white transition-opacity hover:opacity-80 md:text-[20px] lg:text-[22px] xl:text-[25px]"
+                className="
+                  font-[var(--font-poppins)] 
+                  text-[15px] 
+                  font-normal 
+                  leading-[1.1] 
+                  text-white 
+                  transition-opacity 
+                  hover:opacity-80
+                "
               >
                 {item.label}
               </Link>
