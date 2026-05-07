@@ -143,6 +143,8 @@ function getText(locale: "es" | "en") {
         children: "Niños",
         infant: "Infante",
         infants: "Infantes",
+        inapamVisitor: "INAPAM",
+        inapamVisitors: "INAPAM",
         free: "Gratis",
         defaultPackageName: "Nombre del paquete",
         pendingQuote: "Cotiza para ver el desglose completo de precios.",
@@ -170,6 +172,8 @@ function getText(locale: "es" | "en") {
         children: "Children",
         infant: "Infant",
         infants: "Infants",
+        inapamVisitor: "INAPAM",
+        inapamVisitors: "INAPAM",
         free: "Free",
         defaultPackageName: "Package name",
         pendingQuote: "Quote to see the complete price breakdown.",
@@ -273,6 +277,7 @@ export default function BookingSummary({
   adults,
   children,
   infants,
+  inapamVisitors,
   quote,
   couponCode,
   loadingQuote,
@@ -309,9 +314,18 @@ export default function BookingSummary({
 
   const currency = quote?.package?.currency || selectedPackage?.currency || "MXN";
 
-  const baseAdultTotal = (selectedPackage?.adultPriceMXN ?? 0) * adults;
-  const baseChildTotal = (selectedPackage?.childPriceMXN ?? 0) * children;
-  const baseInfantTotal = (selectedPackage?.infantPriceMXN ?? 0) * infants;
+  const packageAdultPriceMXN =
+    quote?.pricing?.adultPriceMXN ?? selectedPackage?.adultPriceMXN ?? 0;
+
+  const packageChildPriceMXN =
+    quote?.pricing?.childPriceMXN ?? selectedPackage?.childPriceMXN ?? 0;
+
+  const packageInfantPriceMXN =
+    quote?.pricing?.infantPriceMXN ?? selectedPackage?.infantPriceMXN ?? 0;
+
+  const baseAdultTotal = packageAdultPriceMXN * adults;
+  const baseChildTotal = packageChildPriceMXN * children;
+  const baseInfantTotal = packageInfantPriceMXN * infants;
 
   const adultLineTotalBeforeInapam =
     quote?.pricing?.campaignAdultTotalMXN ?? baseAdultTotal;
@@ -331,15 +345,48 @@ export default function BookingSummary({
   const inapamDiscountMXN = quote?.pricing?.inapamDiscountMXN ?? 0;
   const totalMXN = quote?.pricing?.totalMXN ?? subtotalMXN;
 
-  const adultLineTotalAfterInapam = Math.max(
-    adultLineTotalBeforeInapam - inapamDiscountMXN,
-    0
-  );
+  const quoteInapamVisitors =
+    quote?.pricing?.inapamVisitors ?? inapamVisitors ?? 0;
 
-  const hasAdultDiscount =
+  const payableAdults = quote?.passengers?.payableAdults ?? adults;
+
+  const effectiveAdultUnitPriceMXN =
+    quote?.pricing?.effectiveAdultUnitPriceMXN ??
+    (payableAdults > 0
+      ? Math.floor(adultLineTotalBeforeInapam / payableAdults)
+      : packageAdultPriceMXN);
+
+  const inapamUnitPriceMXN =
+    quote?.pricing?.inapamUnitPriceMXN ??
+    (quoteInapamVisitors > 0
+      ? Math.max(
+          effectiveAdultUnitPriceMXN -
+            Math.floor(inapamDiscountMXN / quoteInapamVisitors),
+          0
+        )
+      : effectiveAdultUnitPriceMXN);
+
+  const shouldSplitInapamLine = hasQuote && quoteInapamVisitors > 0;
+
+  const regularAdultCount = shouldSplitInapamLine
+    ? Math.max(adults - quoteInapamVisitors, 0)
+    : adults;
+
+  const regularAdultLineTotal = shouldSplitInapamLine
+    ? regularAdultCount * effectiveAdultUnitPriceMXN
+    : Math.max(adultLineTotalBeforeInapam - inapamDiscountMXN, 0);
+
+  const inapamLineTotal = quoteInapamVisitors * inapamUnitPriceMXN;
+
+  const hasRegularAdultCampaignDiscount =
     hasQuote &&
-    adultLineTotalBeforeInapam > 0 &&
-    adultLineTotalAfterInapam < adultLineTotalBeforeInapam;
+    regularAdultCount > 0 &&
+    packageAdultPriceMXN > effectiveAdultUnitPriceMXN;
+
+  const hasInapamDiscount =
+    hasQuote &&
+    quoteInapamVisitors > 0 &&
+    effectiveAdultUnitPriceMXN > inapamUnitPriceMXN;
 
   const hasChildDiscount =
     hasQuote && baseChildTotal > 0 && childLineTotal < baseChildTotal;
@@ -391,13 +438,40 @@ export default function BookingSummary({
       </div>
 
       <div className="mt-4 space-y-3">
-        {adults > 0 ? (
+        {regularAdultCount > 0 ? (
           <PersonRow
-            label={getPeopleLabel(adults, t.adult, t.adults)}
-            value={formatMoney(adultLineTotalAfterInapam, currency, locale)}
+            label={getPeopleLabel(regularAdultCount, t.adult, t.adults)}
+            value={formatMoney(regularAdultLineTotal, currency, locale)}
             previousValue={
-              hasAdultDiscount
-                ? formatMoney(adultLineTotalBeforeInapam, currency, locale)
+              hasRegularAdultCampaignDiscount
+                ? formatMoney(
+                    regularAdultCount * packageAdultPriceMXN,
+                    currency,
+                    locale
+                  )
+                : undefined
+            }
+            showPrice={hasQuote}
+            loading={loadingQuote}
+            freeLabel={t.free}
+          />
+        ) : null}
+
+        {shouldSplitInapamLine ? (
+          <PersonRow
+            label={getPeopleLabel(
+              quoteInapamVisitors,
+              t.inapamVisitor,
+              t.inapamVisitors
+            )}
+            value={formatMoney(inapamLineTotal, currency, locale)}
+            previousValue={
+              hasInapamDiscount
+                ? formatMoney(
+                    quoteInapamVisitors * effectiveAdultUnitPriceMXN,
+                    currency,
+                    locale
+                  )
                 : undefined
             }
             showPrice={hasQuote}
@@ -534,43 +608,60 @@ export default function BookingSummary({
               </div>
             ) : null}
 
-            <div className="pt-2">
-              <div className="flex items-center justify-between text-[22px] font-black text-[#005F74]">
-                <span>{t.total}</span>
-                <span>{formatMoney(totalMXN, currency, locale)}</span>
+            <div className="pt-4">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="font-[var(--font-be-vietnam-pro)] text-[22px] font-black leading-none text-[#005F74]">
+                    {t.total}
+                  </p>
+                  <p className="mt-2 text-[11px] font-medium text-[#005F74]">
+                    {t.taxes}
+                  </p>
+                </div>
+
+                <p className="font-[var(--font-be-vietnam-pro)] text-[22px] font-black leading-none text-[#005F74]">
+                  {formatMoney(totalMXN, currency, locale)}
+                </p>
               </div>
-              <p className="mt-1 text-[11px] text-[#005F74]">{t.taxes}</p>
             </div>
           </div>
         ) : (
-          <p className="text-[13px] font-medium leading-[1.35] text-[#005F74]/80">
+          <p className="text-[14px] font-medium text-[#005F74]">
             {t.pendingQuote}
           </p>
         )}
       </div>
 
-      {currentStep < 4 ? (
-        <button
-          type="button"
-          onClick={onPrimaryAction}
-          disabled={isBusy || !canContinue}
-          className="mt-8 h-[44px] w-full rounded-full bg-[#C028B9] font-[var(--font-be-vietnam-pro)] text-[13px] font-black uppercase tracking-[0.28em] text-white transition disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {mainButtonLabel}
-        </button>
-      ) : null}
+      <button
+        type="button"
+        onClick={onPrimaryAction}
+        disabled={!canContinue || isBusy}
+        className="
+          mt-8 flex h-[44px] w-full items-center justify-center
+          rounded-[999px]
+          bg-[#C028B9]
+          px-6
+          font-[var(--font-be-vietnam-pro)]
+          text-[13px] font-black tracking-[0.35em]
+          text-white
+          transition
+          hover:brightness-110
+          disabled:cursor-not-allowed
+          disabled:opacity-60
+        "
+      >
+        {mainButtonLabel}
+      </button>
 
-      <div className="mt-8">
-        <p className="mb-2 font-[var(--font-be-vietnam-pro)] text-[16px] font-black leading-none text-[#C028B9] md:text-[18px]">
+      <div className="mt-7">
+        <p className="mb-3 font-[var(--font-be-vietnam-pro)] text-[16px] font-black text-[#C028B9]">
           {t.accepts}
         </p>
 
-        <div className="overflow-x-auto">
-          <div className="flex min-w-max flex-nowrap items-center gap-2.5 md:gap-3">
-            {paymentLogos.map((item) => (
-              <PaymentLogo key={item.key} item={item} />
-            ))}
-          </div>
+        <div className="flex flex-wrap items-center gap-3">
+          {paymentLogos.map((item) => (
+            <PaymentLogo key={item.key} item={item} />
+          ))}
         </div>
       </div>
     </aside>

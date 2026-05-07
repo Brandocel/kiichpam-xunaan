@@ -58,7 +58,18 @@ export default function BookingModal({
           type="button"
           onClick={onClose}
           aria-label={locale === "es" ? "Cerrar reservación" : "Close booking"}
-          className="absolute right-4 top-4 z-30 flex h-[34px] w-[34px] items-center justify-center bg-transparent text-[30px] font-light leading-none text-[#005F74] shadow-none transition duration-200 hover:scale-[1.08] hover:text-[#C028B9]"
+          className="
+            absolute right-4 top-4 z-30
+            flex h-[34px] w-[34px]
+            items-center justify-center
+            bg-transparent
+            text-[30px] font-light leading-none
+            text-[#005F74]
+            shadow-none
+            transition duration-200
+            hover:scale-[1.08]
+            hover:text-[#C028B9]
+          "
         >
           ×
         </button>

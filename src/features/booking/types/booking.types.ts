@@ -40,6 +40,7 @@ export interface ReservationQuotePricing {
   adultPriceMXN: number;
   childPriceMXN: number;
   infantPriceMXN: number;
+  inapamPriceMXN?: number | null;
 
   campaignAdultTotalMXN: number;
   campaignChildTotalMXN: number;
@@ -56,6 +57,11 @@ export interface ReservationQuotePricing {
   inapamVisitors: number;
   inapamDiscountMXN: number;
 
+  effectiveAdultUnitPriceMXN?: number;
+  regularInapamUnitPriceMXN?: number;
+  campaignInapamUnitPriceMXN?: number;
+  inapamUnitPriceMXN?: number;
+
   couponDiscountMXN: number;
   discountMXN: number;
   totalMXN: number;
@@ -65,6 +71,7 @@ export interface ReservationQuotePassengers {
   adults: number;
   children: number;
   infants: number;
+  inapamVisitors?: number;
   payableAdults: number;
   payableChildren: number;
   payableInfants: number;
@@ -86,6 +93,7 @@ export interface ReservationQuoteCampaignItem {
   priority: number;
   audience: string;
   stackable?: boolean;
+  fixedInapamPriceMXN?: number | null;
 }
 
 export interface ReservationQuoteCampaigns {
@@ -98,6 +106,14 @@ export interface ReservationQuoteRules {
   order: string[];
   campaignResolvedByBackend: boolean;
   couponValidatedAgainstCampaign: boolean;
+
+  primaryCampaignCode?: string | null;
+  primaryCampaignStackable?: boolean | null;
+  primaryCampaignFixedInapamPriceMXN?: number | null;
+
+  inapamRequested?: boolean;
+  inapamCanCombineWithCampaign?: boolean;
+  inapamApplied?: boolean;
 }
 
 export interface ReservationQuoteBreakdown {
@@ -181,6 +197,7 @@ export interface ReservationPackageRecord {
   adultPriceMXN: number;
   childPriceMXN: number;
   infantPriceMXN: number;
+  inapamPriceMXN?: number | null;
   currency: string;
   maxAdults: number | null;
   maxChildren: number | null;
@@ -375,6 +392,8 @@ export interface PaymentIntentResponse {
 export interface BookingDraftStorage {
   form: {
     packageCode: string;
+    campaignCode?: string;
+    campaignByPackageCode?: Record<string, string>;
     visitDate: string;
     adults: number;
     children: number;
@@ -403,4 +422,4 @@ export interface BookingDraftStorage {
     acceptedPrivacy: boolean;
   };
   updatedAt: string;
-}
+} 

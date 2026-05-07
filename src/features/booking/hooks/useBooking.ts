@@ -102,9 +102,25 @@ function clearStoredDraft() {
   }
 }
 
-function showBookingError(message: string) {
-  if (typeof window === "undefined") return;
-  window.alert(message);
+function getReadableErrorMessage(error: unknown, fallback: string) {
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+
+  if (typeof error === "string" && error.trim()) {
+    return error;
+  }
+
+  return fallback;
+}
+
+/**
+ * Ya no usamos alert() del navegador.
+ * Los mensajes se guardan en quoteError, reservationError, contactError o paymentError.
+ * BookingSection los muestra con una tarjeta visual elegante.
+ */
+function showBookingError(_message: string) {
+  return;
 }
 
 export function useBooking({
@@ -140,9 +156,11 @@ export function useBooking({
   const [packageCode, setPackageCodeState] = useState(
     normalizedInitialPackageCode
   );
+
   const [campaignCode, setCampaignCodeState] = useState(
     normalizedInitialCampaignCode
   );
+
   const [campaignByPackageCode, setCampaignByPackageCode] =
     useState<Record<string, string>>(normalizedInitialCampaignByPackageCode);
 
@@ -160,6 +178,7 @@ export function useBooking({
 
   const [paymentMethod, setPaymentMethodState] =
     useState<PaymentMethodType>("card");
+
   const [paymentIntent, setPaymentIntent] = useState<PaymentIntentData | null>(
     null
   );
@@ -280,6 +299,7 @@ export function useBooking({
   }, [folio, reservation, currentStep]);
 
   const hasFreshQuote = Boolean(quote && quoteSignature === currentSignature);
+
   const hasFreshReservation = Boolean(
     reservation && reservationSignature === currentSignature && folio
   );
@@ -685,8 +705,7 @@ export function useBooking({
 
       return result.data;
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Error al cotizar";
+      const message = getReadableErrorMessage(error, "Error al cotizar");
 
       setQuoteError(message);
       showBookingError(message);
@@ -741,8 +760,10 @@ export function useBooking({
 
       return result.data;
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Error al crear reservación";
+      const message = getReadableErrorMessage(
+        error,
+        "Error al crear reservación"
+      );
 
       setReservationError(message);
       showBookingError(message);
@@ -808,8 +829,10 @@ export function useBooking({
 
       return result.data;
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Error al guardar contacto";
+      const message = getReadableErrorMessage(
+        error,
+        "Error al guardar contacto"
+      );
 
       setContactError(message);
       showBookingError(message);
@@ -860,10 +883,10 @@ export function useBooking({
 
       return result.data;
     } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : "Error al generar el pago con tarjeta";
+      const message = getReadableErrorMessage(
+        error,
+        "Error al generar el pago con tarjeta"
+      );
 
       setPaymentError(message);
       showBookingError(message);
@@ -886,10 +909,10 @@ export function useBooking({
 
       return true;
     } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : "No se pudo confirmar el pago con tarjeta";
+      const message = getReadableErrorMessage(
+        error,
+        "No se pudo confirmar el pago con tarjeta"
+      );
 
       setPaymentError(message);
       showBookingError(message);
@@ -946,8 +969,10 @@ export function useBooking({
 
       return result.data;
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Error al generar pago OXXO";
+      const message = getReadableErrorMessage(
+        error,
+        "Error al generar pago OXXO"
+      );
 
       setPaymentError(message);
       showBookingError(message);
@@ -1027,7 +1052,9 @@ export function useBooking({
     if (type === "adults") {
       setAdultsState((prevAdults) => {
         const nextAdults = Math.max(0, prevAdults - 1);
-        setInapamVisitorsState((prevInapam) => Math.min(prevInapam, nextAdults));
+        setInapamVisitorsState((prevInapam) =>
+          Math.min(prevInapam, nextAdults)
+        );
         return nextAdults;
       });
       return;
