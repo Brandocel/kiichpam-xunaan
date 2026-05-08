@@ -2,11 +2,15 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { type ChangeEvent, type FormEvent, useRef, useState } from "react";
+import {
+  type ChangeEvent,
+  type FormEvent,
+  useRef,
+  useState,
+} from "react";
 
 import { sendContactMessage } from "../services/contact.service";
-
-type ContactLocale = "es" | "en";
+import type { ContactLocale } from "../types/contact.types";
 
 interface ContactFormProps {
   locale: ContactLocale;
@@ -69,11 +73,13 @@ const translations = {
     success: "Mensaje enviado correctamente.",
     error: "No se pudo enviar el mensaje.",
     follow: "Síguenos en:",
-    defaultSubject: "Mensaje desde formulario de contacto",
-    defaultCountry: "No especificado",
+    defaultSubject: "Quiero información sobre paquetes",
+    defaultCountry: "México",
     missingName: "Ingresa tu nombre y apellido.",
     missingEmail: "Ingresa tu correo electrónico.",
+    invalidEmail: "Ingresa un correo electrónico válido.",
     missingMessage: "Ingresa tu mensaje.",
+    animation: "Ver animación",
   },
   en: {
     title: "Stay in touch",
@@ -89,11 +95,13 @@ const translations = {
     success: "Message sent successfully.",
     error: "The message could not be sent.",
     follow: "Follow us:",
-    defaultSubject: "Message from contact form",
-    defaultCountry: "Not specified",
+    defaultSubject: "I want more information about packages",
+    defaultCountry: "Mexico",
     missingName: "Enter your first and last name.",
     missingEmail: "Enter your email address.",
+    invalidEmail: "Enter a valid email address.",
     missingMessage: "Enter your message.",
+    animation: "View animation",
   },
 } as const;
 
@@ -105,17 +113,26 @@ const initialFormData: ContactFormState = {
   message: "",
 };
 
+function isValidEmail(email: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
 export default function ContactForm({ locale }: ContactFormProps) {
   const t = translations[locale] ?? translations.es;
 
-  const [formData, setFormData] = useState<ContactFormState>(initialFormData);
+  const [formData, setFormData] =
+    useState<ContactFormState>(initialFormData);
+
   const [isSending, setIsSending] = useState(false);
+
   const [status, setStatus] = useState<{
     type: "success" | "error";
     message: string;
   } | null>(null);
 
-  function handleChange(event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
+  function handleChange(
+    event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) {
     const { name, value } = event.target;
 
     setFormData((prev) => ({
@@ -125,17 +142,24 @@ export default function ContactForm({ locale }: ContactFormProps) {
   }
 
   function validateForm() {
-    const fullName = `${formData.firstName.trim()} ${formData.lastName.trim()}`.trim();
+    const firstName = formData.firstName.trim();
+    const lastName = formData.lastName.trim();
+    const email = formData.email.trim();
+    const message = formData.message.trim();
 
-    if (!fullName) {
+    if (!firstName || !lastName) {
       return t.missingName;
     }
 
-    if (!formData.email.trim()) {
+    if (!email) {
       return t.missingEmail;
     }
 
-    if (!formData.message.trim()) {
+    if (!isValidEmail(email)) {
+      return t.invalidEmail;
+    }
+
+    if (!message) {
       return t.missingMessage;
     }
 
@@ -161,14 +185,16 @@ export default function ContactForm({ locale }: ContactFormProps) {
     setIsSending(true);
 
     try {
-      const fullName = `${formData.firstName.trim()} ${formData.lastName.trim()}`.trim();
+      const firstName = formData.firstName.trim();
+      const lastName = formData.lastName.trim();
+      const fullName = `${firstName} ${lastName}`.trim();
 
       await sendContactMessage({
         name: fullName,
-        firstName: formData.firstName.trim(),
-        lastName: formData.lastName.trim(),
+        firstName,
+        lastName,
         email: formData.email.trim(),
-        phone: formData.phone.trim() || "No especificado",
+        phone: formData.phone.trim(),
         country: t.defaultCountry,
         subjectType: "reservations",
         subject: t.defaultSubject,
@@ -217,7 +243,10 @@ export default function ContactForm({ locale }: ContactFormProps) {
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="mt-10 w-full max-w-[426px]">
+            <form
+              onSubmit={handleSubmit}
+              className="mt-10 w-full max-w-[426px]"
+            >
               <div className="grid grid-cols-1 gap-[10px] sm:grid-cols-2">
                 <FloatingInput
                   name="firstName"
@@ -248,6 +277,7 @@ export default function ContactForm({ locale }: ContactFormProps) {
 
               <FloatingInput
                 name="phone"
+                type="tel"
                 label={t.phone}
                 value={formData.phone}
                 onChange={handleChange}
@@ -278,6 +308,7 @@ export default function ContactForm({ locale }: ContactFormProps) {
               posterSrc="/contacto/pajaroto.png"
               videoSrc="/contacto/mascota.mp4"
               alt="Contacto Kiichpam Xunaan"
+              animationLabel={t.animation}
             />
           </div>
         </div>
@@ -331,12 +362,14 @@ interface HoverMascotaVideoProps {
   posterSrc: string;
   videoSrc: string;
   alt: string;
+  animationLabel: string;
 }
 
 function HoverMascotaVideo({
   posterSrc,
   videoSrc,
   alt,
+  animationLabel,
 }: HoverMascotaVideoProps) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [showPoster, setShowPoster] = useState(true);
@@ -406,7 +439,7 @@ function HoverMascotaVideo({
       {showPoster && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/5 opacity-0 transition duration-300 group-hover:opacity-100">
           <div className="rounded-full bg-white/90 px-5 py-3 text-sm font-semibold text-[#073d5d] shadow-lg">
-            Ver animación
+            {animationLabel}
           </div>
         </div>
       )}
@@ -448,7 +481,7 @@ function FloatingInput({
 
       <label
         htmlFor={name}
-        className="pointer-events-none absolute left-[10px] top-1/2 -translate-y-1/2 text-[15px] font-normal leading-none text-white/60 transition-all duration-200 peer-focus:top-[9px] peer-focus:text-[11px] peer-focus:text-white/80 peer-[:not(:placeholder-shown)]:top-[9px] peer-[:not(:placeholder-shown)]:text-[11px] peer-[:not(:placeholder-shown)]:text-white/80"
+        className="pointer-events-none absolute left-[10px] top-[9px] text-[11px] font-normal leading-none text-white/80 transition-all duration-200 peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:text-[15px] peer-placeholder-shown:text-white/60 peer-focus:top-[9px] peer-focus:translate-y-0 peer-focus:text-[11px] peer-focus:text-white/80"
       >
         {label}
       </label>
@@ -487,7 +520,7 @@ function FloatingTextarea({
 
       <label
         htmlFor={name}
-        className="pointer-events-none absolute left-[10px] top-[20px] -translate-y-1/2 text-[15px] font-normal leading-none text-white/60 transition-all duration-200 peer-focus:top-[11px] peer-focus:text-[11px] peer-focus:text-white/80 peer-[:not(:placeholder-shown)]:top-[11px] peer-[:not(:placeholder-shown)]:text-[11px] peer-[:not(:placeholder-shown)]:text-white/80"
+        className="pointer-events-none absolute left-[10px] top-[11px] text-[11px] font-normal leading-none text-white/80 transition-all duration-200 peer-placeholder-shown:top-[20px] peer-placeholder-shown:text-[15px] peer-placeholder-shown:text-white/60 peer-focus:top-[11px] peer-focus:text-[11px] peer-focus:text-white/80"
       >
         {label}
       </label>
