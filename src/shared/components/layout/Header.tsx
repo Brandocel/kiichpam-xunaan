@@ -40,13 +40,6 @@ const headerNavigation = [
       en: "Contact",
     },
   },
-  {
-    href: "/blog",
-    label: {
-      es: "Blog",
-      en: "Blog",
-    },
-  },
 ];
 
 export default function Header({
