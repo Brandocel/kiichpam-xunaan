@@ -52,6 +52,7 @@ function getText(locale: "es" | "en") {
         chooseDate: "Elige tu fecha de visita",
         adults: "Adulto",
         children: "Niños",
+        childrenNote: "A partir de 5 a 11 años",
         infants: "Infantes",
         infantsNote: "Gratis a partir de 0 a 4 años",
         inapamLabel: "Descuento INAPAM",
@@ -68,6 +69,7 @@ function getText(locale: "es" | "en") {
         chooseDate: "Choose your visit date",
         adults: "Adults",
         children: "Children",
+        childrenNote: "From 5 to 11 years old",
         infants: "Infants",
         infantsNote: "Infants enter free from 0 to 4 years old",
         inapamLabel: "INAPAM Visitors",
@@ -486,12 +488,18 @@ export default function BookingForm({
                 onDecrement={() => onDecrement("adults")}
               />
 
-              <CounterRow
-                label={t.children}
-                value={children}
-                onIncrement={() => onIncrement("children")}
-                onDecrement={() => onDecrement("children")}
-              />
+              <div>
+                <CounterRow
+                  label={t.children}
+                  value={children}
+                  onIncrement={() => onIncrement("children")}
+                  onDecrement={() => onDecrement("children")}
+                />
+
+                <p className="mt-2 font-[var(--font-be-vietnam-pro)] text-[14px] font-normal leading-[1.3] text-[#005F74]">
+                  {t.childrenNote}
+                </p>
+              </div>
 
               <div>
                 <CounterRow
@@ -500,6 +508,7 @@ export default function BookingForm({
                   onIncrement={() => onIncrement("infants")}
                   onDecrement={() => onDecrement("infants")}
                 />
+
                 <p className="mt-2 font-[var(--font-be-vietnam-pro)] text-[14px] font-normal leading-[1.3] text-[#005F74]">
                   {t.infantsNote}
                 </p>
@@ -512,6 +521,7 @@ export default function BookingForm({
                   onIncrement={() => onIncrement("inapam")}
                   onDecrement={() => onDecrement("inapam")}
                 />
+
                 <p className="mt-2 font-[var(--font-be-vietnam-pro)] text-[14px] font-normal leading-[1.3] text-[#005F74]">
                   {t.inapamNote}
                 </p>
