@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { Check, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
 interface ProposalPackagesProps {
   locale: "es" | "en";
@@ -33,6 +34,108 @@ const createWhatsappLink = ({
 
   return `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
 };
+
+const packageMeanings: Record<
+  string,
+  {
+    es: string;
+    en: string;
+  }
+> = {
+  yaakun: {
+    es: "Amor",
+    en: "Love",
+  },
+  kuxtal: {
+    es: "Vida",
+    en: "Life",
+  },
+  tuukul: {
+    es: "Pensamiento",
+    en: "Thought",
+  },
+  kaanal: {
+    es: "Cielo",
+    en: "Sky",
+  },
+};
+
+function normalizePackageName(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/’/g, "")
+    .replace(/'/g, "")
+    .replace(/´/g, "")
+    .replace(/`/g, "");
+}
+
+function getPackageMeaning(packageName: string, locale: "es" | "en") {
+  const key = normalizePackageName(packageName);
+
+  return packageMeanings[key]?.[locale] || packageName;
+}
+
+function AnimatedPackageName({
+  packageName,
+  locale,
+  active,
+}: {
+  packageName: string;
+  locale: "es" | "en";
+  active: boolean;
+}) {
+  const meaning = getPackageMeaning(packageName, locale);
+  const hasMeaning = meaning !== packageName;
+
+  return (
+    <span
+      className="
+        relative block h-[42px] overflow-hidden
+        text-[clamp(1.75rem,3.4vw,2.25rem)]
+        font-bold leading-[1.02]
+        lg:h-[34px] lg:text-[1.55rem]
+        xl:h-[42px] xl:text-[1.9rem]
+        2xl:h-[46px] 2xl:text-[2.1rem]
+      "
+      title={hasMeaning ? `${packageName} = ${meaning}` : packageName}
+    >
+      <span
+        className={[
+          "absolute left-0 top-0 block",
+          "transition-all duration-500 ease-out",
+
+          active
+            ? "-translate-y-full opacity-0"
+            : "translate-y-0 opacity-100",
+
+          hasMeaning
+            ? "md:group-hover:-translate-y-full md:group-hover:opacity-0"
+            : "",
+        ].join(" ")}
+      >
+        {packageName}
+      </span>
+
+      {hasMeaning && (
+        <span
+          className={[
+            "absolute left-0 top-0 block",
+            "transition-all duration-500 ease-out",
+
+            active
+              ? "translate-y-0 opacity-100"
+              : "translate-y-full opacity-0",
+
+            "md:group-hover:translate-y-0 md:group-hover:opacity-100",
+          ].join(" ")}
+        >
+          {meaning}
+        </span>
+      )}
+    </span>
+  );
+}
 
 const packagesContent: Record<"es" | "en", ProposalPackageItem[]> = {
   es: [
@@ -240,9 +343,64 @@ const boldItems = [
 
 export default function ProposalPackages({ locale }: ProposalPackagesProps) {
   const items = packagesContent[locale];
+  const cardRefs = useRef<Record<string, HTMLElement | null>>({});
+  const [activeMobileCardId, setActiveMobileCardId] = useState<string | null>(
+    null
+  );
 
   const sectionTitle =
     locale === "es" ? "Conoce nuestros paquetes" : "Discover our packages";
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const mobileQuery = window.matchMedia("(max-width: 767px)");
+
+    function clearActiveIfDesktop() {
+      if (!mobileQuery.matches) {
+        setActiveMobileCardId(null);
+      }
+    }
+
+    clearActiveIfDesktop();
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (!mobileQuery.matches) return;
+
+        const visibleEntries = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+
+        const mostVisibleEntry = visibleEntries[0];
+
+        if (!mostVisibleEntry) return;
+
+        const packageId = mostVisibleEntry.target.getAttribute(
+          "data-package-id"
+        );
+
+        if (packageId) {
+          setActiveMobileCardId(packageId);
+        }
+      },
+      {
+        threshold: [0.35, 0.45, 0.55, 0.65, 0.75],
+        rootMargin: "-18% 0px -18% 0px",
+      }
+    );
+
+    Object.values(cardRefs.current).forEach((card) => {
+      if (card) observer.observe(card);
+    });
+
+    mobileQuery.addEventListener("change", clearActiveIfDesktop);
+
+    return () => {
+      observer.disconnect();
+      mobileQuery.removeEventListener("change", clearActiveIfDesktop);
+    };
+  }, [items]);
 
   return (
     <section className="w-full bg-[#005F73] pb-16 pt-8 md:pb-20 md:pt-10 xl:pb-24">
@@ -270,81 +428,96 @@ export default function ProposalPackages({ locale }: ProposalPackagesProps) {
               packageName: item.packageName,
             });
 
+            const packageLabel = item.title.split("\n")[0];
+            const isMobileActive = activeMobileCardId === item.id;
+
             return (
               <article
                 key={item.id}
-                className="
-                  group relative flex min-h-[610px] flex-col
-                  rounded-[22px] bg-[#C028B9]
-                  px-5 pb-5 pt-6
-                  text-white
-                  shadow-[0px_34px_30px_0px_rgba(72,50,137,0.34)]
-                  transition-all duration-300 ease-out
-                  hover:-translate-y-2 hover:bg-white hover:text-[#C028B9]
-                  sm:px-6
-                  lg:min-h-[590px] lg:rounded-[18px] lg:px-4 lg:pb-4 lg:pt-5
-                  xl:min-h-[620px] xl:rounded-[22px] xl:px-5 xl:pb-5 xl:pt-6
-                "
+                data-package-id={item.id}
+                ref={(node) => {
+                  cardRefs.current[item.id] = node;
+                }}
+                className={[
+                  "group relative flex min-h-[610px] flex-col",
+                  "rounded-[22px]",
+                  "px-5 pb-5 pt-6",
+                  "shadow-[0px_34px_30px_0px_rgba(72,50,137,0.34)]",
+                  "transition-all duration-300 ease-out",
+                  "sm:px-6",
+                  "lg:min-h-[590px] lg:rounded-[18px] lg:px-4 lg:pb-4 lg:pt-5",
+                  "xl:min-h-[620px] xl:rounded-[22px] xl:px-5 xl:pb-5 xl:pt-6",
+
+                  isMobileActive
+                    ? "-translate-y-2 bg-white text-[#C028B9]"
+                    : "bg-[#C028B9] text-white",
+
+                  "md:hover:-translate-y-2 md:hover:bg-white md:hover:text-[#C028B9]",
+                ].join(" ")}
               >
-<h3
-  className="
-    min-h-[62px]
-    max-w-full
-    text-white transition-colors duration-300
-    group-hover:text-[#C028B9]
-    lg:min-h-[54px]
-    xl:min-h-[64px]
-  "
-  style={{
-    fontFamily:
-      '"Be Vietnam Pro", ui-sans-serif, system-ui, sans-serif',
-  }}
->
-  <span
-    className="
-      block
-      text-[clamp(1.35rem,2.8vw,1.9rem)]
-      font-bold leading-[1.02]
-      lg:text-[1.2rem]
-      xl:text-[1.55rem]
-      2xl:text-[1.7rem]
-    "
-  >
-    {item.title.split("\n")[0]}
-  </span>
+                <h3
+                  className={[
+                    "min-h-[62px] max-w-full",
+                    "transition-colors duration-300",
+                    "lg:min-h-[54px] xl:min-h-[64px]",
+                    isMobileActive ? "text-[#C028B9]" : "text-white",
+                    "md:group-hover:text-[#C028B9]",
+                  ].join(" ")}
+                  style={{
+                    fontFamily:
+                      '"Be Vietnam Pro", ui-sans-serif, system-ui, sans-serif',
+                  }}
+                >
+                  <span
+                    className="
+                      block
+                      text-[clamp(1.35rem,2.8vw,1.9rem)]
+                      font-bold leading-[1.02]
+                      lg:text-[1.2rem]
+                      xl:text-[1.55rem]
+                      2xl:text-[1.7rem]
+                    "
+                  >
+                    {packageLabel}
+                  </span>
 
-  <span
-    className="
-      block
-      text-[clamp(1.75rem,3.4vw,2.25rem)]
-      font-bold leading-[1.02]
-      lg:text-[1.55rem]
-      xl:text-[1.9rem]
-      2xl:text-[2.1rem]
-    "
-  >
-    {item.title.split("\n")[1]}
-  </span>
-</h3>
+                  <AnimatedPackageName
+                    packageName={item.packageName}
+                    locale={locale}
+                    active={isMobileActive}
+                  />
+                </h3>
 
-                <div className="mt-3 h-px w-full bg-white/60 transition-colors duration-300 group-hover:bg-[#C028B9]/45" />
+                <div
+                  className={[
+                    "mt-3 h-px w-full transition-colors duration-300",
+                    isMobileActive ? "bg-[#C028B9]/45" : "bg-white/60",
+                    "md:group-hover:bg-[#C028B9]/45",
+                  ].join(" ")}
+                />
 
                 <div className="mt-4">
                   <div className="mb-2 flex items-center gap-2">
                     <span
-                      className="
-                        flex h-[22px] w-[22px] shrink-0 items-center justify-center
-                        rounded-full bg-white/20 text-white
-                        transition-colors duration-300
-                        group-hover:bg-[#F8DDF5]
-                        group-hover:text-[#C028B9]
-                      "
+                      className={[
+                        "flex h-[22px] w-[22px] shrink-0 items-center justify-center",
+                        "rounded-full transition-colors duration-300",
+                        isMobileActive
+                          ? "bg-[#F8DDF5] text-[#C028B9]"
+                          : "bg-white/20 text-white",
+                        "md:group-hover:bg-[#F8DDF5] md:group-hover:text-[#C028B9]",
+                      ].join(" ")}
                     >
                       <Check size={16} strokeWidth={4} />
                     </span>
 
                     <p
-                      className="text-[17px] font-normal text-white transition-colors duration-300 group-hover:text-[#C028B9] lg:text-[14px] xl:text-[16px]"
+                      className={[
+                        "text-[17px] font-normal transition-colors duration-300",
+                        "lg:text-[14px] xl:text-[16px]",
+                        isMobileActive ? "text-[#C028B9]" : "text-white",
+                        "md:group-hover:text-[#C028B9]",
+                      ].join(" ")}
                       style={{
                         fontFamily:
                           '"Be Vietnam Pro", ui-sans-serif, system-ui, sans-serif',
@@ -355,16 +528,16 @@ export default function ProposalPackages({ locale }: ProposalPackagesProps) {
                   </div>
 
                   <ul
-                    className="
-                      list-disc space-y-[2px] pl-5
-                      text-[14.5px] font-normal leading-[1.18]
-                      text-white marker:text-current
-                      transition-colors duration-300
-                      group-hover:text-[#C028B9]
-                      lg:space-y-[1px] lg:pl-4 lg:text-[11.8px] lg:leading-[1.15]
-                      xl:space-y-[2px] xl:pl-5 xl:text-[13px] xl:leading-[1.18]
-                      2xl:text-[14px]
-                    "
+                    className={[
+                      "list-disc space-y-[2px] pl-5",
+                      "text-[14.5px] font-normal leading-[1.18]",
+                      "marker:text-current transition-colors duration-300",
+                      "lg:space-y-[1px] lg:pl-4 lg:text-[11.8px] lg:leading-[1.15]",
+                      "xl:space-y-[2px] xl:pl-5 xl:text-[13px] xl:leading-[1.18]",
+                      "2xl:text-[14px]",
+                      isMobileActive ? "text-[#C028B9]" : "text-white",
+                      "md:group-hover:text-[#C028B9]",
+                    ].join(" ")}
                     style={{
                       fontFamily:
                         '"Be Vietnam Pro", ui-sans-serif, system-ui, sans-serif',
@@ -386,19 +559,25 @@ export default function ProposalPackages({ locale }: ProposalPackagesProps) {
                 <div className="mt-auto pt-5 lg:pt-4 xl:pt-6">
                   <div className="mb-2 flex items-center gap-2">
                     <span
-                      className="
-                        flex h-[22px] w-[22px] shrink-0 items-center justify-center
-                        rounded-full bg-white/20 text-white
-                        transition-colors duration-300
-                        group-hover:bg-[#F8DDF5]
-                        group-hover:text-[#C028B9]
-                      "
+                      className={[
+                        "flex h-[22px] w-[22px] shrink-0 items-center justify-center",
+                        "rounded-full transition-colors duration-300",
+                        isMobileActive
+                          ? "bg-[#F8DDF5] text-[#C028B9]"
+                          : "bg-white/20 text-white",
+                        "md:group-hover:bg-[#F8DDF5] md:group-hover:text-[#C028B9]",
+                      ].join(" ")}
                     >
                       <X size={16} strokeWidth={4} />
                     </span>
 
                     <p
-                      className="text-[17px] font-normal text-white transition-colors duration-300 group-hover:text-[#C028B9] lg:text-[14px] xl:text-[16px]"
+                      className={[
+                        "text-[17px] font-normal transition-colors duration-300",
+                        "lg:text-[14px] xl:text-[16px]",
+                        isMobileActive ? "text-[#C028B9]" : "text-white",
+                        "md:group-hover:text-[#C028B9]",
+                      ].join(" ")}
                       style={{
                         fontFamily:
                           '"Be Vietnam Pro", ui-sans-serif, system-ui, sans-serif',
@@ -409,16 +588,16 @@ export default function ProposalPackages({ locale }: ProposalPackagesProps) {
                   </div>
 
                   <ul
-                    className="
-                      list-disc space-y-[2px] pl-5
-                      text-[14.5px] font-normal leading-[1.18]
-                      text-white marker:text-current
-                      transition-colors duration-300
-                      group-hover:text-[#C028B9]
-                      lg:space-y-[1px] lg:pl-4 lg:text-[11.8px] lg:leading-[1.15]
-                      xl:space-y-[2px] xl:pl-5 xl:text-[13px] xl:leading-[1.18]
-                      2xl:text-[14px]
-                    "
+                    className={[
+                      "list-disc space-y-[2px] pl-5",
+                      "text-[14.5px] font-normal leading-[1.18]",
+                      "marker:text-current transition-colors duration-300",
+                      "lg:space-y-[1px] lg:pl-4 lg:text-[11.8px] lg:leading-[1.15]",
+                      "xl:space-y-[2px] xl:pl-5 xl:text-[13px] xl:leading-[1.18]",
+                      "2xl:text-[14px]",
+                      isMobileActive ? "text-[#C028B9]" : "text-white",
+                      "md:group-hover:text-[#C028B9]",
+                    ].join(" ")}
                     style={{
                       fontFamily:
                         '"Be Vietnam Pro", ui-sans-serif, system-ui, sans-serif',
@@ -434,18 +613,20 @@ export default function ProposalPackages({ locale }: ProposalPackagesProps) {
                   href={whatsappHref}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="
-                    mt-6 inline-flex h-[44px] w-full
-                    items-center justify-center
-                    rounded-[11px]
-                    bg-white
-                    text-center text-[18px] font-bold text-[#C028B9]
-                    transition-all duration-300
-                    group-hover:bg-[#483289] group-hover:text-white
-                    lg:mt-5 lg:h-[40px] lg:rounded-[9px] lg:text-[15px]
-                    xl:h-[44px] xl:text-[17px]
-                    2xl:h-[46px] 2xl:text-[18px]
-                  "
+                  className={[
+                    "mt-6 inline-flex h-[44px] w-full",
+                    "items-center justify-center",
+                    "rounded-[11px]",
+                    "text-center text-[18px] font-bold",
+                    "transition-all duration-300",
+                    "lg:mt-5 lg:h-[40px] lg:rounded-[9px] lg:text-[15px]",
+                    "xl:h-[44px] xl:text-[17px]",
+                    "2xl:h-[46px] 2xl:text-[18px]",
+                    isMobileActive
+                      ? "bg-[#483289] text-white"
+                      : "bg-white text-[#C028B9]",
+                    "md:group-hover:bg-[#483289] md:group-hover:text-white",
+                  ].join(" ")}
                   style={{
                     fontFamily:
                       '"Be Vietnam Pro", ui-sans-serif, system-ui, sans-serif',
