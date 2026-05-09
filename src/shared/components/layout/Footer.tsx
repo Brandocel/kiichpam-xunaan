@@ -28,15 +28,15 @@ const footerContent = {
       },
       {
         label: "Whatsapp",
-        href: "https://wa.me/52XXXXXXXXXX",
+        href: "https://wa.me/5219987510867",
       },
       {
         label: "Tiktok",
-        href: "#",
+        href: "https://www.tiktok.com/@kiichpamxunaan?lang=es",
       },
       {
         label: "Youtube",
-        href: "#",
+        href: "https://www.youtube.com/@kiichpamxunaan",
       },
     ],
     supportLinks: [
@@ -69,15 +69,15 @@ const footerContent = {
       },
       {
         label: "Whatsapp",
-        href: "https://wa.me/52XXXXXXXXXX",
+        href: "https://wa.me/5219987510867",
       },
       {
         label: "Tiktok",
-        href: "#",
+        href: "https://www.tiktok.com/@kiichpamxunaan?lang=es",
       },
       {
         label: "Youtube",
-        href: "#",
+        href: "https://www.youtube.com/@kiichpamxunaan",
       },
     ],
     supportLinks: [
@@ -184,11 +184,13 @@ export default function Footer({ locale = "es" }: FooterProps) {
             "
           >
             <FooterColumn title={t.home} links={t.homeLinks} locale={locale} />
+
             <FooterColumn
               title={t.contact}
               links={t.contactLinks}
               locale={locale}
             />
+
             <FooterColumn
               title={t.support}
               links={t.supportLinks}
