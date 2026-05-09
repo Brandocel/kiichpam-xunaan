@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { Check, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
@@ -18,21 +17,76 @@ type ProposalPackageItem = {
   buttonHref: string;
 };
 
-const phoneNumber = "529987510867";
+const phoneNumber = "5219987510867";
 
-const createWhatsappLink = ({
+const createWhatsappMessage = ({
   locale,
   packageName,
 }: {
   locale: "es" | "en";
   packageName: string;
 }) => {
-  const message =
-    locale === "es"
-      ? `Hola, me gustaría cotizar el paquete ${packageName} para una pedida de mano.`
-      : `Hello, I would like to quote the ${packageName} package for a marriage proposal.`;
+  return locale === "es"
+    ? `Hola, me gustaría cotizar el paquete ${packageName} para una pedida de mano.`
+    : `Hello, I would like to quote the ${packageName} package for a marriage proposal.`;
+};
 
-  return `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+const openNormalWhatsapp = ({
+  locale,
+  packageName,
+}: {
+  locale: "es" | "en";
+  packageName: string;
+}) => {
+  const message = createWhatsappMessage({
+    locale,
+    packageName,
+  });
+
+  const encodedMessage = encodeURIComponent(message);
+
+  const isAndroid =
+    typeof navigator !== "undefined" && /Android/i.test(navigator.userAgent);
+
+  const isIOS =
+    typeof navigator !== "undefined" &&
+    /iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+  const webWhatsappUrl = `https://api.whatsapp.com/send?phone=${phoneNumber}&text=${encodedMessage}`;
+  const appWhatsappUrl = `whatsapp://send?phone=${phoneNumber}&text=${encodedMessage}`;
+
+  /*
+    Android:
+    Este intent intenta abrir WhatsApp normal usando el paquete oficial:
+    com.whatsapp
+
+    Esto ayuda cuando el celular también tiene WhatsApp Business instalado.
+  */
+  const androidNormalWhatsappIntent = `intent://send?phone=${phoneNumber}&text=${encodedMessage}#Intent;scheme=whatsapp;package=com.whatsapp;end`;
+
+  if (typeof window === "undefined") return;
+
+  if (isAndroid) {
+    window.location.href = androidNormalWhatsappIntent;
+
+    window.setTimeout(() => {
+      window.location.href = webWhatsappUrl;
+    }, 1200);
+
+    return;
+  }
+
+  if (isIOS) {
+    window.location.href = appWhatsappUrl;
+
+    window.setTimeout(() => {
+      window.location.href = webWhatsappUrl;
+    }, 1200);
+
+    return;
+  }
+
+  window.open(webWhatsappUrl, "_blank", "noopener,noreferrer");
 };
 
 const packageMeanings: Record<
@@ -104,11 +158,9 @@ function AnimatedPackageName({
         className={[
           "absolute left-0 top-0 block",
           "transition-all duration-500 ease-out",
-
           active
             ? "-translate-y-full opacity-0"
             : "translate-y-0 opacity-100",
-
           hasMeaning
             ? "md:group-hover:-translate-y-full md:group-hover:opacity-0"
             : "",
@@ -122,11 +174,9 @@ function AnimatedPackageName({
           className={[
             "absolute left-0 top-0 block",
             "transition-all duration-500 ease-out",
-
             active
               ? "translate-y-0 opacity-100"
               : "translate-y-full opacity-0",
-
             "md:group-hover:translate-y-0 md:group-hover:opacity-100",
           ].join(" ")}
         >
@@ -423,11 +473,6 @@ export default function ProposalPackages({ locale }: ProposalPackagesProps) {
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4 lg:gap-4 xl:gap-6">
           {items.map((item) => {
-            const whatsappHref = createWhatsappLink({
-              locale,
-              packageName: item.packageName,
-            });
-
             const packageLabel = item.title.split("\n")[0];
             const isMobileActive = activeMobileCardId === item.id;
 
@@ -609,10 +654,14 @@ export default function ProposalPackages({ locale }: ProposalPackagesProps) {
                   </ul>
                 </div>
 
-                <Link
-                  href={whatsappHref}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <button
+                  type="button"
+                  onClick={() =>
+                    openNormalWhatsapp({
+                      locale,
+                      packageName: item.packageName,
+                    })
+                  }
                   className={[
                     "mt-6 inline-flex h-[44px] w-full",
                     "items-center justify-center",
@@ -633,7 +682,7 @@ export default function ProposalPackages({ locale }: ProposalPackagesProps) {
                   }}
                 >
                   {item.buttonText}
-                </Link>
+                </button>
               </article>
             );
           })}

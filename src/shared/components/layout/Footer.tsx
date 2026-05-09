@@ -40,9 +40,8 @@ const footerContent = {
       },
     ],
     supportLinks: [
-      { label: "FAQs", href: "/#faqs" },
-      { label: "Atención al cliente", href: "/contacto" },
-      { label: "Feedback", href: "/contacto" },
+      { label: "FAQs", href: "/faqs" },
+      { label: "Atención al cliente", href: "/atencion-cliente" },
     ],
   },
 
@@ -81,9 +80,9 @@ const footerContent = {
       },
     ],
     supportLinks: [
-      { label: "FAQs", href: "/#faqs" },
-      { label: "Customer support", href: "/contacto" },
-      { label: "Feedback", href: "/contacto" },
+      { label: "FAQs", href: "/faqs" },
+      { label: "Customer support", href: "/atencion-cliente" },
+      { label: "Feedback", href: "/feedback" },
     ],
   },
 } as const;
