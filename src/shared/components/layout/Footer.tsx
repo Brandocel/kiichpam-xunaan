@@ -5,18 +5,22 @@ interface FooterProps {
   locale?: "es" | "en";
 }
 
+type FooterLink = {
+  label: string;
+  href: string;
+};
+
 const footerContent = {
   es: {
-    home: "Inicio",
+    home: "Navegación",
     contact: "Contacto",
     support: "Soporte",
-    copyright: "© 2026 Ecoparque Ki’ichpam Xunaán. All rights reserved.",
+    copyright: "© 2026 Ecoparque Ki’ichpam Xunaán. Todos los derechos reservados.",
     homeLinks: [
       { label: "Cenotes", href: "/cenotes" },
-      { label: "Pedidas de mano", href: "/pedida-mano" },
-      { label: "Promociones", href: "/promotions" },
+      { label: "Pedidas de mano", href: "/pedidas-de-mano" },
+      { label: "Promociones", href: "/promociones" },
       { label: "Contacto", href: "/contacto" },
-      { label: "Blog", href: "/blog" },
     ],
     contactLinks: [
       {
@@ -28,36 +32,35 @@ const footerContent = {
         href: "https://www.facebook.com/kiichpamxunaan",
       },
       {
-        label: "Whatsapp",
+        label: "WhatsApp",
         href: "https://wa.me/52XXXXXXXXXX",
       },
       {
-        label: "Tiktok",
+        label: "TikTok",
         href: "#",
       },
       {
-        label: "Youtube",
+        label: "YouTube",
         href: "#",
       },
     ],
     supportLinks: [
       { label: "FAQs", href: "/#faqs" },
       { label: "Atención al cliente", href: "/contacto" },
-      { label: "Feedback", href: "/contacto" },
+      { label: "Comentarios", href: "/contacto" },
     ],
   },
 
   en: {
-    home: "Home",
+    home: "Navigation",
     contact: "Contact",
     support: "Support",
     copyright: "© 2026 Ecoparque Ki’ichpam Xunaán. All rights reserved.",
     homeLinks: [
       { label: "Cenotes", href: "/cenotes" },
-      { label: "Proposal packages", href: "/pedida-mano" },
-      { label: "Promotions", href: "/promotions" },
+      { label: "Proposals", href: "/pedidas-de-mano" },
+      { label: "Promotions", href: "/promociones" },
       { label: "Contact", href: "/contacto" },
-      { label: "Blog", href: "/blog" },
     ],
     contactLinks: [
       {
@@ -69,15 +72,15 @@ const footerContent = {
         href: "https://www.facebook.com/kiichpamxunaan",
       },
       {
-        label: "Whatsapp",
+        label: "WhatsApp",
         href: "https://wa.me/52XXXXXXXXXX",
       },
       {
-        label: "Tiktok",
+        label: "TikTok",
         href: "#",
       },
       {
-        label: "Youtube",
+        label: "YouTube",
         href: "#",
       },
     ],
@@ -89,14 +92,18 @@ const footerContent = {
   },
 } as const;
 
-function isExternal(href: string) {
+function isExternalLink(href: string) {
   return href.startsWith("http");
 }
 
-function withLocale(locale: "es" | "en", href: string) {
+function buildLocalizedHref(locale: "es" | "en", href: string) {
   if (href.startsWith("http")) return href;
   if (href === "#") return href;
-  if (href.startsWith("/#")) return `/${locale}${href}`;
+
+  if (href.startsWith("/#")) {
+    return `/${locale}${href}`;
+  }
+
   return `/${locale}${href}`;
 }
 
@@ -104,92 +111,100 @@ export default function Footer({ locale = "es" }: FooterProps) {
   const t = footerContent[locale];
 
   return (
-    <footer className="mt-auto w-full overflow-hidden bg-[#493287] text-white">
-      {/* Franja superior del patrón */}
+    <footer className="mt-auto w-full overflow-hidden bg-[linear-gradient(180deg,#8B197C_0%,#26051F_100%)] text-white">
       <div
         className="
-          h-[36px] 
-          w-full 
-          bg-[url('/footer/text.png')] 
-          bg-repeat-x 
+          h-[36px]
+          w-full
+          bg-[url('/footer/text.png')]
+          bg-repeat-x
           bg-top
           [background-size:auto_36px]
         "
         aria-hidden="true"
       />
 
-      {/* Contenido principal */}
       <div
         className="
-          mx-auto 
-          flex 
-          min-h-[248px] 
-          w-full 
-          max-w-[1080px] 
-          flex-col 
-          px-8 
-          pb-4 
-          pt-11
-          sm:px-10
-          lg:px-16
+          mx-auto
+          flex
+          w-full
+          max-w-[1800px]
+          flex-col
+          px-6
+          pb-5
+          pt-10
+          sm:px-8
+          sm:pt-12
+          md:px-12
+          xl:px-20
         "
       >
         <div
           className="
-            flex 
-            flex-1 
-            flex-col 
-            items-center 
-            justify-center 
-            gap-10 
-            md:flex-row 
-            md:items-start 
-            md:justify-between 
-            md:gap-14
+            flex
+            flex-col
+            items-center
+            justify-between
+            gap-10
+            lg:flex-row
+            lg:items-start
+            lg:gap-16
           "
         >
-          {/* Logo */}
-          <div className="flex shrink-0 justify-center md:justify-start">
-            <Link href={`/${locale}`} aria-label="Kiichpam Xunáan home">
-              <Image
-                src="/footer/logofooter.svg"
-                alt="Kiichpam Xunáan"
-                width={180}
-                height={180}
-                priority={false}
+          <div className="flex shrink-0 justify-center lg:justify-start">
+            <Link
+              href={`/${locale}`}
+              aria-label="Kiichpam Xunaan home"
+              className="block transition-opacity duration-300 hover:opacity-85"
+            >
+              <div
                 className="
-                  h-[130px] 
-                  w-auto 
-                  object-contain
-                  sm:h-[145px]
+                  relative
+                  h-[120px]
+                  w-[120px]
+                  sm:h-[135px]
+                  sm:w-[135px]
                   md:h-[150px]
-                  lg:h-[158px]
+                  md:w-[150px]
+                  xl:h-[165px]
+                  xl:w-[165px]
                 "
-              />
+              >
+                <Image
+                  src="/footer/logofooter.svg"
+                  alt="Kiichpam Xunaan"
+                  fill
+                  priority={false}
+                  className="object-contain"
+                  sizes="(max-width: 640px) 120px, (max-width: 768px) 135px, (max-width: 1280px) 150px, 165px"
+                />
+              </div>
             </Link>
           </div>
 
-          {/* Columnas */}
           <div
             className="
-              grid 
-              w-full 
-              max-w-[505px] 
-              grid-cols-1 
-              gap-9 
-              text-center 
-              sm:grid-cols-3 
-              sm:gap-8 
+              grid
+              w-full
+              max-w-[760px]
+              grid-cols-1
+              gap-9
+              text-center
+              sm:grid-cols-3
+              sm:gap-8
               sm:text-left
-              md:mt-4
+              lg:pt-5
             "
           >
             <FooterColumn title={t.home} links={t.homeLinks} locale={locale} />
+
             <FooterColumn
               title={t.contact}
               links={t.contactLinks}
               locale={locale}
             />
+
             <FooterColumn
               title={t.support}
               links={t.supportLinks}
@@ -198,21 +213,21 @@ export default function Footer({ locale = "es" }: FooterProps) {
           </div>
         </div>
 
-        {/* Copyright */}
-        <p
-          className="
-            mt-7 
-            text-center 
-            font-[var(--font-poppins)] 
-            text-[11px] 
-            font-semibold 
-            leading-none 
-            text-white
-            sm:text-[12px]
-          "
-        >
-          {t.copyright}
-        </p>
+        <div className="mt-10 border-t border-white/15 pt-5">
+          <p
+            className="
+              text-center
+              font-[var(--font-poppins)]
+              text-[12px]
+              font-medium
+              leading-relaxed
+              text-white/85
+              sm:text-[13px]
+            "
+          >
+            {t.copyright}
+          </p>
+        </div>
       </div>
     </footer>
   );
@@ -220,10 +235,7 @@ export default function Footer({ locale = "es" }: FooterProps) {
 
 interface FooterColumnProps {
   title: string;
-  links: ReadonlyArray<{
-    label: string;
-    href: string;
-  }>;
+  links: ReadonlyArray<FooterLink>;
   locale: "es" | "en";
 }
 
@@ -232,21 +244,22 @@ function FooterColumn({ title, links, locale }: FooterColumnProps) {
     <div className="min-w-0">
       <h3
         className="
-          mb-3 
-          font-[var(--font-poppins)] 
-          text-[15px] 
-          font-bold 
-          leading-[1.1] 
+          mb-4
+          font-[var(--font-poppins)]
+          text-[18px]
+          font-semibold
+          leading-none
           text-white
+          xl:text-[20px]
         "
       >
         {title}
       </h3>
 
-      <ul className="space-y-[10px]">
+      <ul className="space-y-3">
         {links.map((item) => {
-          const href = withLocale(locale, item.href);
-          const external = isExternal(item.href);
+          const href = buildLocalizedHref(locale, item.href);
+          const external = isExternalLink(item.href);
 
           return (
             <li key={`${title}-${item.label}`}>
@@ -259,13 +272,18 @@ function FooterColumn({ title, links, locale }: FooterColumnProps) {
                     }
                   : {})}
                 className="
-                  font-[var(--font-poppins)] 
-                  text-[15px] 
-                  font-normal 
-                  leading-[1.1] 
-                  text-white 
-                  transition-opacity 
-                  hover:opacity-80
+                  inline-block
+                  font-[var(--font-poppins)]
+                  text-[15px]
+                  font-normal
+                  leading-snug
+                  text-white/85
+                  transition-all
+                  duration-300
+                  hover:translate-x-1
+                  hover:text-white
+                  hover:opacity-90
+                  xl:text-[16px]
                 "
               >
                 {item.label}
