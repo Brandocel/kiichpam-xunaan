@@ -16,7 +16,6 @@ const footerContent = {
       { label: "Pedidas de mano", href: "/pedidas-de-mano" },
       { label: "Promociones", href: "/promociones" },
       { label: "Contacto", href: "/contacto" },
-      { label: "Blog", href: "/blog" },
     ],
     contactLinks: [
       {
