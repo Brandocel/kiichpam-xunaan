@@ -5,6 +5,17 @@ import type {
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
+type Locale = "es" | "en";
+
+function getSafeApiBaseUrl() {
+  if (!API_BASE_URL) {
+    console.error("NEXT_PUBLIC_API_URL no está configurada");
+    return "";
+  }
+
+  return API_BASE_URL.replace(/\/$/, "");
+}
+
 function isPromotionActiveByDate(promotion: PromotionItem) {
   const now = new Date();
 
@@ -37,22 +48,40 @@ function sortPromotions(promotions: PromotionItem[]) {
       return a.order - b.order;
     }
 
-    return a.title.localeCompare(b.title);
+    return (a.title || "").localeCompare(b.title || "");
   });
 }
 
-export async function getPublicPromotions(): Promise<{
+export async function getPublicPromotions(
+  locale: Locale = "es",
+): Promise<{
   featuredPromotion: PromotionItem | null;
   promotions: PromotionItem[];
 }> {
   try {
-    const response = await fetch(`${API_BASE_URL}/promotions/public`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      cache: "no-store",
+    const baseUrl = getSafeApiBaseUrl();
+
+    if (!baseUrl) {
+      return {
+        featuredPromotion: null,
+        promotions: [],
+      };
+    }
+
+    const params = new URLSearchParams({
+      lang: locale,
     });
+
+    const response = await fetch(
+      `${baseUrl}/promotions/public?${params.toString()}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        cache: "no-store",
+      },
+    );
 
     if (!response.ok) {
       console.error("PROMOTIONS STATUS ERROR:", response.status);
@@ -73,12 +102,14 @@ export async function getPublicPromotions(): Promise<{
     }
 
     const featuredFromApi = result.data.featuredPromotion ?? null;
+
     const promotionsFromApi = Array.isArray(result.data.promotions)
       ? result.data.promotions
       : [];
 
     const activePromotions = promotionsFromApi.filter(
-      (promotion: PromotionItem) => promotion.isActive && isPromotionActiveByDate(promotion)
+      (promotion: PromotionItem) =>
+        promotion.isActive && isPromotionActiveByDate(promotion),
     );
 
     const sortedPromotions = sortPromotions(activePromotions);
@@ -91,7 +122,7 @@ export async function getPublicPromotions(): Promise<{
       return {
         featuredPromotion: featuredFromApi,
         promotions: sortedPromotions.filter(
-          (promotion) => promotion.id !== featuredFromApi.id
+          (promotion) => promotion.id !== featuredFromApi.id,
         ),
       };
     }

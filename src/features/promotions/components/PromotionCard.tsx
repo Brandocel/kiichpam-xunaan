@@ -27,6 +27,21 @@ function resolveImageUrl(url?: string | null) {
   return `${API_BASE_URL}${url.startsWith("/") ? url : `/${url}`}`;
 }
 
+function getPromotionText(promotion: PromotionItem, locale: "es" | "en") {
+  const translation =
+    promotion.translation?.lang === locale ? promotion.translation : null;
+
+  return {
+    title: translation?.title || promotion.title || "",
+    subtitle: translation?.subtitle || promotion.subtitle || "",
+    description: translation?.description || promotion.description || "",
+    buttonText:
+      translation?.buttonText ||
+      promotion.buttonText ||
+      (locale === "es" ? "Reservar" : "Book now"),
+  };
+}
+
 export default function PromotionCard({
   promotion,
   locale,
@@ -34,9 +49,7 @@ export default function PromotionCard({
   onReserve,
 }: PromotionCardProps) {
   const imageUrl = resolveImageUrl(promotion.imageMedia?.url);
-
-  const buttonText =
-    promotion.buttonText || (locale === "es" ? "Reservar" : "Book now");
+  const text = getPromotionText(promotion, locale);
 
   return (
     <article
@@ -59,7 +72,7 @@ export default function PromotionCard({
       >
         <Image
           src={imageUrl}
-          alt={promotion.title}
+          alt={text.title || "Promotion"}
           fill
           unoptimized
           className="object-cover object-center"
@@ -88,11 +101,11 @@ export default function PromotionCard({
               '"Be Vietnam Pro", ui-sans-serif, system-ui, sans-serif',
           }}
         >
-          {promotion.title}
+          {text.title}
         </h2>
 
         <div className="mt-1 w-full max-w-[568px]">
-          {promotion.subtitle && (
+          {text.subtitle && (
             <p
               className="
                 text-[16px] font-black leading-[150%] text-white
@@ -103,11 +116,11 @@ export default function PromotionCard({
                   '"Be Vietnam Pro", ui-sans-serif, system-ui, sans-serif',
               }}
             >
-              {promotion.subtitle}
+              {text.subtitle}
             </p>
           )}
 
-          {promotion.description && (
+          {text.description && (
             <p
               className="
                 whitespace-pre-line
@@ -120,7 +133,7 @@ export default function PromotionCard({
                   '"Be Vietnam Pro", ui-sans-serif, system-ui, sans-serif',
               }}
             >
-              {promotion.description}
+              {text.description}
             </p>
           )}
         </div>
@@ -147,7 +160,7 @@ export default function PromotionCard({
             gap: "4.71px",
           }}
         >
-          {buttonText}
+          {text.buttonText}
         </button>
       </div>
     </article>

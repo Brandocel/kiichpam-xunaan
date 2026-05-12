@@ -1,68 +1,74 @@
-export type Locale = "es" | "en";
+export type PromotionLocale = "es" | "en";
 
-export type PromotionSectionType = "MONTHLY" | "STANDARD";
+export interface PromotionTranslation {
+  id?: string;
+  lang: PromotionLocale | string;
+  title?: string | null;
+  subtitle?: string | null;
+  description?: string | null;
+  buttonText?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+}
 
 export interface PromotionMedia {
   id: string;
-  url: string;
+  kind?: string;
+  mimeType: string;
+  ext?: string;
+  size?: number;
   originalName?: string;
-  altText?: string;
-}
-
-export interface PromotionPackage {
-  id: string;
-  code: string;
-  currency?: string;
-  translation?: {
-    lang: string;
-    name: string;
-    description?: string | null;
-  } | null;
-}
-
-export interface PromotionCampaign {
-  id: string;
-  code: string;
-  name: string;
-  description?: string | null;
-  ruleType?: string;
+  filename?: string;
+  path?: string;
+  url: string;
+  isActive?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface PromotionItem {
   id: string;
   code: string;
   isActive: boolean;
-  sectionType: PromotionSectionType;
-
+  sectionType: "MONTHLY" | "STANDARD";
   title: string;
   subtitle?: string | null;
   description?: string | null;
-
   buttonText?: string | null;
   buttonUrl?: string | null;
-
   order: number;
   priority: number;
-
   startAt?: string | null;
   endAt?: string | null;
-
   packageId?: string | null;
   campaignId?: string | null;
   imageMediaId?: string | null;
-
-  package?: PromotionPackage | null;
-  campaign?: PromotionCampaign | null;
   imageMedia?: PromotionMedia | null;
-}
-
-export interface PromotionsPublicResponseData {
-  featuredPromotion: PromotionItem | null;
-  promotions: PromotionItem[];
+  package?: {
+    id?: string;
+    code?: string;
+    [key: string]: unknown;
+  } | null;
+  campaign?: {
+    id?: string;
+    code?: string;
+    [key: string]: unknown;
+  } | null;
+  translation?: PromotionTranslation | null;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface PromotionsPublicApiResponse {
   success: boolean;
-  message: string;
-  data: PromotionsPublicResponseData;
+  message?: string;
+  data?: {
+    featuredPromotion: PromotionItem | null;
+    promotions: PromotionItem[];
+  };
+  meta?: {
+    timestamp?: string;
+    path?: string;
+    method?: string;
+  };
 }
