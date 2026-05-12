@@ -9,9 +9,11 @@ import {
 
 const SITE_URL = "https://kiichpam-xunaan.com";
 
+type Locale = "es" | "en";
+
 interface HomePageProps {
   params: Promise<{
-    locale: "es" | "en";
+    locale: Locale;
   }>;
 }
 
@@ -48,14 +50,19 @@ const seoContent = {
   },
 };
 
-function getUrl(locale: "es" | "en") {
+function normalizeLocale(locale?: string): Locale {
+  return locale === "en" ? "en" : "es";
+}
+
+function getUrl(locale: Locale) {
   return `${SITE_URL}/${locale}`;
 }
 
 export async function generateMetadata({
   params,
 }: HomePageProps): Promise<Metadata> {
-  const { locale } = await params;
+  const resolvedParams = await params;
+  const locale = normalizeLocale(resolvedParams.locale);
   const seo = seoContent[locale];
 
   return {
@@ -107,13 +114,19 @@ export async function generateMetadata({
   };
 }
 
-export const revalidate = 3600;
+/**
+ * Para probar traducciones en vivo, déjalo dinámico.
+ * Cuando todo esté estable, puedes volver a usar revalidate = 3600 si quieres cache.
+ */
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export default async function HomePage({ params }: HomePageProps) {
-  const { locale } = await params;
+  const resolvedParams = await params;
+  const locale = normalizeLocale(resolvedParams.locale);
 
   const [slides, packageItems] = await Promise.all([
-    getHeroSlides(),
+    getHeroSlides(locale),
     getPackages(locale),
   ]);
 

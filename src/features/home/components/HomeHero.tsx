@@ -16,13 +16,24 @@ function formatHeroTitle(title?: string) {
   if (!title) return "";
 
   const normalizedTitle = title.trim();
+  const normalizedLower = normalizedTitle.toLowerCase();
 
-  if (normalizedTitle.toLowerCase() === "el lugar de los sueños") {
+  if (normalizedLower === "el lugar de los sueños") {
     return (
       <>
         El lugar
         <br />
         de los sueños
+      </>
+    );
+  }
+
+  if (normalizedLower === "the place of dreams") {
+    return (
+      <>
+        The place
+        <br />
+        of dreams
       </>
     );
   }
@@ -37,6 +48,10 @@ export default function HomeHero({ slides, locale = "es" }: HomeHeroProps) {
   );
 
   const [activeIndex, setActiveIndex] = useState(0);
+
+  useEffect(() => {
+    setActiveIndex(0);
+  }, [locale, validSlides.length]);
 
   useEffect(() => {
     if (validSlides.length <= 1) return;
@@ -129,9 +144,11 @@ export default function HomeHero({ slides, locale = "es" }: HomeHeroProps) {
             {formatHeroTitle(activeSlide.title)}
           </h1>
 
-          <p className="mt-4 max-w-[900px] text-balance text-[clamp(1rem,2.1vw,1.9rem)] font-normal leading-[1.2] text-white md:mt-5">
-            {activeSlide.subtitle}
-          </p>
+          {activeSlide.subtitle && (
+            <p className="mt-4 max-w-[900px] text-balance text-[clamp(1rem,2.1vw,1.9rem)] font-normal leading-[1.2] text-white md:mt-5">
+              {activeSlide.subtitle}
+            </p>
+          )}
         </div>
       </div>
 

@@ -5,6 +5,7 @@ import Link from "next/link";
 import {
   type ChangeEvent,
   type FormEvent,
+  useEffect,
   useRef,
   useState,
 } from "react";
@@ -15,6 +16,8 @@ import type { ContactLocale } from "../types/contact.types";
 interface ContactFormProps {
   locale: ContactLocale;
 }
+
+type Locale = "es" | "en";
 
 type SocialItem = {
   alt: string;
@@ -80,12 +83,13 @@ const translations = {
     invalidEmail: "Ingresa un correo electrónico válido.",
     missingMessage: "Ingresa tu mensaje.",
     animation: "Ver animación",
+    imageAlt: "Contacto Kiichpam Xunaan",
   },
   en: {
-    title: "Stay in touch",
+    title: "Let’s keep in touch",
     description:
-      "We appreciate all comments so we can give you the best possible experience before, during and after your visit to our eco park",
-    firstName: "Name",
+      "We appreciate all your comments so we can give you the best possible experience before, during and after your visit to our eco park",
+    firstName: "First name",
     lastName: "Last name",
     email: "Email",
     phone: "Phone number",
@@ -102,6 +106,7 @@ const translations = {
     invalidEmail: "Enter a valid email address.",
     missingMessage: "Enter your message.",
     animation: "View animation",
+    imageAlt: "Kiichpam Xunaan contact",
   },
 } as const;
 
@@ -113,12 +118,17 @@ const initialFormData: ContactFormState = {
   message: "",
 };
 
+function normalizeLocale(locale?: string): Locale {
+  return locale === "en" ? "en" : "es";
+}
+
 function isValidEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
 export default function ContactForm({ locale }: ContactFormProps) {
-  const t = translations[locale] ?? translations.es;
+  const safeLocale = normalizeLocale(locale);
+  const t = translations[safeLocale];
 
   const [formData, setFormData] =
     useState<ContactFormState>(initialFormData);
@@ -130,8 +140,12 @@ export default function ContactForm({ locale }: ContactFormProps) {
     message: string;
   } | null>(null);
 
+  useEffect(() => {
+    setStatus(null);
+  }, [safeLocale]);
+
   function handleChange(
-    event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) {
     const { name, value } = event.target;
 
@@ -199,7 +213,7 @@ export default function ContactForm({ locale }: ContactFormProps) {
         subjectType: "reservations",
         subject: t.defaultSubject,
         message: formData.message.trim(),
-        lang: locale,
+        lang: safeLocale,
       });
 
       setStatus({
@@ -307,7 +321,7 @@ export default function ContactForm({ locale }: ContactFormProps) {
             <HoverMascotaVideo
               posterSrc="/contacto/pajaroto.png"
               videoSrc="/contacto/mascota.mp4"
-              alt="Contacto Kiichpam Xunaan"
+              alt={t.imageAlt}
               animationLabel={t.animation}
             />
           </div>

@@ -51,8 +51,19 @@ export default function LanguageSwitcher({
     setSelected(nextLocale);
 
     timeoutRef.current = setTimeout(() => {
-      router.push(buildNextPath(nextLocale), { scroll: false });
-      isChangingRef.current = false;
+      const nextPath = buildNextPath(nextLocale);
+
+      router.push(nextPath, { scroll: false });
+
+      /**
+       * Fuerza a Next a pedir de nuevo los datos del server.
+       * Esto ayuda cuando usas fetch en server components.
+       */
+      router.refresh();
+
+      timeoutRef.current = setTimeout(() => {
+        isChangingRef.current = false;
+      }, 250);
     }, 130);
   };
 

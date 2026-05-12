@@ -7,9 +7,31 @@ import type {
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
-export async function getHeroSlides(): Promise<HeroSlide[]> {
+type Locale = "es" | "en";
+
+function getSafeApiBaseUrl() {
+  if (!API_BASE_URL) {
+    console.error("NEXT_PUBLIC_API_URL no está configurada");
+    return "";
+  }
+
+  return API_BASE_URL.replace(/\/$/, "");
+}
+
+export async function getHeroSlides(lang: Locale = "es"): Promise<HeroSlide[]> {
   try {
-    const response = await fetch(`${API_BASE_URL}/hero/slides`, {
+    const baseUrl = getSafeApiBaseUrl();
+
+    if (!baseUrl) {
+      return [];
+    }
+
+    const params = new URLSearchParams({
+      lang,
+      isActive: "true",
+    });
+
+    const response = await fetch(`${baseUrl}/hero/slides?${params.toString()}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -18,7 +40,7 @@ export async function getHeroSlides(): Promise<HeroSlide[]> {
     });
 
     if (!response.ok) {
-      console.error("STATUS ERROR:", response.status);
+      console.error("HERO STATUS ERROR:", response.status);
       return [];
     }
 
@@ -37,11 +59,19 @@ export async function getHeroSlides(): Promise<HeroSlide[]> {
   }
 }
 
-export async function getPackages(
-  lang: "es" | "en"
-): Promise<PackageItem[]> {
+export async function getPackages(lang: Locale = "es"): Promise<PackageItem[]> {
   try {
-    const response = await fetch(`${API_BASE_URL}/packages?lang=${lang}`, {
+    const baseUrl = getSafeApiBaseUrl();
+
+    if (!baseUrl) {
+      return [];
+    }
+
+    const params = new URLSearchParams({
+      lang,
+    });
+
+    const response = await fetch(`${baseUrl}/packages?${params.toString()}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",

@@ -1,15 +1,24 @@
+// src/app/[locale]/contacto/page.tsx
+
 import Header from "@/shared/components/layout/Header";
 import ContactHero from "@/features/contact/components/ContactHero";
 import ContactForm from "@/features/contact/components/ContactForm";
 
+type Locale = "es" | "en";
+
 interface Props {
-  params: {
-    locale: "es" | "en";
-  };
+  params: Promise<{
+    locale: Locale;
+  }>;
 }
 
-export default function ContactoPage({ params }: Props) {
-  const locale = params.locale === "en" ? "en" : "es";
+function normalizeLocale(locale?: string): Locale {
+  return locale === "en" ? "en" : "es";
+}
+
+export default async function ContactoPage({ params }: Props) {
+  const resolvedParams = await params;
+  const locale = normalizeLocale(resolvedParams.locale);
 
   return (
     <div className="min-h-screen bg-[#006f82]">
@@ -18,7 +27,7 @@ export default function ContactoPage({ params }: Props) {
         <ContactHero />
       </div>
 
-      <ContactForm locale={locale} />
+      <ContactForm key={locale} locale={locale} />
     </div>
   );
 }
