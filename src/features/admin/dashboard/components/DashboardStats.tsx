@@ -174,7 +174,7 @@ export default function DashboardStats() {
                     <ReservationStatusBadge status={reservation.status} />
                   </td>
                   <td className="py-4 text-right text-sm font-bold text-slate-900">
-                    {formatMoneyFromCents(reservation.pricing?.totalMXN)}
+                    {formatMoneyFromCents(Number(reservation.pricing?.totalMXN))}
                   </td>
                 </tr>
               ))}
