@@ -1,6 +1,33 @@
 import Image from "next/image";
 
-export default function CenoteYunChen() {
+interface CenoteYunChenProps {
+  locale: "es" | "en";
+}
+
+const content = {
+  es: {
+    titleLine1: "Cenote",
+    titleLine2: "Yun Chen",
+    mainAlt: "Cenote Yun Chen",
+    secondaryAlt: "Vista Cenote Yun Chen",
+    heading: "Cenote semiabierto tipo caverna",
+    description:
+      "El cenote Yun Chen está caracterizado por su formación rocosa y entrada de luz natural desde la parte superior. Cuenta con un diámetro aproximado de 20 a 25 metros y una profundidad que alcanza entre 8 y 12 metros, con aguas cristalinas de tonalidad turquesa. Sus paredes de piedra caliza y formaciones naturales crean un entorno íntimo y visualmente impactante, ideal para experiencias únicas en contacto con la naturaleza.",
+  },
+  en: {
+    titleLine1: "Cenote",
+    titleLine2: "Yun Chen",
+    mainAlt: "Yun Chen Cenote",
+    secondaryAlt: "Yun Chen Cenote view",
+    heading: "Semi-open cave-type cenote",
+    description:
+      "The Yun Chen cenote is characterized by its rock formation and natural light entering from above. It has an approximate diameter of 20 to 25 meters and a depth ranging from 8 to 12 meters, with crystal-clear turquoise waters. Its limestone walls and natural formations create an intimate and visually striking setting, ideal for unique experiences in contact with nature.",
+  },
+} as const;
+
+export default function CenoteYunChen({ locale }: CenoteYunChenProps) {
+  const t = content[locale] ?? content.es;
+
   return (
     <section className="w-full bg-[#00586F] pb-8 pt-10 sm:pb-10 md:pb-12 lg:pb-14">
       <div className="mx-auto max-w-[1512px] px-5 sm:px-6 md:px-10 lg:px-[42px] xl:px-[64px]">
@@ -9,7 +36,7 @@ export default function CenoteYunChen() {
           <div className="relative h-[320px] w-full overflow-hidden rounded-[8px] sm:h-[400px] md:h-[480px] lg:h-[520px] xl:h-[580px]">
             <Image
               src="/cenotepage/cenoteyun.webp"
-              alt="Cenote Yun Chen"
+              alt={t.mainAlt}
               fill
               priority
               className="object-cover object-center"
@@ -35,9 +62,9 @@ export default function CenoteYunChen() {
                     '"Be Vietnam Pro", ui-sans-serif, system-ui, sans-serif',
                 }}
               >
-                Cenote
+                {t.titleLine1}
                 <br />
-                Yun Chen
+                {t.titleLine2}
               </h2>
             </div>
           </div>
@@ -62,7 +89,7 @@ export default function CenoteYunChen() {
               <div className="relative h-[410px] w-full overflow-hidden rounded-[8px] shadow-[0_24px_42px_rgba(0,0,0,0.45)] xl:h-[520px]">
                 <Image
                   src="/cenotepage/cenoteyun2.webp"
-                  alt="Vista Cenote Yun Chen"
+                  alt={t.secondaryAlt}
                   fill
                   className="object-cover object-center"
                   sizes="500px"
@@ -102,7 +129,7 @@ export default function CenoteYunChen() {
                     '"Be Vietnam Pro", ui-sans-serif, system-ui, sans-serif',
                 }}
               >
-                Cenote semiabierto tipo caverna
+                {t.heading}
               </h3>
 
               <p
@@ -122,13 +149,7 @@ export default function CenoteYunChen() {
                     '"Be Vietnam Pro", ui-sans-serif, system-ui, sans-serif',
                 }}
               >
-                El cenote Yun Chen está caracterizado por su formación rocosa y
-                entrada de luz natural desde la parte superior. Cuenta con un
-                diámetro aproximado de 20 a 25 metros y una profundidad que
-                alcanza entre 8 y 12 metros, con aguas cristalinas de tonalidad
-                turquesa. Sus paredes de piedra caliza y formaciones naturales
-                crean un entorno íntimo y visualmente impactante, ideal para
-                experiencias únicas en contacto con la naturaleza.
+                {t.description}
               </p>
             </div>
 
@@ -139,7 +160,7 @@ export default function CenoteYunChen() {
               <div className="relative h-[360px] w-full overflow-hidden rounded-[8px] shadow-[0_24px_42px_rgba(0,0,0,0.45)] sm:h-[460px] md:h-[560px]">
                 <Image
                   src="/cenotepage/cenoteyun2.webp"
-                  alt="Vista Cenote Yun Chen"
+                  alt={t.secondaryAlt}
                   fill
                   className="object-cover object-center"
                   sizes="100vw"

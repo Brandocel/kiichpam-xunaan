@@ -23,5 +23,5 @@ export default async function CenotesPage({ params }: CenotesPageProps) {
 
   const content = getCenotesPageContent(locale);
 
-  return <CenotesPageView content={content} locale={"es"} />;
+  return <CenotesPageView content={content} locale={locale} />;
 }

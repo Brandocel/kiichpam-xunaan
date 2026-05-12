@@ -1,6 +1,34 @@
 import Image from "next/image";
 
-export default function CenoteXkokay() {
+interface CenoteXkokayProps {
+  locale: "es" | "en";
+}
+
+const content = {
+  es: {
+    titleLine1: "Cenote",
+    titleLine2: "Xkokay",
+    mainAlt: "Cenote Xkokay",
+    secondaryAlt: "Estalactitas del Cenote Xkokay",
+    heading:
+      "Un rincón escondido donde la luz se filtra suavemente entre la roca",
+    description:
+      "El cenote Xkokay crea una atmósfera íntima y llena de misterio. Sus aguas tranquilas y cristalinas envuelven el momento en una sensación de calma absoluta, mientras la naturaleza y la energía ancestral del lugar convierten cada instante en algo profundamente especial. Un escenario perfecto para vivir emociones auténticas y recuerdos que perduran para siempre.",
+  },
+  en: {
+    titleLine1: "Cenote",
+    titleLine2: "Xkokay",
+    mainAlt: "Xkokay Cenote",
+    secondaryAlt: "Stalactites of Xkokay Cenote",
+    heading: "A hidden corner where light gently filters through the rock",
+    description:
+      "The Xkokay cenote creates an intimate atmosphere full of mystery. Its calm, crystal-clear waters surround the moment with a feeling of absolute peace, while the nature and ancestral energy of the place turn every instant into something deeply special. A perfect setting to experience authentic emotions and memories that last forever.",
+  },
+} as const;
+
+export default function CenoteXkokay({ locale }: CenoteXkokayProps) {
+  const t = content[locale] ?? content.es;
+
   return (
     <section className="w-full bg-[#00586F] pb-16 pt-8 sm:pb-20 md:pb-24 lg:pb-28">
       <div className="mx-auto max-w-[1512px] px-5 sm:px-6 md:px-10 lg:px-[42px] xl:px-[64px]">
@@ -9,7 +37,7 @@ export default function CenoteXkokay() {
           <div className="relative h-[330px] w-full overflow-hidden rounded-[8px] sm:h-[400px] md:h-[480px] lg:h-[540px] xl:h-[600px]">
             <Image
               src="/cenotepage/Cenotexkokay2.webp"
-              alt="Cenote Xkokay"
+              alt={t.mainAlt}
               fill
               priority
               className="object-cover object-center"
@@ -37,9 +65,9 @@ export default function CenoteXkokay() {
                     '"Be Vietnam Pro", ui-sans-serif, system-ui, sans-serif',
                 }}
               >
-                Cenote
+                {t.titleLine1}
                 <br />
-                Xkokay
+                {t.titleLine2}
               </h2>
             </div>
           </div>
@@ -64,7 +92,7 @@ export default function CenoteXkokay() {
               <div className="relative h-[410px] w-full overflow-hidden rounded-[8px] shadow-[0_24px_42px_rgba(0,0,0,0.45)] xl:h-[520px]">
                 <Image
                   src="/cenotepage/estalaquita.webp"
-                  alt="Estalactitas del Cenote Xkokay"
+                  alt={t.secondaryAlt}
                   fill
                   className="object-cover object-center"
                   sizes="500px"
@@ -108,8 +136,7 @@ export default function CenoteXkokay() {
                     '"Be Vietnam Pro", ui-sans-serif, system-ui, sans-serif',
                 }}
               >
-                Un rincón escondido donde la luz se filtra suavemente entre la
-                roca
+                {t.heading}
               </h3>
 
               <p
@@ -132,12 +159,7 @@ export default function CenoteXkokay() {
                     '"Be Vietnam Pro", ui-sans-serif, system-ui, sans-serif',
                 }}
               >
-                El cenote Xkokay crea una atmósfera íntima y llena de misterio.
-                Sus aguas tranquilas y cristalinas envuelven el momento en una
-                sensación de calma absoluta, mientras la naturaleza y la energía
-                ancestral del lugar convierten cada instante en algo
-                profundamente especial. Un escenario perfecto para vivir
-                emociones auténticas y recuerdos que perduran para siempre.
+                {t.description}
               </p>
             </div>
 
@@ -148,7 +170,7 @@ export default function CenoteXkokay() {
               <div className="relative h-[360px] w-full overflow-hidden rounded-[8px] shadow-[0_24px_42px_rgba(0,0,0,0.45)] sm:h-[460px] md:h-[560px]">
                 <Image
                   src="/cenotepage/estalaquita.webp"
-                  alt="Estalactitas del Cenote Xkokay"
+                  alt={t.secondaryAlt}
                   fill
                   className="object-cover object-center"
                   sizes="100vw"

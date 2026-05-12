@@ -16,8 +16,8 @@ export default function CenotesPageView({
   return (
     <main>
       <CenotesHero hero={content.hero} locale={locale} />
-      <CenoteYunChen />
-      <CenoteXkokay />
+      <CenoteYunChen locale={locale} />
+      <CenoteXkokay locale={locale} />
       <CenotesGallery />
     </main>
   );
