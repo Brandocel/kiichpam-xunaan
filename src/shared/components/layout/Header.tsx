@@ -1,13 +1,22 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Menu, X } from "lucide-react";
+import { usePathname } from "next/navigation";
 import LanguageSwitcher from "./LanguageSwitcher";
+import {
+  AppLocale,
+  DEFAULT_LOCALE,
+  buildLocalizedHref,
+  getLocaleFromPathname,
+  getPreferredLocaleFromBrowser,
+  savePreferredLocale,
+} from "@/shared/lib/locale-utils";
 
 interface HeaderProps {
-  locale?: "es" | "en";
+  locale?: AppLocale;
   variant?: "solid" | "overlay";
 }
 
@@ -42,13 +51,52 @@ const headerNavigation = [
   },
 ];
 
+const headerText = {
+  es: {
+    menu: "Menú",
+    openMenu: "Abrir menú",
+    closeMenu: "Cerrar menú",
+    language: "Idioma",
+    logoAlt: "Kiichpam Xunaan",
+  },
+  en: {
+    menu: "Menu",
+    openMenu: "Open menu",
+    closeMenu: "Close menu",
+    language: "Language",
+    logoAlt: "Kiichpam Xunaan",
+  },
+};
+
 export default function Header({
-  locale = "es",
+  locale,
   variant = "overlay",
 }: HeaderProps) {
+  const pathname = usePathname();
+
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [storedLocale, setStoredLocale] = useState<AppLocale | null>(null);
 
   const isOverlay = variant === "overlay";
+
+  const routeLocale = useMemo(() => {
+    return getLocaleFromPathname(pathname);
+  }, [pathname]);
+
+  const activeLocale = routeLocale ?? locale ?? storedLocale ?? DEFAULT_LOCALE;
+  const text = headerText[activeLocale];
+
+  useEffect(() => {
+    const preferredLocale = getPreferredLocaleFromBrowser();
+
+    if (preferredLocale) {
+      setStoredLocale(preferredLocale);
+    }
+  }, []);
+
+  useEffect(() => {
+    savePreferredLocale(activeLocale);
+  }, [activeLocale]);
 
   useEffect(() => {
     document.body.style.overflow = mobileMenuOpen ? "hidden" : "";
@@ -73,14 +121,14 @@ export default function Header({
       >
         <div className="mx-auto flex h-[150px] w-full max-w-[1800px] items-center justify-between px-6 sm:h-[160px] sm:px-8 md:h-[170px] md:px-12 xl:h-[180px] xl:px-20">
           <Link
-            href={`/${locale}`}
+            href={`/${activeLocale}`}
             className="relative z-10 flex shrink-0 items-center"
             onClick={closeMenu}
           >
             <div className="relative h-[96px] w-[96px] sm:h-[108px] sm:w-[108px] md:h-[120px] md:w-[120px] xl:h-[132px] xl:w-[132px]">
               <Image
                 src="/KXXNlogo.svg"
-                alt="Kiichpam Xunaan"
+                alt={text.logoAlt}
                 fill
                 priority
                 className="object-contain"
@@ -94,21 +142,21 @@ export default function Header({
               {headerNavigation.map((item) => (
                 <Link
                   key={item.href}
-                  href={`/${locale}${item.href}`}
+                  href={buildLocalizedHref(activeLocale, item.href)}
                   className="font-[var(--font-poppins)] text-[18px] font-semibold leading-none text-white transition-opacity duration-200 hover:opacity-80 xl:text-[21px]"
                 >
-                  {item.label[locale]}
+                  {item.label[activeLocale]}
                 </Link>
               ))}
             </nav>
 
             <div className="relative z-10 hidden lg:block">
-              <LanguageSwitcher locale={locale} />
+              <LanguageSwitcher locale={activeLocale} />
             </div>
 
             <button
               type="button"
-              aria-label={mobileMenuOpen ? "Cerrar menú" : "Abrir menú"}
+              aria-label={mobileMenuOpen ? text.closeMenu : text.openMenu}
               aria-expanded={mobileMenuOpen}
               onClick={() => setMobileMenuOpen(true)}
               className="relative z-10 flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-sm transition-all duration-300 hover:bg-white/20 lg:hidden"
@@ -138,12 +186,12 @@ export default function Header({
         <div className="flex h-full flex-col">
           <div className="flex items-center justify-between border-b border-white/15 px-5 py-5">
             <span className="font-[var(--font-poppins)] text-[28px] font-semibold text-white">
-              Menú
+              {text.menu}
             </span>
 
             <button
               type="button"
-              aria-label="Cerrar menú"
+              aria-label={text.closeMenu}
               onClick={closeMenu}
               className="flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white transition-all duration-300 hover:bg-white/20"
             >
@@ -156,7 +204,7 @@ export default function Header({
               {headerNavigation.map((item, index) => (
                 <Link
                   key={item.href}
-                  href={`/${locale}${item.href}`}
+                  href={buildLocalizedHref(activeLocale, item.href)}
                   onClick={closeMenu}
                   className="group rounded-xl px-4 py-3 text-white transition-all duration-300 hover:bg-white/10"
                   style={{
@@ -171,7 +219,7 @@ export default function Header({
                         : "translate-x-5 opacity-0",
                     ].join(" ")}
                   >
-                    {item.label[locale]}
+                    {item.label[activeLocale]}
                   </span>
                 </Link>
               ))}
@@ -179,9 +227,10 @@ export default function Header({
 
             <div className="mt-auto border-t border-white/15 pt-5">
               <p className="mb-3 font-[var(--font-poppins)] text-sm text-white/80">
-                Idioma
+                {text.language}
               </p>
-              <LanguageSwitcher locale={locale} mobile />
+
+              <LanguageSwitcher locale={activeLocale} mobile />
             </div>
           </nav>
         </div>
