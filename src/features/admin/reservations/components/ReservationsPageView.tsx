@@ -11,6 +11,7 @@ import {
   ApiReservation,
   ApiReservationsListResponse,
   getReservationStatusLabel,
+  reservationReferenceOptions,
   reservationStatusOptions,
 } from "../types/reservation.types";
 import {
@@ -27,6 +28,7 @@ const initialFilters: Required<AdminReservationListParams> = {
   status: "",
   packageCode: "",
   email: "",
+  reference: "",
   from: "",
   to: "",
   sortBy: "createdAt",
@@ -347,7 +349,7 @@ export default function ReservationsPageView() {
                       search: event.target.value,
                     }))
                   }
-                  placeholder="Folio, nombre, email o teléfono"
+                  placeholder="Folio, nombre, email, teléfono u origen"
                   className="h-10 w-full border border-slate-300 bg-white px-3 text-sm text-slate-800 outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
                 />
               </div>
@@ -372,6 +374,31 @@ export default function ReservationsPageView() {
                   {reservationStatusOptions.map((status) => (
                     <option key={status} value={status}>
                       {getReservationStatusLabel(status)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="mb-1.5 block text-[11px] font-black uppercase tracking-wide text-slate-500">
+                  Origen / Referencia
+                </label>
+
+                <select
+                  value={formFilters.reference}
+                  onChange={(event) =>
+                    setFormFilters((prev) => ({
+                      ...prev,
+                      reference: event.target.value,
+                    }))
+                  }
+                  className="h-10 w-full border border-slate-300 bg-white px-3 text-sm text-slate-800 outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
+                >
+                  <option value="">Todos</option>
+
+                  {reservationReferenceOptions.map((reference) => (
+                    <option key={reference} value={reference}>
+                      {reference}
                     </option>
                   ))}
                 </select>
@@ -459,15 +486,17 @@ export default function ReservationsPageView() {
                   onChange={(event) =>
                     setFormFilters((prev) => ({
                       ...prev,
-                      sortBy: event.target.value,
+                      sortBy: event.target.value as
+                        | "createdAt"
+                        | "visitDate"
+                        | "totalMXN",
                     }))
                   }
                   className="h-10 w-full border border-slate-300 bg-white px-3 text-sm text-slate-800 outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
                 >
                   <option value="createdAt">Creación</option>
                   <option value="visitDate">Fecha de visita</option>
-                  <option value="folio">Folio</option>
-                  <option value="status">Estado</option>
+                  <option value="totalMXN">Total</option>
                 </select>
               </div>
 

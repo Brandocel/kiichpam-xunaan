@@ -30,6 +30,7 @@ import {
   toApiVisitDate,
 } from "../utils/booking-calculations";
 import { validateBookingContact } from "../utils/booking-validators";
+import { buildReservationAttributionPayload } from "@/shared/lib/attribution";
 
 interface UseBookingParams {
   locale: BookingLocale;
@@ -681,6 +682,8 @@ export function useBooking({
       setLoadingQuote(true);
       setQuoteError("");
 
+      const attributionPayload = buildReservationAttributionPayload();
+
       const payload: ReservationQuoteRequest = {
         packageCode,
         visitDate: apiVisitDate,
@@ -692,6 +695,7 @@ export function useBooking({
         campaignCode: campaignCode || undefined,
         lang: locale,
         extras: normalizeExtras(extras),
+        ...attributionPayload,
       };
 
       const result = await getReservationQuote(payload);
@@ -734,6 +738,8 @@ export function useBooking({
       setLoadingReservation(true);
       setReservationError("");
 
+      const attributionPayload = buildReservationAttributionPayload();
+
       const payload: ReservationCreateRequest = {
         packageCode,
         visitDate: apiVisitDate,
@@ -745,6 +751,7 @@ export function useBooking({
         campaignCode: campaignCode || undefined,
         lang: locale,
         extras: normalizeExtras(extras),
+        ...attributionPayload,
       };
 
       const result = await createReservation(payload);

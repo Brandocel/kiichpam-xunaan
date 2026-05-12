@@ -5,7 +5,19 @@ export interface BookingExtraInput {
   qty: number;
 }
 
-export interface ReservationQuoteRequest {
+export interface ReservationAttributionPayload {
+  reference?: string;
+  utmSource?: string;
+  utmMedium?: string;
+  utmCampaign?: string;
+  utmContent?: string;
+  utmTerm?: string;
+  fbclid?: string;
+  ttclid?: string;
+  gclid?: string;
+}
+
+export interface ReservationQuoteRequest extends ReservationAttributionPayload {
   packageCode: string;
   visitDate: string;
   adults: number;
@@ -14,13 +26,6 @@ export interface ReservationQuoteRequest {
   inapamVisitors: number;
   couponCode?: string;
   campaignCode?: string;
-  utmSource?: string;
-  utmMedium?: string;
-  utmCampaign?: string;
-  utmContent?: string;
-  utmTerm?: string;
-  fbclid?: string;
-  ttclid?: string;
   lang: BookingLocale;
   extras?: BookingExtraInput[];
 }
@@ -140,6 +145,18 @@ export interface ReservationQuoteSnapshot {
   } | null;
 }
 
+export interface ReservationAttributionData {
+  reference?: string | null;
+  utmSource?: string | null;
+  utmMedium?: string | null;
+  utmCampaign?: string | null;
+  utmContent?: string | null;
+  utmTerm?: string | null;
+  fbclid?: string | null;
+  ttclid?: string | null;
+  gclid?: string | null;
+}
+
 export interface ReservationQuoteData {
   package: ReservationQuotePackageInfo;
   pricing: ReservationQuotePricing;
@@ -157,6 +174,7 @@ export interface ReservationQuoteData {
   rules: ReservationQuoteRules;
   breakdown: ReservationQuoteBreakdown;
   snapshot: ReservationQuoteSnapshot;
+  attribution?: ReservationAttributionData;
 }
 
 export interface ReservationQuoteResponse {
@@ -170,7 +188,7 @@ export interface ReservationQuoteResponse {
   };
 }
 
-export interface ReservationCreateRequest {
+export interface ReservationCreateRequest extends ReservationAttributionPayload {
   packageCode: string;
   visitDate: string;
   adults: number;
@@ -179,13 +197,6 @@ export interface ReservationCreateRequest {
   inapamVisitors: number;
   couponCode?: string;
   campaignCode?: string;
-  utmSource?: string;
-  utmMedium?: string;
-  utmCampaign?: string;
-  utmContent?: string;
-  utmTerm?: string;
-  fbclid?: string;
-  ttclid?: string;
   lang: BookingLocale;
   extras?: BookingExtraInput[];
 }
@@ -231,7 +242,10 @@ export interface ReservationRecord {
   comments: string | null;
 
   campaignCode?: string | null;
-  appliedCampaignCodes?: string[] | null;
+  appliedCampaignCodes?: string[] | string | null;
+
+  reference?: string | null;
+  attribution?: ReservationAttributionData;
 
   utmSource?: string | null;
   utmMedium?: string | null;
@@ -240,6 +254,7 @@ export interface ReservationRecord {
   utmTerm?: string | null;
   fbclid?: string | null;
   ttclid?: string | null;
+  gclid?: string | null;
 
   couponCode?: string | null;
   couponDiscountMXN?: number;
@@ -422,4 +437,4 @@ export interface BookingDraftStorage {
     acceptedPrivacy: boolean;
   };
   updatedAt: string;
-} 
+}

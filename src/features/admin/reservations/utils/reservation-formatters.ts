@@ -1,85 +1,106 @@
-export function formatMoneyFromCents(amount: number | null | undefined) {
-    const safeAmount = Number(amount || 0);
-  
-    return new Intl.NumberFormat("es-MX", {
-      style: "currency",
-      currency: "MXN",
-    }).format(safeAmount / 100);
+import type { ApiReservation } from "../types/reservation.types";
+
+type MoneyValue = number | string | null | undefined;
+
+function toSafeNumber(value: MoneyValue) {
+  if (value === null || value === undefined || value === "") return 0;
+
+  if (typeof value === "number") {
+    return Number.isFinite(value) ? value : 0;
   }
-  
-  export function formatDate(value: string | null | undefined) {
-    if (!value) return "Sin fecha";
-  
-    const date = new Date(value);
-  
-    if (Number.isNaN(date.getTime())) return "Fecha inválida";
-  
-    return date.toLocaleDateString("es-MX", {
-      year: "numeric",
-      month: "short",
-      day: "2-digit",
-      timeZone: "America/Cancun",
-    });
+
+  const parsed = Number(value);
+
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+/**
+ * El nombre se mantiene por compatibilidad con los imports existentes.
+ * Pero ahora NO divide entre 100 porque la API ya regresa el monto normal.
+ */
+export function formatMoneyFromCents(value: MoneyValue, currency = "MXN") {
+  const amount = toSafeNumber(value);
+
+  return new Intl.NumberFormat("es-MX", {
+    style: "currency",
+    currency,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(amount);
+}
+
+export function formatDate(value?: string | Date | null) {
+  if (!value) return "Sin fecha";
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) return "Fecha inválida";
+
+  return new Intl.DateTimeFormat("es-MX", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).format(date);
+}
+
+export function formatDateTime(value?: string | Date | null) {
+  if (!value) return "Sin fecha";
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) return "Fecha inválida";
+
+  return new Intl.DateTimeFormat("es-MX", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
+}
+
+export function formatValue(value: unknown, fallback = "Sin información") {
+  if (value === null || value === undefined || value === "") {
+    return fallback;
   }
-  
-  export function formatDateTime(value: string | null | undefined) {
-    if (!value) return "Sin fecha";
-  
-    const date = new Date(value);
-  
-    if (Number.isNaN(date.getTime())) return "Fecha inválida";
-  
-    return date.toLocaleString("es-MX", {
-      year: "numeric",
-      month: "short",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-      timeZone: "America/Cancun",
-    });
+
+  if (typeof value === "string") {
+    return value.trim() || fallback;
   }
-  
-  export function getCustomerName(reservation: {
-    customer?: {
-      firstName?: string | null;
-      lastName?: string | null;
-    } | null;
-  }) {
-    const firstName = reservation.customer?.firstName || "";
-    const lastName = reservation.customer?.lastName || "";
-    const fullName = `${firstName} ${lastName}`.trim();
-  
-    return fullName || "Cliente sin nombre";
+
+  if (typeof value === "number") {
+    return Number.isFinite(value) ? String(value) : fallback;
   }
-  
-  export function getTotalPassengers(reservation: {
-    passengers?: {
-      adults?: number | null;
-      children?: number | null;
-      infants?: number | null;
-    } | null;
-  }) {
-    return (
-      Number(reservation.passengers?.adults || 0) +
-      Number(reservation.passengers?.children || 0) +
-      Number(reservation.passengers?.infants || 0)
-    );
+
+  if (typeof value === "boolean") {
+    return value ? "Sí" : "No";
   }
-  
-  export function formatValue(value: unknown, fallback = "N/A") {
-    if (value === null || value === undefined || value === "") return fallback;
-  
-    if (Array.isArray(value)) {
-      return value.length > 0 ? value.join(", ") : fallback;
-    }
-  
-    if (typeof value === "object") {
-      try {
-        return JSON.stringify(value);
-      } catch {
-        return fallback;
-      }
-    }
-  
-    return String(value);
-  }
+
+  return String(value);
+}
+
+export function getCustomerName(reservation: ApiReservation) {
+  const firstName = reservation.customer?.firstName?.trim() || "";
+  const lastName = reservation.customer?.lastName?.trim() || "";
+  const fullName = `${firstName} ${lastName}`.trim();
+
+  return fullName || "Cliente sin nombre";
+}
+
+export function getTotalPassengers(reservation: ApiReservation) {
+  const adults = Number(reservation.passengers?.adults || 0);
+  const children = Number(reservation.passengers?.children || 0);
+  const infants = Number(reservation.passengers?.infants || 0);
+
+  return adults + children + infants;
+}
+
+export function getReservationReference(reservation: ApiReservation) {
+  return (
+    reservation.reference ||
+    reservation.attribution?.reference ||
+    reservation.utmSource ||
+    reservation.attribution?.utmSource ||
+    "Pagina WEB"
+  );
+}
