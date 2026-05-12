@@ -364,7 +364,7 @@ export default function AdminPaymentsPageView() {
                     </td>
 
                     <td className="whitespace-nowrap px-5 py-4 text-right text-sm font-black text-slate-900">
-                      {formatMoneyFromCents(reservation.pricing?.totalMXN)}
+                      {formatMoneyFromCents(Number(reservation.pricing?.totalMXN))}
                     </td>
                   </tr>
                 ))
