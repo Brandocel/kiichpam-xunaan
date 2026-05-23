@@ -23,6 +23,7 @@ export default function AdminShell({ children }: AdminShellProps) {
   const pathname = usePathname();
 
   const [session, setSession] = useState<AdminSession | null>(null);
+  const [isSessionLoading, setIsSessionLoading] = useState(true);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
@@ -47,7 +48,7 @@ export default function AdminShell({ children }: AdminShellProps) {
         });
 
         if (!response.ok) {
-          setSession(null);
+          router.replace("/admin/login");
           return;
         }
 
@@ -56,10 +57,12 @@ export default function AdminShell({ children }: AdminShellProps) {
         if (result.success) {
           setSession(result.data);
         } else {
-          setSession(null);
+          router.replace("/admin/login");
         }
       } catch {
-        setSession(null);
+        router.replace("/admin/login");
+      } finally {
+        setIsSessionLoading(false);
       }
     };
 
@@ -96,7 +99,17 @@ export default function AdminShell({ children }: AdminShellProps) {
             onLogout={handleLogout}
           />
 
-          <main className="px-4 py-6 sm:px-6 lg:px-8">{children}</main>
+          <main className="px-4 py-6 sm:px-6 lg:px-8">
+            {isSessionLoading ? (
+              <div className="flex items-center justify-center py-20">
+                <p className="text-sm font-semibold text-slate-400">
+                  Verificando sesión...
+                </p>
+              </div>
+            ) : session ? (
+              children
+            ) : null}
+          </main>
         </div>
       </div>
     </div>

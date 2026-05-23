@@ -30,12 +30,13 @@ export default function DashboardStats() {
   const [response, setResponse] = useState<ApiReservationsListResponse | null>(
     null
   );
-
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const loadDashboard = async () => {
       setIsLoading(true);
+      setError(null);
 
       try {
         const result = await getAdminReservations({
@@ -46,6 +47,13 @@ export default function DashboardStats() {
         });
 
         setResponse(result);
+      } catch (err) {
+        console.error("Error cargando dashboard:", err);
+        setError(
+          err instanceof Error
+            ? err.message
+            : "No se pudo cargar el dashboard."
+        );
       } finally {
         setIsLoading(false);
       }
@@ -91,6 +99,17 @@ export default function DashboardStats() {
         <p className="text-sm font-semibold text-slate-500">
           Cargando dashboard...
         </p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="rounded-3xl border border-red-200 bg-red-50 p-6 shadow-sm">
+        <p className="text-sm font-semibold text-red-600">
+          Error al cargar el dashboard
+        </p>
+        <p className="mt-1 text-sm text-red-500">{error}</p>
       </div>
     );
   }
@@ -174,7 +193,9 @@ export default function DashboardStats() {
                     <ReservationStatusBadge status={reservation.status} />
                   </td>
                   <td className="py-4 text-right text-sm font-bold text-slate-900">
-                    {formatMoneyFromCents(Number(reservation.pricing?.totalMXN))}
+                    {formatMoneyFromCents(
+                      Number(reservation.pricing?.totalMXN)
+                    )}
                   </td>
                 </tr>
               ))}
