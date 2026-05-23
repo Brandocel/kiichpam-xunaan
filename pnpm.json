@@ -1,0 +1,10 @@
+{
+    "onlyBuiltDependencies": [
+      "@parcel/watcher",
+      "esbuild",
+      "puppeteer",
+      "sharp",
+      "unrs-resolver",
+      "vue-demi"
+    ]
+  }
