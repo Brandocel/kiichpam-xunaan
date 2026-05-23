@@ -32,5 +32,15 @@
     "tailwindcss": "^4.2.4",
     "typescript": "^5",
     "unlighthouse": "^0.17.9"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@parcel/watcher",
+      "esbuild",
+      "puppeteer",
+      "sharp",
+      "unrs-resolver",
+      "vue-demi"
+    ]
   }
 }
