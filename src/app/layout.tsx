@@ -4,6 +4,7 @@ import { Poppins, Be_Vietnam_Pro } from "next/font/google";
 import "flag-icons/css/flag-icons.min.css";
 import { MetaPixel } from "@/shared/components/analytics/MetaPixel";
 import { AttributionTracker } from "@/shared/components/analytics/AttributionTracker";
+import { GoogleAnalytics } from "@/shared/components/analytics/GoogleAnalytics";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -31,6 +32,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
       >
         <AttributionTracker />
         <MetaPixel pixelId={process.env.NEXT_PUBLIC_META_PIXEL_ID} />
+        <GoogleAnalytics measurementId={process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID} />
 
         {children}
       </body>
