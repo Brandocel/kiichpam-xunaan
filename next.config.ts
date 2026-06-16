@@ -13,7 +13,7 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
-        hostname: "kiichpam-xunaan.com",
+        hostname: "www.cenotexunaan.com",
         pathname: "/**",
       },
       {
@@ -22,6 +22,22 @@ const nextConfig: NextConfig = {
         pathname: "/media/file/**",
       },
     ],
+  },
+  async redirects() {
+    return [
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "kiichpam-xunaan.com" }],
+        destination: "https://www.cenotexunaan.com/:path*",
+        permanent: true,
+      },
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "www.kiichpam-xunaan.com" }],
+        destination: "https://www.cenotexunaan.com/:path*",
+        permanent: true,
+      },
+    ];
   },
   async headers() {
     return [

@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 
-const SITE_URL = "https://kiichpam-xunaan.com";
+const SITE_URL = "https://www.cenotexunaan.com";
 
 type RouteConfig = {
   path: string;

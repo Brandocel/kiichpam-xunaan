@@ -7,7 +7,7 @@ import {
   getPackages,
 } from "../../features/home/services/home.service";
 
-const SITE_URL = "https://kiichpam-xunaan.com";
+const SITE_URL = "https://www.cenotexunaan.com";
 
 type Locale = "es" | "en";
 
