@@ -115,11 +115,11 @@ export async function generateMetadata({
 }
 
 /**
- * Para probar traducciones en vivo, déjalo dinámico.
- * Cuando todo esté estable, puedes volver a usar revalidate = 3600 si quieres cache.
+ * ISR: la página se sirve estática (rápida para SEO y Core Web Vitals) y se
+ * regenera en segundo plano cada hora para reflejar cambios de contenido.
+ * Si necesitas ver una traducción al instante, sube el deploy o baja este valor.
  */
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+export const revalidate = 3600;
 
 export default async function HomePage({ params }: HomePageProps) {
   const resolvedParams = await params;
