@@ -59,27 +59,54 @@ function getSearchParam(url: URL, key: string) {
   return value && value.trim() !== "" ? value.trim() : undefined;
 }
 
-function normalizeSource(rawSource?: string, referrer?: string) {
-  const source = rawSource?.toLowerCase();
+type NormalizeSourceParams = {
+  rawSource?: string;
+  medium?: string;
+  referrer?: string;
+  gclid?: string;
+  fbclid?: string;
+  ttclid?: string;
+};
 
+// Define el origen con esta prioridad (de más confiable a menos):
+//   1) utm_source explícito en el link
+//   2) click IDs (gclid/fbclid/ttclid) — funcionan aunque el referrer venga vacío
+//   3) referrer (la página de la que vino) — poco confiable, se adivina
+//   4) Directo (no se pudo determinar)
+function normalizeSource({
+  rawSource,
+  medium,
+  referrer,
+  gclid,
+  fbclid,
+  ttclid,
+}: NormalizeSourceParams) {
+  const source = rawSource?.toLowerCase();
+  const normalizedMedium = medium?.toLowerCase();
+  const isPaid =
+    normalizedMedium === "cpc" ||
+    normalizedMedium === "ppc" ||
+    normalizedMedium === "paid";
+
+  // 1) utm_source explícito (lo más confiable)
   if (source === "fb" || source === "facebook") {
     return {
-      source: "facebook",
-      sourceLabel: "Facebook",
+      source: isPaid ? "facebook_ads" : "facebook",
+      sourceLabel: isPaid ? "Facebook Ads" : "Facebook",
     };
   }
 
   if (source === "ig" || source === "instagram") {
     return {
-      source: "instagram",
-      sourceLabel: "Instagram",
+      source: isPaid ? "instagram_ads" : "instagram",
+      sourceLabel: isPaid ? "Instagram Ads" : "Instagram",
     };
   }
 
   if (source === "tiktok" || source === "tt") {
     return {
-      source: "tiktok",
-      sourceLabel: "TikTok",
+      source: isPaid ? "tiktok_ads" : "tiktok",
+      sourceLabel: isPaid ? "TikTok Ads" : "TikTok",
     };
   }
 
@@ -91,10 +118,10 @@ function normalizeSource(rawSource?: string, referrer?: string) {
   }
 
   if (source === "google") {
-    return {
-      source: "google",
-      sourceLabel: "Google",
-    };
+    // Google pagado (Ads) vs Google orgánico (búsqueda gratis)
+    return isPaid || gclid
+      ? { source: "google_ads", sourceLabel: "Google Ads" }
+      : { source: "google", sourceLabel: "Google" };
   }
 
   if (source === "direct" || source === "directo") {
@@ -118,6 +145,30 @@ function normalizeSource(rawSource?: string, referrer?: string) {
     };
   }
 
+  // 2) Click IDs: deterministas aunque no haya utm ni referrer.
+  // gclid SOLO lo agrega Google Ads → siempre es tráfico pagado.
+  if (gclid) {
+    return {
+      source: "google_ads",
+      sourceLabel: "Google Ads",
+    };
+  }
+
+  if (fbclid) {
+    return {
+      source: "facebook",
+      sourceLabel: "Facebook",
+    };
+  }
+
+  if (ttclid) {
+    return {
+      source: "tiktok",
+      sourceLabel: "TikTok",
+    };
+  }
+
+  // 3) Referrer (adivinanza, poco confiable)
   const normalizedReferrer = referrer?.toLowerCase();
 
   if (normalizedReferrer?.includes("facebook.com")) {
@@ -155,6 +206,7 @@ function normalizeSource(rawSource?: string, referrer?: string) {
     };
   }
 
+  // 4) No se pudo determinar
   return {
     source: "direct",
     sourceLabel: "Directo",
@@ -237,7 +289,14 @@ export function captureAttributionFromCurrentUrl() {
     return existingAttribution;
   }
 
-  const sourceData = normalizeSource(utmSource, referrer);
+  const sourceData = normalizeSource({
+    rawSource: utmSource,
+    medium: utmMedium,
+    referrer,
+    gclid,
+    fbclid,
+    ttclid,
+  });
   const now = new Date();
 
   const attribution: AttributionData = {
