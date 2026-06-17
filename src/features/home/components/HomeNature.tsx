@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type HomeNatureProps = {
   locale?: "es" | "en";
@@ -37,6 +37,30 @@ export default function HomeNature({
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
 
+  // El video solo se descarga/reproduce cuando la sección entra en pantalla,
+  // así no penaliza la carga inicial (está debajo del fold).
+  const [inView, setInView] = useState(false);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const node = containerRef.current;
+    if (!node || inView) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          setInView(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "200px" },
+    );
+
+    observer.observe(node);
+
+    return () => observer.disconnect();
+  }, [inView]);
+
   return (
     <section className="relative w-full overflow-hidden bg-[#0A6571]">
       <div
@@ -62,8 +86,11 @@ export default function HomeNature({
 
         <div className="mt-8 flex justify-center">
           <div className="relative w-full max-w-[1320px] overflow-hidden bg-black shadow-[0_25px_55px_rgba(0,0,0,0.30)]">
-            <div className="relative h-[240px] w-full sm:h-[320px] md:h-[420px] xl:h-[520px]">
-              {!hasError && (
+            <div
+              ref={containerRef}
+              className="relative h-[240px] w-full sm:h-[320px] md:h-[420px] xl:h-[520px]"
+            >
+              {!hasError && inView && (
                 <video
                   src={videoSrc}
                   title={t.videoTitle}

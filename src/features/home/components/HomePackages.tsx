@@ -247,7 +247,6 @@ export default function HomePackages({
                     fill
                     className="object-cover"
                     sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                    priority={item.code === "KX_BASIC"}
                   />
                 </div>
 

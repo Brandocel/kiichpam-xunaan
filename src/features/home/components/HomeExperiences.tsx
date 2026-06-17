@@ -275,7 +275,7 @@ export default function HomeExperiences({
                         playsInline
                         muted
                         loop
-                        preload="auto"
+                        preload="none"
                       />
                     </div>
 
