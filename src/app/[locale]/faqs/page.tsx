@@ -1,9 +1,61 @@
-type PageProps = {
-    params: {
+import type { Metadata } from "next";
+  import {
+    SITE_URL,
+    getFaqJsonLd,
+    jsonLdScript,
+    localizedUrl,
+  } from "@/shared/lib/seo";
+
+  type PageProps = {
+    params: Promise<{
       locale: "es" | "en";
-    };
+    }>;
   };
-  
+
+  const seo = {
+    es: {
+      title: "Preguntas frecuentes | Cenote Kiichpam Xunáan, Valladolid",
+      description:
+        "Respuestas sobre ubicación, cómo llegar, reservaciones, pagos y promociones del ecoparque de cenotes Kiichpam Xunáan cerca de Valladolid, Yucatán.",
+    },
+    en: {
+      title: "Frequently Asked Questions | Cenote Kiichpam Xunáan, Valladolid",
+      description:
+        "Answers about location, directions, bookings, payments and promotions for the Kiichpam Xunáan cenotes ecopark near Valladolid, Yucatán.",
+    },
+  } as const;
+
+  export async function generateMetadata({
+    params,
+  }: PageProps): Promise<Metadata> {
+    const { locale } = await params;
+    const safeLocale = locale === "en" ? "en" : "es";
+    const s = seo[safeLocale];
+
+    return {
+      title: s.title,
+      description: s.description,
+      metadataBase: new URL(SITE_URL),
+      alternates: {
+        canonical: localizedUrl(safeLocale, "/faqs"),
+        languages: {
+          es: localizedUrl("es", "/faqs"),
+          en: localizedUrl("en", "/faqs"),
+          "x-default": localizedUrl("es", "/faqs"),
+        },
+      },
+      openGraph: {
+        title: s.title,
+        description: s.description,
+        url: localizedUrl(safeLocale, "/faqs"),
+        siteName: "Kiichpam Xunaan",
+        locale: safeLocale === "es" ? "es_MX" : "en_US",
+        type: "website",
+      },
+      robots: { index: true, follow: true },
+    };
+  }
+
   const content = {
     es: {
       eyebrow: "Soporte",
@@ -83,12 +135,17 @@ type PageProps = {
     },
   } as const;
   
-  export default function FaqsPage({ params }: PageProps) {
-    const locale = params.locale === "en" ? "en" : "es";
+  export default async function FaqsPage({ params }: PageProps) {
+    const { locale: rawLocale } = await params;
+    const locale = rawLocale === "en" ? "en" : "es";
     const t = content[locale];
-  
+
     return (
       <main className="min-h-screen bg-white">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={jsonLdScript(getFaqJsonLd(t.faqs))}
+        />
         <section className="relative overflow-hidden bg-[#493287] px-6 py-20 text-white sm:px-10 lg:px-16">
           <div
             className="absolute inset-0 opacity-20"

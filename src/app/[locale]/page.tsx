@@ -87,7 +87,7 @@ export async function generateMetadata({
       type: "website",
       images: [
         {
-          url: `${SITE_URL}/og/home.jpg`,
+          url: `${SITE_URL}/home/home.webp`,
           width: 1200,
           height: 630,
           alt: "Kiichpam Xunaan",
@@ -98,7 +98,7 @@ export async function generateMetadata({
       card: "summary_large_image",
       title: seo.title,
       description: seo.description,
-      images: [`${SITE_URL}/og/home.jpg`],
+      images: [`${SITE_URL}/home/home.webp`],
     },
     robots: {
       index: true,
@@ -133,10 +133,11 @@ export default async function HomePage({ params }: HomePageProps) {
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "TouristAttraction",
+    "@id": `${SITE_URL}/#business`,
     name: "Kiichpam Xunaan",
     url: getUrl(locale),
     description: seoContent[locale].description,
-    image: `${SITE_URL}/og/home.jpg`,
+    image: `${SITE_URL}/home/home.webp`,
     touristType: ["Families", "Couples", "Groups", "Adventure travelers"],
     availableLanguage: ["Spanish", "English"],
     address: {
