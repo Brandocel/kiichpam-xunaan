@@ -121,6 +121,8 @@ export interface ApiReservationAttribution {
   fbclid?: string | null;
   ttclid?: string | null;
   gclid?: string | null;
+  landingPage?: string | null;
+  referrer?: string | null;
 }
 
 export interface ApiReservationExtra {
@@ -162,6 +164,8 @@ export interface ApiReservation {
   fbclid?: string | null;
   ttclid?: string | null;
   gclid?: string | null;
+  landingPage?: string | null;
+  referrer?: string | null;
 
   passengers?: ApiReservationPassengers | null;
   customer?: ApiReservationCustomer | null;

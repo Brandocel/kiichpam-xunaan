@@ -31,6 +31,8 @@ export type ReservationAttributionPayload = {
   fbclid?: string;
   ttclid?: string;
   gclid?: string;
+  landingPage?: string;
+  referrer?: string;
 };
 
 const ATTRIBUTION_STORAGE_KEY = "kiichpam_attribution";
@@ -367,5 +369,7 @@ export function buildReservationAttributionPayload(): ReservationAttributionPayl
     fbclid: attribution.fbclid,
     ttclid: attribution.ttclid,
     gclid: attribution.gclid,
+    landingPage: attribution.landingPage,
+    referrer: attribution.referrer,
   });
 }

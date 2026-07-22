@@ -1,6 +1,7 @@
 "use client";
 
 import ReservationStatusBadge from "../ReservationStatusBadge";
+import AttributionTracePopover from "./AttributionTracePopover";
 import type { ApiReservation } from "../../types/reservation.types";
 import {
   formatMoneyFromCents,
@@ -525,6 +526,10 @@ export default function ReservationsTable({
                           {reservation.attribution.utmCampaign}
                         </p>
                       ) : null}
+
+                      <div>
+                        <AttributionTracePopover reservation={reservation} />
+                      </div>
                     </TableBodyCell>
 
                     <TableBodyCell align="center" className="whitespace-nowrap">

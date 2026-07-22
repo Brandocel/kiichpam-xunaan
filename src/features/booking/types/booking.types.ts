@@ -15,6 +15,8 @@ export interface ReservationAttributionPayload {
   fbclid?: string;
   ttclid?: string;
   gclid?: string;
+  landingPage?: string;
+  referrer?: string;
 }
 
 export interface ReservationQuoteRequest extends ReservationAttributionPayload {
@@ -155,6 +157,8 @@ export interface ReservationAttributionData {
   fbclid?: string | null;
   ttclid?: string | null;
   gclid?: string | null;
+  landingPage?: string | null;
+  referrer?: string | null;
 }
 
 export interface ReservationQuoteData {
