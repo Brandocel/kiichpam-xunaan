@@ -106,7 +106,16 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  return NextResponse.next();
+  // Las rutas del panel son autenticadas y dinámicas: nunca deben cachearse
+  // en el CDN/edge. Esto evita que se sirva la variante RSC como documento.
+  const response = NextResponse.next();
+
+  response.headers.set(
+    "Cache-Control",
+    "private, no-store, no-cache, must-revalidate"
+  );
+
+  return response;
 }
 
 export const config = {
