@@ -1,10 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   ADMIN_COOKIE_NAME,
+  AdminRole,
   createAdminSessionToken,
   getAdminSessionSecret,
-  SUPER_ADMIN_PERMISSIONS,
+  getPermissionsForRole,
+  isAdminRole,
 } from "@/shared/lib/admin-auth";
+import { kiichpamApiFetch } from "@/shared/lib/kiichpam-api";
+
+type ValidateCredentialsResponse = {
+  data?: {
+    valid: boolean;
+    user: {
+      id: string;
+      name: string;
+      email: string;
+      role: string;
+      isActive: boolean;
+    } | null;
+  };
+};
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,21 +29,42 @@ export async function POST(request: NextRequest) {
     const email = String(body.email || "").trim().toLowerCase();
     const password = String(body.password || "");
 
-    const adminEmail = String(process.env.ADMIN_EMAIL || "").trim().toLowerCase();
-    const adminPassword = String(process.env.ADMIN_PASSWORD || "");
-
-    if (!adminEmail || !adminPassword) {
+    if (!email || !password) {
       return NextResponse.json(
         {
           success: false,
-          message:
-            "Faltan variables ADMIN_EMAIL y ADMIN_PASSWORD en el archivo .env.",
+          message: "Correo y contraseña son obligatorios.",
         },
-        { status: 500 }
+        { status: 400 }
       );
     }
 
-    if (email !== adminEmail || password !== adminPassword) {
+    let result: ValidateCredentialsResponse;
+
+    try {
+      result = await kiichpamApiFetch<ValidateCredentialsResponse>(
+        "/admin-users/validate-credentials",
+        {
+          method: "POST",
+          protected: true,
+          body: { email, password },
+        }
+      );
+    } catch (error) {
+      console.error("ADMIN_LOGIN_API_ERROR", error);
+
+      return NextResponse.json(
+        {
+          success: false,
+          message: "No se pudo validar el acceso. Intenta más tarde.",
+        },
+        { status: 502 }
+      );
+    }
+
+    const payload = result?.data;
+
+    if (!payload?.valid || !payload.user) {
       return NextResponse.json(
         {
           success: false,
@@ -37,15 +74,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const user = payload.user;
+    const role: AdminRole = isAdminRole(user.role)
+      ? user.role
+      : ("VIEWER" as AdminRole);
+
     const expiresInSeconds = 60 * 60 * 8;
 
     const token = await createAdminSessionToken(
       {
-        sub: "admin-001",
-        email: adminEmail,
-        name: "Administrador",
-        role: "SUPER_ADMIN",
-        permissions: SUPER_ADMIN_PERMISSIONS,
+        sub: user.id,
+        email: user.email,
+        name: user.name,
+        role,
+        permissions: getPermissionsForRole(role),
         exp: Math.floor(Date.now() / 1000) + expiresInSeconds,
       },
       getAdminSessionSecret()

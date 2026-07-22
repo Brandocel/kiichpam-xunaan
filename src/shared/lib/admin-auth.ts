@@ -6,7 +6,8 @@ export type AdminRole =
   | "MANAGER"
   | "SALES"
   | "ACCOUNTING"
-  | "VIEWER";
+  | "VIEWER"
+  | "AUDITOR";
 
 export type AdminSessionPayload = {
   sub: string;
@@ -196,3 +197,128 @@ export const ADMIN_PERMISSIONS = {
 } as const;
 
 export const SUPER_ADMIN_PERMISSIONS = Object.values(ADMIN_PERMISSIONS);
+
+const P = ADMIN_PERMISSIONS;
+
+/**
+ * Permisos asignados a cada rol del panel administrativo.
+ * Fuente única de verdad: el login construye los permisos de la sesión a
+ * partir del rol usando este mapa.
+ */
+export const ROLE_PERMISSIONS: Record<AdminRole, string[]> = {
+  SUPER_ADMIN: SUPER_ADMIN_PERMISSIONS,
+
+  ADMIN: [
+    P.DASHBOARD_VIEW,
+    P.RESERVATIONS_VIEW,
+    P.RESERVATIONS_CREATE,
+    P.RESERVATIONS_UPDATE,
+    P.RESERVATIONS_CANCEL,
+    P.RESERVATIONS_CHANGE_STATUS,
+    P.RESERVATIONS_EXPORT,
+    P.USERS_VIEW,
+    P.USERS_CREATE,
+    P.USERS_UPDATE,
+    P.USERS_DISABLE,
+    P.ROLES_VIEW,
+    P.PAYMENTS_VIEW,
+    P.PAYMENTS_EXPORT,
+    P.REPORTS_VIEW,
+    P.REPORTS_EXPORT,
+  ],
+
+  MANAGER: [
+    P.DASHBOARD_VIEW,
+    P.RESERVATIONS_VIEW,
+    P.RESERVATIONS_CREATE,
+    P.RESERVATIONS_UPDATE,
+    P.RESERVATIONS_CANCEL,
+    P.RESERVATIONS_CHANGE_STATUS,
+    P.RESERVATIONS_EXPORT,
+    P.PAYMENTS_VIEW,
+    P.REPORTS_VIEW,
+  ],
+
+  SALES: [
+    P.DASHBOARD_VIEW,
+    P.RESERVATIONS_VIEW,
+    P.RESERVATIONS_CREATE,
+    P.RESERVATIONS_UPDATE,
+    P.RESERVATIONS_CHANGE_STATUS,
+  ],
+
+  ACCOUNTING: [
+    P.DASHBOARD_VIEW,
+    P.PAYMENTS_VIEW,
+    P.PAYMENTS_EXPORT,
+    P.REPORTS_VIEW,
+    P.REPORTS_EXPORT,
+  ],
+
+  VIEWER: [P.DASHBOARD_VIEW, P.RESERVATIONS_VIEW],
+
+  /**
+   * Auditoría: acceso exclusivo de solo lectura a reservaciones.
+   */
+  AUDITOR: [P.RESERVATIONS_VIEW],
+};
+
+export type AdminRoleMeta = {
+  role: AdminRole;
+  label: string;
+  description: string;
+};
+
+/**
+ * Metadatos de los roles para mostrarlos en el panel (páginas Usuarios/Roles).
+ */
+export const ADMIN_ROLES: AdminRoleMeta[] = [
+  {
+    role: "SUPER_ADMIN",
+    label: "Super Admin",
+    description: "Acceso completo a todo el sistema.",
+  },
+  {
+    role: "ADMIN",
+    label: "Administrador",
+    description:
+      "Gestiona reservaciones, usuarios, pagos y reportes (sin reembolsos).",
+  },
+  {
+    role: "MANAGER",
+    label: "Gerente",
+    description: "Gestiona reservaciones y consulta pagos y reportes.",
+  },
+  {
+    role: "SALES",
+    label: "Ventas",
+    description: "Crea y gestiona reservaciones de clientes.",
+  },
+  {
+    role: "ACCOUNTING",
+    label: "Contabilidad",
+    description: "Consulta y exporta pagos y reportes.",
+  },
+  {
+    role: "VIEWER",
+    label: "Consulta",
+    description: "Solo lectura de dashboard y reservaciones.",
+  },
+  {
+    role: "AUDITOR",
+    label: "Auditoría",
+    description: "Solo lectura de reservaciones. Sin acceso a nada más.",
+  },
+];
+
+/**
+ * Devuelve los permisos correspondientes a un rol. Si el rol es desconocido,
+ * devuelve un arreglo vacío (sin acceso) por seguridad.
+ */
+export function getPermissionsForRole(role: string): string[] {
+  return ROLE_PERMISSIONS[role as AdminRole] ?? [];
+}
+
+export function isAdminRole(value: string): value is AdminRole {
+  return value in ROLE_PERMISSIONS;
+}

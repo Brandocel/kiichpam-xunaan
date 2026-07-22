@@ -28,3 +28,41 @@ export async function requireAdminSession(request: NextRequest) {
     unauthorizedResponse: null,
   };
 }
+
+/**
+ * Igual que requireAdminSession, pero además exige que la sesión tenga un
+ * permiso específico. Devuelve 401 si no hay sesión y 403 si falta el permiso.
+ */
+export async function requirePermission(
+  request: NextRequest,
+  permission: string
+) {
+  const { session, unauthorizedResponse } = await requireAdminSession(request);
+
+  if (unauthorizedResponse || !session) {
+    return {
+      session: null,
+      errorResponse:
+        unauthorizedResponse ??
+        NextResponse.json(
+          { success: false, message: "No autorizado." },
+          { status: 401 }
+        ),
+    };
+  }
+
+  if (!session.permissions?.includes(permission)) {
+    return {
+      session: null,
+      errorResponse: NextResponse.json(
+        { success: false, message: "No tienes permiso para esta acción." },
+        { status: 403 }
+      ),
+    };
+  }
+
+  return {
+    session,
+    errorResponse: null,
+  };
+}
