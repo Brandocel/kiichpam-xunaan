@@ -2,6 +2,7 @@
 
 import { FormEvent, CSSProperties, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { Eye, EyeOff } from "lucide-react";
 
 type Star = {
   left: string;
@@ -181,8 +182,9 @@ export default function AdminLoginForm() {
 
   const redirectTo = searchParams.get("redirect") || "/admin/dashboard";
 
-  const [email, setEmail] = useState("admin@kiichpam.com");
-  const [password, setPassword] = useState("Admin123456*");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -294,15 +296,29 @@ export default function AdminLoginForm() {
               Contraseña
             </label>
 
-            <input
-              type="password"
-              value={password}
-              autoComplete="current-password"
-              onChange={(event) => setPassword(event.target.value)}
-              className="h-12 w-full rounded-xl border border-slate-300 bg-white px-4 text-sm outline-none transition focus:border-[#383071] focus:ring-4 focus:ring-[#383071]/10"
-              placeholder="********"
-              required
-            />
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                value={password}
+                autoComplete="current-password"
+                onChange={(event) => setPassword(event.target.value)}
+                className="h-12 w-full rounded-xl border border-slate-300 bg-white px-4 pr-12 text-sm outline-none transition focus:border-[#383071] focus:ring-4 focus:ring-[#383071]/10"
+                placeholder="********"
+                required
+              />
+
+              <button
+                type="button"
+                onClick={() => setShowPassword((prev) => !prev)}
+                aria-label={
+                  showPassword ? "Ocultar contraseña" : "Mostrar contraseña"
+                }
+                title={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                className="absolute inset-y-0 right-0 flex w-12 items-center justify-center text-slate-400 transition hover:text-slate-700"
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
           </div>
 
           <button
