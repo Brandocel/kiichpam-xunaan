@@ -1,58 +1,56 @@
+import ReservationsReportView from "@/features/admin/reports/components/ReservationsReportView";
+
 export const metadata = {
-    title: "Reportes | Admin Kiichpam Xunáan",
-  };
-  
-  const reports = [
-    {
-      title: "Reporte de reservaciones",
-      description: "Reservaciones por fecha, estado, paquete y origen.",
-    },
-    {
-      title: "Reporte de ventas",
-      description: "Ingresos, descuentos, pagos confirmados y pendientes.",
-    },
-    {
-      title: "Reporte de clientes",
-      description: "Clientes, visitas, datos de contacto y comportamiento.",
-    },
-    {
-      title: "Reporte operativo",
-      description: "Llegadas, no shows, cancelaciones y reservaciones completadas.",
-    },
-  ];
-  
-  export default function AdminReportsPage() {
-    return (
-      <section className="space-y-6">
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-          <p className="text-sm font-semibold uppercase tracking-[0.25em] text-slate-400">
-            Análisis
-          </p>
-          <h1 className="mt-1 text-3xl font-bold text-slate-950">Reportes</h1>
-          <p className="mt-2 text-sm text-slate-500">
-            Prepara reportes administrativos y exportaciones para Excel, CSV o PDF.
+  title: "Reportes | Admin Kiichpam Xunáan",
+};
+
+const upcomingReports = [
+  {
+    title: "Reporte de ventas",
+    description: "Ingresos, descuentos, pagos confirmados y pendientes.",
+  },
+  {
+    title: "Reporte de clientes",
+    description: "Clientes, visitas, datos de contacto y comportamiento.",
+  },
+  {
+    title: "Reporte operativo",
+    description: "Llegadas, no shows, cancelaciones y reservaciones completadas.",
+  },
+];
+
+export default function AdminReportsPage() {
+  return (
+    <div className="space-y-5">
+      <ReservationsReportView />
+
+      <div className="border border-slate-300 bg-white">
+        <div className="border-b border-slate-300 bg-slate-100 px-4 py-4">
+          <h2 className="text-lg font-black text-slate-950">Otros reportes</h2>
+
+          <p className="mt-1 text-sm font-medium text-slate-500">
+            Próximas exportaciones administrativas del panel.
           </p>
         </div>
-  
-        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-          {reports.map((report) => (
-            <div
-              key={report.title}
-              className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm"
-            >
-              <h2 className="text-lg font-bold text-slate-950">
+
+        <div className="grid gap-px bg-slate-300 md:grid-cols-3">
+          {upcomingReports.map((report) => (
+            <div key={report.title} className="bg-white px-4 py-5">
+              <h3 className="text-base font-black text-slate-950">
                 {report.title}
-              </h2>
-              <p className="mt-2 text-sm text-slate-500">
+              </h3>
+
+              <p className="mt-2 text-sm font-medium text-slate-500">
                 {report.description}
               </p>
-  
-              <button className="mt-6 rounded-xl border border-slate-300 px-4 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-100">
-                Preparar exportación
-              </button>
+
+              <span className="mt-4 inline-flex border border-slate-300 bg-slate-100 px-3 py-1.5 text-[11px] font-black uppercase tracking-wide text-slate-500">
+                Próximamente
+              </span>
             </div>
           ))}
         </div>
-      </section>
-    );
-  }
+      </div>
+    </div>
+  );
+}
