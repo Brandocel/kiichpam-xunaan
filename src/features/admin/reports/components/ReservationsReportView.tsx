@@ -6,13 +6,16 @@ import ReservationStatusBadge from "@/features/admin/reservations/components/Res
 import {
   getReservationStatusLabel,
   reservationReferenceOptions,
-  reservationStatusOptions,
+  reservationStatusReportOptions,
   type AdminReservationListParams,
 } from "@/features/admin/reservations/types/reservation.types";
 import { formatMoneyFromCents } from "@/features/admin/reservations/utils/reservation-formatters";
 import { formatVisitDate } from "@/features/admin/reservations/utils/formatVisitDate";
 
-import { fetchAllAdminReservations } from "../services/admin-reports.service";
+import {
+  MAX_REPORT_RECORDS,
+  fetchAllAdminReservations,
+} from "../services/admin-reports.service";
 import {
   buildReportFileName,
   downloadCsv,
@@ -39,7 +42,11 @@ type ReportFilters = {
 const initialFilters: ReportFilters = {
   from: "",
   to: "",
-  status: "",
+  /**
+   * El reporte arranca en "Pagada": es el estado que de verdad importa para
+   * ingresos. Los borradores y pagos fallidos se consultan cambiando el filtro.
+   */
+  status: "PAID",
   reference: "",
   packageCode: "",
   sortBy: "visitDate",
@@ -76,6 +83,15 @@ type QuickRange = {
 };
 
 const quickRanges: QuickRange[] = [
+  {
+    key: "all",
+    label: "Todo el histórico",
+    /**
+     * Sin fechas: la API devuelve todas las reservaciones y el servicio
+     * recorre todas las páginas.
+     */
+    getRange: () => ({ from: "", to: "" }),
+  },
   {
     key: "today",
     label: "Hoy",
@@ -140,6 +156,12 @@ const quickRanges: QuickRange[] = [
     },
   },
 ];
+
+function getQuickRange(key: string) {
+  const match = quickRanges.find((range) => range.key === key);
+
+  return match ? match.getRange() : { from: "", to: "" };
+}
 
 function StatCard({
   label,
@@ -275,6 +297,7 @@ export default function ReservationsReportView() {
   const [hasGenerated, setHasGenerated] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [loadedCount, setLoadedCount] = useState(0);
+  const [expectedCount, setExpectedCount] = useState(0);
   const [truncated, setTruncated] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
@@ -285,6 +308,10 @@ export default function ReservationsReportView() {
 
   const rangeLabel = useMemo(() => {
     if (!appliedFilters) return "Sin rango aplicado";
+
+    if (!appliedFilters.from && !appliedFilters.to) {
+      return "Todo el histórico";
+    }
 
     const from = appliedFilters.from
       ? formatVisitDate(appliedFilters.from)
@@ -300,6 +327,7 @@ export default function ReservationsReportView() {
     setErrorMessage("");
     setSuccessMessage("");
     setLoadedCount(0);
+    setExpectedCount(0);
 
     try {
       const result = await fetchAllAdminReservations(
@@ -313,7 +341,10 @@ export default function ReservationsReportView() {
           sortOrder: filters.sortOrder,
         },
         {
-          onProgress: (loaded) => setLoadedCount(loaded),
+          onProgress: (loaded, total) => {
+            setLoadedCount(loaded);
+            setExpectedCount(total);
+          },
         }
       );
 
@@ -324,7 +355,7 @@ export default function ReservationsReportView() {
 
       if (result.truncated) {
         setErrorMessage(
-          "El rango es muy grande y solo se cargaron los primeros 5,000 registros. Acota las fechas para exportar todo."
+          `Hay más de ${MAX_REPORT_RECORDS.toLocaleString("es-MX")} reservaciones en este rango y solo se cargaron las primeras. Acota las fechas para exportar el resto.`
         );
       }
     } catch (error) {
@@ -345,7 +376,7 @@ export default function ReservationsReportView() {
 
     didAutoRun.current = true;
 
-    const range = quickRanges[2].getRange();
+    const range = getQuickRange("last30");
     const defaultFilters = { ...initialFilters, ...range };
 
     setFormFilters(defaultFilters);
@@ -359,7 +390,7 @@ export default function ReservationsReportView() {
   };
 
   const handleReset = () => {
-    const range = quickRanges[2].getRange();
+    const range = getQuickRange("last30");
     const defaultFilters = { ...initialFilters, ...range };
 
     setFormFilters(defaultFilters);
@@ -618,13 +649,13 @@ export default function ReservationsReportView() {
                   }
                   className={inputClass}
                 >
-                  <option value="">Todos</option>
-
-                  {reservationStatusOptions.map((status) => (
+                  {reservationStatusReportOptions.map((status) => (
                     <option key={status} value={status}>
                       {getReservationStatusLabel(status)}
                     </option>
                   ))}
+
+                  <option value="">Todos</option>
                 </select>
               </div>
 
@@ -707,8 +738,10 @@ export default function ReservationsReportView() {
 
               <div className="flex items-end">
                 <p className="text-xs font-semibold leading-5 text-slate-500">
-                  El archivo incluye {reservationReportColumns.length} columnas
-                  con cliente, paquete, pax, precios y pago.
+                  Deja <strong>Desde</strong> y <strong>Hasta</strong> vacías
+                  para bajar todo el histórico. El archivo incluye{" "}
+                  {reservationReportColumns.length} columnas con cliente,
+                  paquete, pax, precios y pago.
                 </p>
               </div>
             </div>
@@ -728,7 +761,9 @@ export default function ReservationsReportView() {
                 disabled={isLoading}
                 className="bg-slate-950 px-4 py-2.5 text-sm font-black text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {isLoading ? "Generando..." : "Generar reporte"}
+                {isLoading
+                  ? `Generando${expectedCount ? ` ${loadedCount}/${expectedCount}` : ""}...`
+                  : "Generar reporte"}
               </button>
             </div>
           </form>
@@ -760,7 +795,11 @@ export default function ReservationsReportView() {
         <StatCard
           label="Reservaciones"
           value={totals.reservations}
-          hint={isLoading ? `Cargando ${loadedCount}...` : undefined}
+          hint={
+            isLoading
+              ? `Cargando ${loadedCount}${expectedCount ? ` de ${expectedCount}` : ""}...`
+              : undefined
+          }
         />
 
         <StatCard

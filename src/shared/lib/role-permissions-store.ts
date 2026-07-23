@@ -31,11 +31,15 @@ export type RolePermissionsStoreState = {
  * mover este store a una tabla en kiichpam-api: toda la lectura/escritura pasa
  * por readStore/writeStore, así que solo hay que cambiar esas dos funciones.
  */
+const DEFAULT_STORE_PATH = path.join(".data", "role-permissions.json");
+
 function getStorePath() {
-  return (
-    process.env.ADMIN_ROLES_STORE_PATH ||
-    path.join(process.cwd(), ".data", "role-permissions.json")
-  );
+  /**
+   * Ruta relativa a propósito: node la resuelve contra el cwd del proceso y
+   * así evitamos un process.cwd() dinámico que hace que Turbopack trace todo
+   * el proyecto en el bundle de la ruta.
+   */
+  return process.env.ADMIN_ROLES_STORE_PATH || DEFAULT_STORE_PATH;
 }
 
 const ALL_ROLES = ADMIN_ROLES.map((role) => role.role);

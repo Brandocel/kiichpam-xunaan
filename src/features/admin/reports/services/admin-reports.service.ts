@@ -13,7 +13,13 @@ export type AdminReportFetchResult = {
 };
 
 const DEFAULT_PAGE_SIZE = 100;
-const DEFAULT_MAX_PAGES = 50;
+const DEFAULT_MAX_PAGES = 300;
+
+/**
+ * Tope duro de registros por reporte. Con esto entra todo el histórico
+ * de la página sin dejar al navegador pidiendo páginas indefinidamente.
+ */
+export const MAX_REPORT_RECORDS = DEFAULT_PAGE_SIZE * DEFAULT_MAX_PAGES;
 
 /**
  * La API pagina las reservaciones, así que para un reporte por rango

@@ -4,6 +4,7 @@ export type ReservationSortOrder = "asc" | "desc";
 export type ReservationStatus =
   | "DRAFT"
   | "PROCESSING_PAYMENT"
+  | "PAYMENT_FAILED"
   | "PAID"
   | "COMPLETED"
   | "CANCELLED"
@@ -197,8 +198,24 @@ export interface ApiReservationsListResponse {
 export const reservationStatusOptions = [
   "DRAFT",
   "PROCESSING_PAYMENT",
+  "PAYMENT_FAILED",
   "PAID",
   "COMPLETED",
+  "CANCELLED",
+  "NO_SHOW",
+  "REFUNDED",
+];
+
+/**
+ * Mismo catálogo pero con los estados que más se consultan al principio.
+ * Lo usa el filtro de Reportes, donde lo normal es arrancar por "Pagada".
+ */
+export const reservationStatusReportOptions = [
+  "PAID",
+  "COMPLETED",
+  "PROCESSING_PAYMENT",
+  "PAYMENT_FAILED",
+  "DRAFT",
   "CANCELLED",
   "NO_SHOW",
   "REFUNDED",
@@ -223,6 +240,8 @@ export function getReservationStatusLabel(status?: string | null) {
       return "Borrador";
     case "PROCESSING_PAYMENT":
       return "Procesando pago";
+    case "PAYMENT_FAILED":
+      return "Pago fallido";
     case "PAID":
       return "Pagada";
     case "COMPLETED":
