@@ -41,4 +41,7 @@ yarn-error.log*
 
 # claude code (config local)
 /.claude/
+
+# store local de permisos por rol (ver role-permissions-store.ts)
+/.data/
 next-env.d.ts

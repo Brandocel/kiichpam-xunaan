@@ -4,10 +4,10 @@ import {
   AdminRole,
   createAdminSessionToken,
   getAdminSessionSecret,
-  getPermissionsForRole,
   isAdminRole,
 } from "@/shared/lib/admin-auth";
 import { kiichpamApiFetch } from "@/shared/lib/kiichpam-api";
+import { getEffectivePermissionsForRole } from "@/shared/lib/role-permissions-store";
 
 type ValidateCredentialsResponse = {
   data?: {
@@ -81,13 +81,19 @@ export async function POST(request: NextRequest) {
 
     const expiresInSeconds = 60 * 60 * 8;
 
+    /**
+     * Los permisos salen del store (overrides guardados en la pantalla Roles)
+     * y caen a los defaults del rol si nunca se ha editado nada.
+     */
+    const permissions = await getEffectivePermissionsForRole(role);
+
     const token = await createAdminSessionToken(
       {
         sub: user.id,
         email: user.email,
         name: user.name,
         role,
-        permissions: getPermissionsForRole(role),
+        permissions,
         exp: Math.floor(Date.now() / 1000) + expiresInSeconds,
       },
       getAdminSessionSecret()
