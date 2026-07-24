@@ -379,6 +379,14 @@ export default function ReservationDetailDrawer({
   const paymentBreakdown = getPaymentBreakdown(reservation);
   const payments = getPayments(reservation);
 
+  /*
+    Una reservación cobrada por Stripe puede no tener movimientos en
+    `payments` si el cobro es anterior al registro en base de datos.
+    En ese caso el estado manda y no debe leerse como "sin pago".
+  */
+  const hasPaymentsPendingSync =
+    reservation.status === "PAID" && payments.length === 0;
+
   const hasCampaignDiscount = paymentBreakdown.campaignDiscountMXN > 0;
   const hasCouponDiscount = paymentBreakdown.couponDiscountMXN > 0;
   const hasInapamDiscount = paymentBreakdown.inapamDiscountMXN > 0;
@@ -520,7 +528,13 @@ export default function ReservationDetailDrawer({
 
             <PaymentInfoCard
               label="Pagos"
-              value={payments.length > 0 ? payments.length : "Sin pagos"}
+              value={
+                payments.length > 0
+                  ? payments.length
+                  : hasPaymentsPendingSync
+                    ? "Por sincronizar"
+                    : "Sin pagos"
+              }
             />
           </div>
 
@@ -659,6 +673,19 @@ export default function ReservationDetailDrawer({
                     index={index}
                   />
                 ))}
+              </div>
+            ) : hasPaymentsPendingSync ? (
+              <div className="border border-dashed border-emerald-300 bg-emerald-50 px-4 py-5 text-center">
+                <p className="text-sm font-black text-emerald-800">
+                  Cobro confirmado, movimiento por sincronizar
+                </p>
+
+                <p className="mt-1 text-xs font-semibold text-emerald-700">
+                  La reservación está pagada, pero el cobro se realizó antes de
+                  que se guardara el detalle en{" "}
+                  <span className="font-black">payments</span>. Sincroniza el
+                  pago desde Stripe para verlo aquí.
+                </p>
               </div>
             ) : (
               <div className="border border-dashed border-slate-300 bg-white px-4 py-5 text-center">
