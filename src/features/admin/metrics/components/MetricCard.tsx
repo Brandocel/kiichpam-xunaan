@@ -30,6 +30,15 @@ export function DeltaBadge({
         ? "border-rose-400/30 bg-rose-400/10 text-rose-300"
         : "border-rose-300 bg-rose-50 text-rose-700";
 
+  // Sin base en el periodo anterior no hay porcentaje que calcular:
+  // se muestra "nuevo" en vez de un guion que se lee como error.
+  const value =
+    delta.pct !== null
+      ? formatPercent(delta.pct)
+      : delta.direction === "up"
+        ? "nuevo"
+        : "—";
+
   return (
     <span
       className={[
@@ -37,7 +46,7 @@ export function DeltaBadge({
         toneClass,
       ].join(" ")}
     >
-      {arrow} {formatPercent(delta.pct)}
+      {arrow} {value}
       {suffix ? <span className="font-bold opacity-80">{suffix}</span> : null}
     </span>
   );

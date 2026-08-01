@@ -58,9 +58,15 @@ export default function MonthlyCandleChart({
       volumeMetric === "revenue" ? candle.revenue : candle.reservations
     );
 
-    const ma = movingAverage(
+    // La media móvil se corta en el último mes con datos: si no, la línea
+    // se desploma al piso en los meses del año que todavía no pasan.
+    const rawMa = movingAverage(
       candles.map((candle) => candle.paxPerDay),
       3
+    );
+
+    const ma = rawMa.map((value, index) =>
+      candles[index].hasData ? value : null
     );
 
     return {
