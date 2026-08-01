@@ -17,6 +17,7 @@ const ADMIN_ROUTE_PERMISSIONS: { prefix: string; permission: string }[] = [
   { prefix: "/admin/roles", permission: "roles.view" },
   { prefix: "/admin/pagos", permission: "payments.view" },
   { prefix: "/admin/reportes", permission: "reports.view" },
+  { prefix: "/admin/metricas", permission: "reports.view" },
 ];
 
 function getRequiredPermission(pathname: string): string | null {

@@ -6,6 +6,7 @@ import {
   ShieldCheck,
   CreditCard,
   BarChart3,
+  TrendingUp,
 } from "lucide-react";
 
 export type AdminNavigationItem = {
@@ -51,5 +52,11 @@ export const adminNavigation: AdminNavigationItem[] = [
     href: "/admin/reportes",
     permission: "reports.view",
     icon: BarChart3,
+  },
+  {
+    label: "Métricas",
+    href: "/admin/metricas",
+    permission: "reports.view",
+    icon: TrendingUp,
   },
 ];
