@@ -517,6 +517,40 @@ export default function ReservationDetailDrawer({
           />
         </AccordionSection>
 
+        {reservation.agent || reservation.salesAgentCode ? (
+          <AccordionSection title="Agente de reservas" defaultOpen>
+            <DetailItem
+              label="Agente"
+              value={
+                reservation.agent?.name ||
+                reservation.salesAgentCode ||
+                "Sin agente"
+              }
+              highlight
+            />
+
+            <DetailItem
+              label="Código"
+              value={
+                reservation.agent?.code || reservation.salesAgentCode || "—"
+              }
+            />
+
+            {reservation.agent?.company ? (
+              <DetailItem label="Empresa" value={reservation.agent.company} />
+            ) : null}
+
+            <DetailItem
+              label="Comisión"
+              value={`${
+                reservation.agentCommissionPercent ??
+                reservation.agent?.commissionPercent ??
+                0
+              }%`}
+            />
+          </AccordionSection>
+        ) : null}
+
         <AccordionSection title="Pago" defaultOpen>
           <div className="mb-4 grid gap-2 sm:grid-cols-3">
             <PaymentInfoCard

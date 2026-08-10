@@ -29,6 +29,7 @@ const initialFilters: Required<AdminReservationListParams> = {
   packageCode: "",
   email: "",
   reference: "",
+  agentCode: "",
   from: "",
   to: "",
   sortBy: "createdAt",
@@ -402,6 +403,24 @@ export default function ReservationsPageView() {
                     </option>
                   ))}
                 </select>
+              </div>
+
+              <div>
+                <label className="mb-1.5 block text-[11px] font-black uppercase tracking-wide text-slate-500">
+                  Agente
+                </label>
+
+                <input
+                  value={formFilters.agentCode}
+                  onChange={(event) =>
+                    setFormFilters((prev) => ({
+                      ...prev,
+                      agentCode: event.target.value,
+                    }))
+                  }
+                  placeholder="MARIA-LOPEZ"
+                  className="h-10 w-full border border-slate-300 bg-white px-3 text-sm text-slate-800 outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
+                />
               </div>
 
               <div>

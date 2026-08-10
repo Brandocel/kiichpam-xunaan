@@ -148,6 +148,41 @@ export const ADMIN_PERMISSION_GROUPS: AdminPermissionGroup[] = [
     ],
   },
   {
+    key: "agents",
+    label: "Agentes de reservas",
+    description:
+      "Hoteles, taxistas, agencias e influencers con link de venta propio.",
+    permissions: [
+      {
+        key: P.AGENTS_VIEW,
+        label: "Ver agentes",
+        description:
+          "Entra a Agentes, consulta sus links y el ranking de ventas.",
+        kind: "view",
+        route: "/admin/agentes",
+      },
+      {
+        key: P.AGENTS_CREATE,
+        label: "Crear agentes",
+        description: "Da de alta un agente y genera su link de venta.",
+        kind: "action",
+      },
+      {
+        key: P.AGENTS_UPDATE,
+        label: "Editar agentes",
+        description: "Cambia datos, comisión y activa o desactiva su link.",
+        kind: "action",
+      },
+      {
+        key: P.AGENTS_DELETE,
+        label: "Eliminar agentes",
+        description:
+          "Borra un agente. Las ventas ya atribuidas conservan su historial.",
+        kind: "action",
+      },
+    ],
+  },
+  {
     key: "payments",
     label: "Pagos",
     description: "Cobros, referencias y reembolsos.",

@@ -7,6 +7,7 @@ import {
   CreditCard,
   BarChart3,
   TrendingUp,
+  Handshake,
 } from "lucide-react";
 
 export type AdminNavigationItem = {
@@ -28,6 +29,12 @@ export const adminNavigation: AdminNavigationItem[] = [
     href: "/admin/reservaciones",
     permission: "reservations.view",
     icon: CalendarRange,
+  },
+  {
+    label: "Agentes",
+    href: "/admin/agentes",
+    permission: "agents.view",
+    icon: Handshake,
   },
   {
     label: "Usuarios",

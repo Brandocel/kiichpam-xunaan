@@ -31,6 +31,7 @@ import {
 } from "../utils/booking-calculations";
 import { validateBookingContact } from "../utils/booking-validators";
 import { buildReservationAttributionPayload } from "@/shared/lib/attribution";
+import { getAgentCodeForReservation } from "@/shared/lib/agent-attribution";
 
 interface UseBookingParams {
   locale: BookingLocale;
@@ -693,6 +694,7 @@ export function useBooking({
         inapamVisitors,
         couponCode: normalizeCouponCode(couponCode) || undefined,
         campaignCode: campaignCode || undefined,
+        agentCode: getAgentCodeForReservation(),
         lang: locale,
         extras: normalizeExtras(extras),
         ...attributionPayload,
@@ -749,6 +751,7 @@ export function useBooking({
         inapamVisitors,
         couponCode: normalizeCouponCode(couponCode) || undefined,
         campaignCode: campaignCode || undefined,
+        agentCode: getAgentCodeForReservation(),
         lang: locale,
         extras: normalizeExtras(extras),
         ...attributionPayload,

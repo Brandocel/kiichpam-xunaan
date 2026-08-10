@@ -33,6 +33,7 @@ export interface AdminReservationListParams {
   packageCode?: string;
   email?: string;
   reference?: string;
+  agentCode?: string;
   from?: string;
   to?: string;
   sortBy?: ReservationSortBy;
@@ -56,6 +57,7 @@ export interface ApiReservationFilters {
   packageCode?: string | null;
   email?: string | null;
   reference?: string | null;
+  agentCode?: string | null;
   from?: string | null;
   to?: string | null;
   sortBy?: ReservationSortBy;
@@ -126,6 +128,19 @@ export interface ApiReservationAttribution {
   referrer?: string | null;
 }
 
+/**
+ * Agente de reservas que trajo la venta. Es independiente de la atribución de
+ * canal: una reservación puede venir de Google y además tener agente.
+ */
+export interface ApiReservationAgent {
+  code: string;
+  name: string;
+  company?: string | null;
+  type?: string | null;
+  commissionPercent?: number | null;
+  isActive?: boolean;
+}
+
 export interface ApiReservationExtra {
   id?: string;
   code?: string;
@@ -156,6 +171,10 @@ export interface ApiReservation {
 
   reference?: string | null;
   attribution?: ApiReservationAttribution | null;
+  agent?: ApiReservationAgent | null;
+
+  salesAgentCode?: string | null;
+  agentCommissionPercent?: number | null;
 
   utmSource?: string | null;
   utmMedium?: string | null;

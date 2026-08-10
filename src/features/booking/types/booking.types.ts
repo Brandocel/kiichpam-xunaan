@@ -28,6 +28,8 @@ export interface ReservationQuoteRequest extends ReservationAttributionPayload {
   inapamVisitors: number;
   couponCode?: string;
   campaignCode?: string;
+  /** Código del agente de reservas que trajo la venta (param `ag` del link). */
+  agentCode?: string;
   lang: BookingLocale;
   extras?: BookingExtraInput[];
 }
@@ -201,6 +203,8 @@ export interface ReservationCreateRequest extends ReservationAttributionPayload 
   inapamVisitors: number;
   couponCode?: string;
   campaignCode?: string;
+  /** Código del agente de reservas que trajo la venta (param `ag` del link). */
+  agentCode?: string;
   lang: BookingLocale;
   extras?: BookingExtraInput[];
 }

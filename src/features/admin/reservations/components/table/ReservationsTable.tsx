@@ -175,6 +175,43 @@ function ReferenceBadge({ reference }: { reference?: string | null }) {
   );
 }
 
+/**
+ * Agente que cerró la venta. Es dimensión aparte del origen: una reservación
+ * puede venir de Google y además traer agente.
+ */
+function AgentBadge({ reservation }: { reservation: ApiReservation }) {
+  const agent = reservation.agent;
+  const code = agent?.code || reservation.salesAgentCode;
+
+  if (!code) {
+    return (
+      <span className="text-[11px] font-semibold text-slate-400">Sin agente</span>
+    );
+  }
+
+  const name = agent?.name || code;
+
+  return (
+    <div className="max-w-[160px]">
+      <span
+        className="inline-flex max-w-full items-center justify-center truncate border border-indigo-300 bg-indigo-50 px-2.5 py-1 text-[11px] font-black uppercase tracking-wide text-indigo-700"
+        title={`${name} (${code})`}
+      >
+        {name}
+      </span>
+
+      {agent?.company ? (
+        <p
+          className="mt-1 truncate text-[11px] font-semibold text-slate-500"
+          title={agent.company}
+        >
+          {agent.company}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
 function TableHeadCell({
   children,
   align = "left",
@@ -298,6 +335,10 @@ function TableLoadingRows({ rows = 6 }: { rows?: number }) {
               <SkeletonBlock className="h-7 w-28" />
             </TableBodyCell>
 
+            <TableBodyCell className="whitespace-nowrap">
+              <SkeletonBlock className="h-7 w-24" />
+            </TableBodyCell>
+
             <TableBodyCell align="center" className="whitespace-nowrap">
               <div className="flex justify-center">
                 <SkeletonBlock className="h-8 w-10" />
@@ -331,7 +372,7 @@ function EmptyTableState() {
   return (
     <tr>
       <td
-        colSpan={8}
+        colSpan={9}
         className="bg-white px-4 py-14 text-center text-sm font-bold text-slate-500"
       >
         <div className="mx-auto max-w-sm">
@@ -445,6 +486,7 @@ export default function ReservationsTable({
               <TableHeadCell>Cliente</TableHeadCell>
               <TableHeadCell>Visita</TableHeadCell>
               <TableHeadCell>Origen</TableHeadCell>
+              <TableHeadCell>Agente</TableHeadCell>
               <TableHeadCell align="center">Pax</TableHeadCell>
               <TableHeadCell>Estado</TableHeadCell>
               <TableHeadCell align="right">Total</TableHeadCell>
@@ -530,6 +572,10 @@ export default function ReservationsTable({
                       <div>
                         <AttributionTracePopover reservation={reservation} />
                       </div>
+                    </TableBodyCell>
+
+                    <TableBodyCell className="whitespace-nowrap">
+                      <AgentBadge reservation={reservation} />
                     </TableBodyCell>
 
                     <TableBodyCell align="center" className="whitespace-nowrap">

@@ -3,6 +3,7 @@
 import { Suspense, useEffect } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { captureAttributionFromCurrentUrl } from "@/shared/lib/attribution";
+import { captureAgentFromCurrentUrl } from "@/shared/lib/agent-attribution";
 
 function AttributionRouteTracker() {
   const pathname = usePathname();
@@ -12,6 +13,7 @@ function AttributionRouteTracker() {
 
   useEffect(() => {
     captureAttributionFromCurrentUrl();
+    captureAgentFromCurrentUrl();
   }, [pathname, queryString]);
 
   return null;

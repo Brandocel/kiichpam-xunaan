@@ -13,6 +13,7 @@ import {
 const ADMIN_ROUTE_PERMISSIONS: { prefix: string; permission: string }[] = [
   { prefix: "/admin/dashboard", permission: "dashboard.view" },
   { prefix: "/admin/reservaciones", permission: "reservations.view" },
+  { prefix: "/admin/agentes", permission: "agents.view" },
   { prefix: "/admin/usuarios", permission: "users.view" },
   { prefix: "/admin/roles", permission: "roles.view" },
   { prefix: "/admin/pagos", permission: "payments.view" },

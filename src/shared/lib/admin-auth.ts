@@ -188,6 +188,11 @@ export const ADMIN_PERMISSIONS = {
   ROLES_CREATE: "roles.create",
   ROLES_UPDATE: "roles.update",
 
+  AGENTS_VIEW: "agents.view",
+  AGENTS_CREATE: "agents.create",
+  AGENTS_UPDATE: "agents.update",
+  AGENTS_DELETE: "agents.delete",
+
   PAYMENTS_VIEW: "payments.view",
   PAYMENTS_REFUND: "payments.refund",
   PAYMENTS_EXPORT: "payments.export",
@@ -221,6 +226,10 @@ export const ROLE_PERMISSIONS: Record<AdminRole, string[]> = {
     P.USERS_UPDATE,
     P.USERS_DISABLE,
     P.ROLES_VIEW,
+    P.AGENTS_VIEW,
+    P.AGENTS_CREATE,
+    P.AGENTS_UPDATE,
+    P.AGENTS_DELETE,
     P.PAYMENTS_VIEW,
     P.PAYMENTS_EXPORT,
     P.REPORTS_VIEW,
@@ -235,6 +244,9 @@ export const ROLE_PERMISSIONS: Record<AdminRole, string[]> = {
     P.RESERVATIONS_CANCEL,
     P.RESERVATIONS_CHANGE_STATUS,
     P.RESERVATIONS_EXPORT,
+    P.AGENTS_VIEW,
+    P.AGENTS_CREATE,
+    P.AGENTS_UPDATE,
     P.PAYMENTS_VIEW,
     P.REPORTS_VIEW,
   ],
@@ -245,6 +257,7 @@ export const ROLE_PERMISSIONS: Record<AdminRole, string[]> = {
     P.RESERVATIONS_CREATE,
     P.RESERVATIONS_UPDATE,
     P.RESERVATIONS_CHANGE_STATUS,
+    P.AGENTS_VIEW,
   ],
 
   ACCOUNTING: [
