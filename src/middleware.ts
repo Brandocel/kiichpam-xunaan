@@ -5,6 +5,12 @@ import {
   getAdminSessionSecret,
   verifyAdminSession,
 } from "@/shared/lib/admin-auth";
+import {
+  AGENT_COOKIE_NAME,
+  AGENT_QUERY_KEYS,
+  AGENT_TTL_DAYS,
+  normalizeAgentCode,
+} from "@/shared/lib/agent-attribution";
 
 /**
  * Permiso requerido para cada sección del panel. El orden define también la
@@ -53,6 +59,57 @@ function isGhostWordPressPath(pathname: string): boolean {
   return true;
 }
 
+/**
+ * Guarda el agente de la URL (`?ag=`) en una cookie de 60 días.
+ *
+ * Se hace en el middleware, en el servidor, porque es lo único que garantiza
+ * que el crédito sobreviva: se escribe antes de que corra el JavaScript, viaja
+ * en cada request siguiente y no depende de localStorage (que se pierde entre
+ * el navegador interno de WhatsApp y el navegador normal).
+ *
+ * Es last-touch: si el visitante llega con el link de otro agente, ese gana.
+ * Si la URL no trae `ag`, la cookie existente no se toca.
+ */
+function persistAgentAttribution(
+  request: NextRequest,
+  response: NextResponse
+): NextResponse {
+  let rawCode: string | null = null;
+
+  for (const key of AGENT_QUERY_KEYS) {
+    const value = request.nextUrl.searchParams.get(key);
+
+    if (value && value.trim()) {
+      rawCode = value;
+      break;
+    }
+  }
+
+  if (!rawCode) {
+    return response;
+  }
+
+  const code = normalizeAgentCode(rawCode);
+
+  if (!code || code === request.cookies.get(AGENT_COOKIE_NAME)?.value) {
+    return response;
+  }
+
+  response.cookies.set({
+    name: AGENT_COOKIE_NAME,
+    value: code,
+    // Legible por el cliente a propósito: el flujo de reserva la lee para
+    // mandar el agentCode junto con la cotización.
+    httpOnly: false,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: AGENT_TTL_DAYS * 24 * 60 * 60,
+  });
+
+  return response;
+}
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -65,7 +122,7 @@ export async function middleware(request: NextRequest) {
   const isAdminLoginRoute = pathname === "/admin/login";
 
   if (!isAdminRoute) {
-    return NextResponse.next();
+    return persistAgentAttribution(request, NextResponse.next());
   }
 
   const token = request.cookies.get(ADMIN_COOKIE_NAME)?.value;

@@ -17,13 +17,47 @@ export type AgentAttributionData = {
 const AGENT_STORAGE_KEY = "kiichpam_sales_agent";
 
 /**
+ * Cookie con el mismo dato. Es la fuente principal porque la escribe el
+ * middleware en el servidor, antes de que corra un solo byte de JavaScript:
+ * así el crédito sobrevive aunque el visitante navegue, recargue, llegue por
+ * un enlace con preview o tenga el JS a medio cargar. localStorage queda como
+ * respaldo para sesiones antiguas que ya lo tenían guardado.
+ */
+export const AGENT_COOKIE_NAME = "kx_ag";
+
+/**
  * Ventana de crédito del agente. Es más larga que la de campañas (30 días)
  * porque un hotel o una agencia entrega el link días antes del viaje.
  */
-const AGENT_TTL_DAYS = 60;
+export const AGENT_TTL_DAYS = 60;
 
 /** Alias aceptados en la URL. `ag` es el corto y el que se usa en los links. */
-const AGENT_QUERY_KEYS = ["ag", "agente", "agent"] as const;
+export const AGENT_QUERY_KEYS = ["ag", "agente", "agent"] as const;
+
+function readCookie(name: string): string | undefined {
+  if (typeof document === "undefined") return undefined;
+
+  const match = document.cookie
+    .split("; ")
+    .find((row) => row.startsWith(`${name}=`));
+
+  if (!match) return undefined;
+
+  const value = decodeURIComponent(match.slice(name.length + 1));
+
+  return value.trim() || undefined;
+}
+
+function writeCookie(name: string, value: string, days: number) {
+  if (typeof document === "undefined") return;
+
+  const maxAge = days * 24 * 60 * 60;
+  const secure = window.location.protocol === "https:" ? "; Secure" : "";
+
+  document.cookie = `${name}=${encodeURIComponent(
+    value
+  )}; path=/; max-age=${maxAge}; SameSite=Lax${secure}`;
+}
 
 function addDays(date: Date, days: number) {
   const result = new Date(date);
@@ -77,6 +111,18 @@ function readAgentCodeFromUrl(url: URL): string | undefined {
 export function getStoredAgentAttribution(): AgentAttributionData | null {
   if (typeof window === "undefined") return null;
 
+  // 1) Cookie: la escribe el middleware y es la que sobrevive la navegación.
+  const cookieCode = normalizeAgentCode(readCookie(AGENT_COOKIE_NAME) ?? "");
+
+  if (cookieCode) {
+    return {
+      code: cookieCode,
+      capturedAt: "",
+      expiresAt: "",
+    };
+  }
+
+  // 2) localStorage: respaldo para visitantes que ya lo traían de antes.
   try {
     const rawValue = window.localStorage.getItem(AGENT_STORAGE_KEY);
 
@@ -89,6 +135,9 @@ export function getStoredAgentAttribution(): AgentAttributionData | null {
       return null;
     }
 
+    // Se promueve a cookie para que a partir de aquí viaje con el visitante.
+    writeCookie(AGENT_COOKIE_NAME, parsed.code, AGENT_TTL_DAYS);
+
     return parsed;
   } catch {
     return null;
@@ -99,6 +148,7 @@ export function clearStoredAgentAttribution() {
   if (typeof window === "undefined") return;
 
   window.localStorage.removeItem(AGENT_STORAGE_KEY);
+  document.cookie = `${AGENT_COOKIE_NAME}=; path=/; max-age=0; SameSite=Lax`;
 }
 
 /**
@@ -125,14 +175,18 @@ export function captureAgentFromCurrentUrl(): AgentAttributionData | null {
     landingPage: window.location.href,
   };
 
+  // La cookie es la que manda; el middleware normalmente ya la escribió, esto
+  // cubre el caso de una navegación de cliente que no pasa por el servidor.
+  writeCookie(AGENT_COOKIE_NAME, code, AGENT_TTL_DAYS);
+
   try {
     window.localStorage.setItem(
       AGENT_STORAGE_KEY,
       JSON.stringify(attribution)
     );
   } catch {
-    // Modo privado o storage lleno: la atribución de este request se pierde,
-    // pero la reservación debe poder continuar.
+    // Modo privado o storage lleno: la cookie ya quedó escrita, así que la
+    // atribución sigue viva aunque no haya localStorage.
   }
 
   return attribution;

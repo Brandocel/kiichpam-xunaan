@@ -57,6 +57,14 @@ export async function updateAgent(
   );
 }
 
+export async function regenerateAgentLink(id: string): Promise<SalesAgent> {
+  return adminFetch<SalesAgent>(
+    `/api/admin/agents/${id}/regenerate-link`,
+    { method: "POST" },
+    "No se pudo generar un link nuevo."
+  );
+}
+
 export async function deleteAgent(id: string): Promise<void> {
   await adminFetch<unknown>(
     `/api/admin/agents/${id}`,

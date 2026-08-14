@@ -10,6 +10,7 @@ import {
   createAgent,
   deleteAgent,
   listAgents,
+  regenerateAgentLink,
   updateAgent,
 } from "../services/admin-agents.service";
 import {
@@ -162,6 +163,30 @@ export default function AgentsManager() {
     }
   };
 
+  const regenerateLink = async (agent: SalesAgent) => {
+    const confirmed = window.confirm(
+      `¿Generar un link nuevo para "${agent.name}"?\n\nEl link anterior dejará de atribuir ventas, así que tendrás que enviarle el nuevo. Las ventas ya registradas no se tocan.`
+    );
+
+    if (!confirmed) return;
+
+    setBusyId(agent.id);
+    setLoadError("");
+
+    try {
+      await regenerateAgentLink(agent.id);
+      await loadAgents();
+    } catch (error) {
+      setLoadError(
+        error instanceof Error
+          ? error.message
+          : "No se pudo generar un link nuevo."
+      );
+    } finally {
+      setBusyId(null);
+    }
+  };
+
   const removeAgent = async (agent: SalesAgent) => {
     const confirmed = window.confirm(
       `¿Eliminar al agente "${agent.name}" (${agent.code})? Su link dejará de funcionar. Las reservaciones ya atribuidas conservan su historial.`
@@ -197,8 +222,9 @@ export default function AgentsManager() {
         </h1>
         <p className="mt-2 text-sm text-slate-500">
           Da de alta hoteles, taxistas, agencias o influencers. Cada uno recibe
-          un link propio y toda venta que entre por ahí queda atribuida a su
-          nombre, sin perder el canal de origen.
+          un link propio con un código anónimo —el nombre del agente nunca
+          aparece en la URL— y toda venta que entre por ahí queda atribuida a
+          él durante 60 días, sin perder el canal de origen.
         </p>
       </div>
 
@@ -290,7 +316,10 @@ export default function AgentsManager() {
                     </td>
 
                     <td className="py-4 pr-4">
-                      <AgentLinkCell code={agent.code} agentName={agent.name} />
+                      <AgentLinkCell
+                        linkToken={agent.linkToken}
+                        agentName={agent.name}
+                      />
                     </td>
 
                     <td className="py-4 text-sm text-slate-600">
@@ -325,6 +354,14 @@ export default function AgentsManager() {
                           className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-100 disabled:opacity-50"
                         >
                           Editar
+                        </button>
+                        <button
+                          onClick={() => regenerateLink(agent)}
+                          disabled={busyId === agent.id}
+                          title="Invalida el link actual y genera uno nuevo"
+                          className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-100 disabled:opacity-50"
+                        >
+                          Nuevo link
                         </button>
                         <button
                           onClick={() => toggleActive(agent)}
@@ -387,7 +424,7 @@ export default function AgentsManager() {
 
                 <div className="sm:col-span-2">
                   <label className="mb-2 block text-sm font-semibold text-slate-700">
-                    Código del link{" "}
+                    Clave interna{" "}
                     <span className="font-normal text-slate-400">
                       (opcional, se genera del nombre)
                     </span>
@@ -399,14 +436,20 @@ export default function AgentsManager() {
                     placeholder="MARIA-LOPEZ"
                     className="h-11 w-full rounded-xl border border-slate-300 px-4 text-sm outline-none focus:border-slate-950 focus:ring-4 focus:ring-slate-950/10"
                   />
-                  {previewCode && (
-                    <p className="mt-2 text-xs text-slate-400">
-                      Link:{" "}
-                      <code className="text-slate-600">
-                        /es/reservar?ag={previewCode}
-                      </code>
-                    </p>
-                  )}
+                  <p className="mt-2 text-xs text-slate-400">
+                    {previewCode ? (
+                      <>
+                        Se guardará como{" "}
+                        <code className="text-slate-600">{previewCode}</code>.{" "}
+                      </>
+                    ) : null}
+                    Solo se usa dentro del panel para filtrar y reportar.{" "}
+                    <strong className="font-semibold text-slate-500">
+                      El link que recibe el cliente no lleva el nombre
+                    </strong>
+                    : se genera un código aleatorio tipo{" "}
+                    <code className="text-slate-600">?ag=KX7F2MQD</code>.
+                  </p>
                 </div>
 
                 <div>

@@ -9,6 +9,8 @@ export type SalesAgentType =
 export type SalesAgent = {
   id: string;
   code: string;
+  /** Token opaco que viaja en el link público. Oculta el nombre del agente. */
+  linkToken: string;
   name: string;
   email: string | null;
   phone: string | null;

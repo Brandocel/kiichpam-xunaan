@@ -6,17 +6,18 @@ import { Check, Copy, MessageCircle } from "lucide-react";
 import { buildAgentBookingLink } from "@/shared/lib/agent-attribution";
 
 type Props = {
-  code: string;
+  /** Token opaco, NO el código legible: el cliente no debe ver el nombre. */
+  linkToken: string;
   agentName: string;
 };
 
-export default function AgentLinkCell({ code, agentName }: Props) {
+export default function AgentLinkCell({ linkToken, agentName }: Props) {
   const [copied, setCopied] = useState(false);
 
   // El origin se resuelve en el cliente para que el link sirva igual en
   // producción, en staging y en local sin configurar nada.
   const origin = typeof window !== "undefined" ? window.location.origin : "";
-  const link = buildAgentBookingLink(code, { baseUrl: origin });
+  const link = buildAgentBookingLink(linkToken, { baseUrl: origin });
   const displayLink = link.replace(/^https?:\/\//, "");
 
   const whatsappMessage = `Reserva tu visita a Cenote Kiichpam Xunáan con ${agentName}: ${link}`;
