@@ -7,7 +7,8 @@ export type AdminRole =
   | "SALES"
   | "ACCOUNTING"
   | "VIEWER"
-  | "AUDITOR";
+  | "AUDITOR"
+  | "AGENT";
 
 export type AdminSessionPayload = {
   sub: string;
@@ -15,6 +16,13 @@ export type AdminSessionPayload = {
   name: string;
   role: AdminRole;
   permissions: string[];
+  /**
+   * Código del agente de reservas dueño de esta sesión, si la cuenta
+   * pertenece a uno. Va firmado dentro del token a propósito: la atribución
+   * de lo que captura sale de aquí y no de un campo que él pueda editar.
+   */
+  agentCode?: string;
+  agentName?: string;
   exp: number;
 };
 
@@ -274,6 +282,17 @@ export const ROLE_PERMISSIONS: Record<AdminRole, string[]> = {
    * Auditoría: acceso exclusivo de solo lectura a reservaciones.
    */
   AUDITOR: [P.RESERVATIONS_VIEW],
+
+  /**
+   * Agente de reservas con cuenta propia. Captura reservaciones a su nombre
+   * y consulta la lista completa. No administra usuarios, roles ni pagos.
+   */
+  AGENT: [
+    P.RESERVATIONS_VIEW,
+    P.RESERVATIONS_CREATE,
+    P.RESERVATIONS_CHANGE_STATUS,
+    P.AGENTS_VIEW,
+  ],
 };
 
 export type AdminRoleMeta = {
@@ -321,6 +340,12 @@ export const ADMIN_ROLES: AdminRoleMeta[] = [
     role: "AUDITOR",
     label: "Auditoría",
     description: "Solo lectura de reservaciones. Sin acceso a nada más.",
+  },
+  {
+    role: "AGENT",
+    label: "Agente de reservas",
+    description:
+      "Captura reservaciones a su nombre y consulta la lista. Se asigna solo desde la pantalla Agentes.",
   },
 ];
 

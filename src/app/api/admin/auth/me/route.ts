@@ -27,6 +27,10 @@ export async function GET(request: NextRequest) {
       name: session.name,
       role: session.role,
       permissions: session.permissions,
+      // Solo informativo: sirve para que el formulario muestre "registrando
+      // como X". La atribución real se resuelve en el servidor con el token.
+      agentCode: session.agentCode ?? null,
+      agentName: session.agentName ?? null,
     },
   });
 }

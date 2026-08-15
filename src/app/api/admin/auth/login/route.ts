@@ -87,6 +87,29 @@ export async function POST(request: NextRequest) {
      */
     const permissions = await getEffectivePermissionsForRole(role);
 
+    /**
+     * Si la cuenta pertenece a un agente de reservas, su código viaja firmado
+     * dentro de la sesión. Lo que capture se atribuye a partir de aquí, no de
+     * un campo del formulario, para que no pueda registrar a nombre de otro.
+     *
+     * Si la consulta falla, la sesión se abre igual pero sin agente: es
+     * preferible a dejar a alguien fuera del panel por un error de red.
+     */
+    let agent: { code: string; name: string } | null = null;
+
+    try {
+      const agentResult = await kiichpamApiFetch<{
+        data?: { code: string; name: string } | null;
+      }>(`/sales-agents/by-admin-user/${user.id}`, {
+        method: "GET",
+        protected: true,
+      });
+
+      agent = agentResult?.data ?? null;
+    } catch (error) {
+      console.error("ADMIN_LOGIN_AGENT_LOOKUP_ERROR", error);
+    }
+
     const token = await createAdminSessionToken(
       {
         sub: user.id,
@@ -94,6 +117,7 @@ export async function POST(request: NextRequest) {
         name: user.name,
         role,
         permissions,
+        ...(agent ? { agentCode: agent.code, agentName: agent.name } : {}),
         exp: Math.floor(Date.now() / 1000) + expiresInSeconds,
       },
       getAdminSessionSecret()

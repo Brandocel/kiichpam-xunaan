@@ -29,6 +29,7 @@ type FormState = {
   type: SalesAgentType;
   commissionPercent: string;
   notes: string;
+  panelPassword: string;
 };
 
 const EMPTY_FORM: FormState = {
@@ -40,6 +41,7 @@ const EMPTY_FORM: FormState = {
   type: "HOTEL",
   commissionPercent: "10",
   notes: "",
+  panelPassword: "",
 };
 
 export default function AgentsManager() {
@@ -91,6 +93,7 @@ export default function AgentsManager() {
       type: agent.type,
       commissionPercent: String(agent.commissionPercent ?? 0),
       notes: agent.notes ?? "",
+      panelPassword: "",
     });
     setFormError("");
     setIsModalOpen(true);
@@ -126,6 +129,11 @@ export default function AgentsManager() {
         commissionPercent: commission,
         notes: form.notes.trim(),
         ...(form.code.trim() ? { code: form.code.trim() } : {}),
+        // Solo viaja si la escribieron: en edición, vacío significa
+        // "no cambiar la contraseña".
+        ...(form.panelPassword.trim()
+          ? { panelPassword: form.panelPassword.trim() }
+          : {}),
       };
 
       if (editingAgent) {
@@ -532,6 +540,49 @@ export default function AgentsManager() {
                     Se aplica sobre el total de las reservaciones pagadas. El
                     porcentaje se congela en cada venta, así que cambiarlo no
                     altera comisiones ya generadas.
+                  </p>
+                </div>
+
+                <div className="sm:col-span-2">
+                  <label className="mb-2 block text-sm font-semibold text-slate-700">
+                    Contraseña del panel{" "}
+                    <span className="font-normal text-slate-400">
+                      (opcional)
+                    </span>
+                  </label>
+                  <input
+                    type="password"
+                    value={form.panelPassword}
+                    onChange={(e) =>
+                      setForm({ ...form, panelPassword: e.target.value })
+                    }
+                    placeholder={
+                      editingAgent?.adminUser
+                        ? "Dejar en blanco para no cambiarla"
+                        : "Mínimo 8 caracteres"
+                    }
+                    className="h-11 w-full rounded-xl border border-slate-300 px-4 text-sm outline-none focus:border-slate-950 focus:ring-4 focus:ring-slate-950/10"
+                  />
+                  <p className="mt-2 text-xs text-slate-400">
+                    {editingAgent?.adminUser ? (
+                      <>
+                        Ya tiene acceso al panel con{" "}
+                        <strong className="font-semibold text-slate-500">
+                          {editingAgent.adminUser.email}
+                        </strong>
+                        . Escribe una contraseña nueva solo si quieres
+                        cambiársela.
+                      </>
+                    ) : (
+                      <>
+                        Si la llenas, el agente podrá entrar al panel con su
+                        correo y capturar reservaciones a su nombre. Requiere
+                        correo.{" "}
+                        <strong className="font-semibold text-slate-500">
+                          Verá todas las reservaciones del negocio.
+                        </strong>
+                      </>
+                    )}
                   </p>
                 </div>
 

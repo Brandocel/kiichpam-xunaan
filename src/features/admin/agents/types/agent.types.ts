@@ -20,6 +20,8 @@ export type SalesAgent = {
   isActive: boolean;
   notes: string | null;
   reservationsCount?: number;
+  /** Cuenta con la que el agente entra al panel, si se le dio acceso. */
+  adminUser?: { id: string; email: string; isActive: boolean } | null;
   createdAt: string;
   updatedAt: string;
 };

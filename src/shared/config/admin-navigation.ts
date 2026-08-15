@@ -8,6 +8,7 @@ import {
   BarChart3,
   TrendingUp,
   Handshake,
+  CalendarPlus,
 } from "lucide-react";
 
 export type AdminNavigationItem = {
@@ -29,6 +30,12 @@ export const adminNavigation: AdminNavigationItem[] = [
     href: "/admin/reservaciones",
     permission: "reservations.view",
     icon: CalendarRange,
+  },
+  {
+    label: "Nueva reservación",
+    href: "/admin/nueva-reserva",
+    permission: "reservations.create",
+    icon: CalendarPlus,
   },
   {
     label: "Agentes",
