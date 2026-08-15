@@ -207,6 +207,17 @@ export interface ReservationCreateRequest extends ReservationAttributionPayload 
   agentCode?: string;
   lang: BookingLocale;
   extras?: BookingExtraInput[];
+
+  /**
+   * Datos del cliente. Viajan en la creación para que el folio nazca completo
+   * y no queden borradores sin nombre ni correo.
+   */
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  phone?: string;
+  country?: string;
+  comments?: string;
 }
 
 export interface ReservationPackageRecord {

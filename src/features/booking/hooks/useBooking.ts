@@ -274,10 +274,11 @@ export function useBooking({
     });
   }, [packageCode, visitDate, adults, children, infants]);
 
+  // Ya no exige folio: en el paso 2 la reservación todavía no existe, se crea
+  // justo al enviar este formulario.
   const canSubmitContact = useMemo(() => {
     return Boolean(
-      folio &&
-        firstName.trim() &&
+      firstName.trim() &&
         lastName.trim() &&
         email.trim() &&
         phone.trim() &&
@@ -286,7 +287,6 @@ export function useBooking({
         acceptedPrivacy
     );
   }, [
-    folio,
     firstName,
     lastName,
     email,
@@ -724,7 +724,14 @@ export function useBooking({
     }
   }
 
-  async function createDraftReservation() {
+  /**
+   * Crea la reservación en la API.
+   *
+   * Recibe el contacto porque se llama desde el paso 2: así el folio nace con
+   * nombre, correo y teléfono en una sola operación, en vez de crear un
+   * borrador vacío y completarlo después con un PATCH que podía no llegar.
+   */
+  async function createDraftReservation(contact?: ReservationContactPayload) {
     if (!canQuote) {
       const message =
         locale === "es"
@@ -754,6 +761,7 @@ export function useBooking({
         agentCode: getAgentCodeForReservation(),
         lang: locale,
         extras: normalizeExtras(extras),
+        ...(contact ?? {}),
         ...attributionPayload,
       };
 
@@ -766,7 +774,6 @@ export function useBooking({
       setReservation(result.data);
       setFolio(result.data.folio);
       setReservationSignature(currentSignature);
-      setCurrentStep(2);
 
       return result.data;
     } catch (error) {
@@ -785,17 +792,6 @@ export function useBooking({
   }
 
   async function submitContact() {
-    if (!folio) {
-      const message =
-        locale === "es"
-          ? "No se encontró el folio de la reservación"
-          : "Reservation folio was not found";
-
-      setContactError(message);
-      showBookingError(message);
-      return null;
-    }
-
     const payload: ReservationContactPayload = {
       firstName: firstName.trim(),
       lastName: lastName.trim(),
@@ -828,6 +824,33 @@ export function useBooking({
       setLoadingContact(true);
       setContactError("");
 
+      // Primera vez: la reservación todavía no existe y se crea aquí, ya con
+      // los datos del cliente, para no dejar borradores vacíos.
+      // Si el visitante retrocedió y cambió el paquete o los pax, la firma
+      // deja de coincidir y también hay que crearla de nuevo.
+      if (!folio || !hasFreshReservation) {
+        const created = await createDraftReservation(payload);
+
+        if (!created) {
+          // createDraftReservation ya mostró el toast y guardó el detalle en
+          // reservationError, pero ese mensaje se pinta en el paso 1. Aquí se
+          // refleja también en el paso 2 para que el usuario no se quede
+          // viendo un botón que "no hace nada".
+          setContactError(
+            locale === "es"
+              ? "No se pudo crear la reservación. Revisa los datos e intenta de nuevo."
+              : "The reservation could not be created. Check the details and try again."
+          );
+
+          return null;
+        }
+
+        setCurrentStep(3);
+
+        return created;
+      }
+
+      // Reservación ya existente (sesión retomada o corrección de datos).
       const result = await updateReservationContact(folio, payload);
 
       if (!result.success || !result.data) {
@@ -1011,11 +1034,10 @@ export function useBooking({
         return;
       }
 
-      if (!hasFreshReservation) {
-        await createDraftReservation();
-        return;
-      }
-
+      // La reservación NO se crea aquí a propósito. Antes se creaba en este
+      // paso y, si el visitante abandonaba antes de escribir sus datos,
+      // quedaba un borrador sin nombre ni correo que no le sirve a nadie.
+      // Ahora se crea hasta el paso 2, ya con los datos de contacto.
       setCurrentStep(2);
       return;
     }
