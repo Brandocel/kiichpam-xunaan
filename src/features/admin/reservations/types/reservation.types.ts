@@ -5,6 +5,7 @@ export type ReservationStatus =
   | "DRAFT"
   | "PROCESSING_PAYMENT"
   | "PAYMENT_FAILED"
+  | "PARTIALLY_PAID"
   | "PAID"
   | "COMPLETED"
   | "CANCELLED"
@@ -163,6 +164,17 @@ export interface ApiReservationPayment {
   [key: string]: unknown;
 }
 
+/**
+ * Estado de cobro de la reservación. Con anticipos, el total y lo pagado
+ * dejan de ser lo mismo, así que el panel necesita ambos por separado.
+ */
+export interface ApiReservationSettlement {
+  totalMXN: number;
+  paidMXN: number;
+  balanceMXN: number;
+  isSettled: boolean;
+}
+
 export interface ApiReservation {
   id: string;
   folio: string;
@@ -196,6 +208,11 @@ export interface ApiReservation {
   extras?: ApiReservationExtra[];
   payments?: ApiReservationPayment[];
 
+  /** Cuánto se ha cobrado y cuánto falta. Presente en el listado. */
+  settlement?: ApiReservationSettlement | null;
+  paidMXN?: number | string | null;
+  balanceMXN?: number | string | null;
+
   createdAt?: string;
   updatedAt?: string;
 }
@@ -217,6 +234,7 @@ export interface ApiReservationsListResponse {
 export const reservationStatusOptions = [
   "DRAFT",
   "PROCESSING_PAYMENT",
+  "PARTIALLY_PAID",
   "PAYMENT_FAILED",
   "PAID",
   "COMPLETED",
@@ -231,6 +249,7 @@ export const reservationStatusOptions = [
  */
 export const reservationStatusReportOptions = [
   "PAID",
+  "PARTIALLY_PAID",
   "COMPLETED",
   "PROCESSING_PAYMENT",
   "PAYMENT_FAILED",
@@ -261,6 +280,8 @@ export function getReservationStatusLabel(status?: string | null) {
       return "Procesando pago";
     case "PAYMENT_FAILED":
       return "Pago fallido";
+    case "PARTIALLY_PAID":
+      return "Anticipo";
     case "PAID":
       return "Pagada";
     case "COMPLETED":

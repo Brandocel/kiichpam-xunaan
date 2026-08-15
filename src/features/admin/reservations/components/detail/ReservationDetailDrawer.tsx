@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import DrawerShell from "../common/DrawerShell";
 import AccordionSection from "../common/AccordionSection";
+import DepositLinkPanel from "./DepositLinkPanel";
 import ReservationStatusBadge from "../ReservationStatusBadge";
 import type { ApiReservation } from "../../types/reservation.types";
 import {
@@ -550,6 +551,20 @@ export default function ReservationDetailDrawer({
             />
           </AccordionSection>
         ) : null}
+
+        <AccordionSection title="Cobro y saldo" defaultOpen>
+          <DepositLinkPanel
+            folio={reservation.folio}
+            totalMXN={Number(
+              reservation.settlement?.totalMXN ??
+                reservation.pricing?.totalMXN ??
+                0
+            )}
+            paidMXN={Number(
+              reservation.settlement?.paidMXN ?? reservation.paidMXN ?? 0
+            )}
+          />
+        </AccordionSection>
 
         <AccordionSection title="Pago" defaultOpen>
           <div className="mb-4 grid gap-2 sm:grid-cols-3">
